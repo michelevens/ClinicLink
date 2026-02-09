@@ -4,19 +4,20 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, Mail, Lock } from 'lucide-react'
+import { Stethoscope, User, Lock, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const { login, isLoading } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await login(email, password)
+      await login(loginId, password)
       navigate('/dashboard')
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.'
@@ -43,23 +44,37 @@ export function LoginPage() {
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Email"
-              type="email"
-              placeholder="you@university.edu"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              icon={<Mail className="w-4 h-4" />}
+              label="Email, Username, or Phone"
+              type="text"
+              placeholder="you@university.edu, username, or phone"
+              value={loginId}
+              onChange={e => setLoginId(e.target.value)}
+              icon={<User className="w-4 h-4" />}
               required
             />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              icon={<Lock className="w-4 h-4" />}
-              required
-            />
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-stone-700">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-10 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
             <Button type="submit" isLoading={isLoading} className="w-full">
               Sign In
             </Button>

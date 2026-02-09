@@ -16,6 +16,7 @@ class AuthController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users', 'regex:/^[a-z0-9._-]+$/'],
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
         ]);
@@ -24,6 +25,7 @@ class AuthController extends Controller
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
+            'username' => $validated['username'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
         ]);
@@ -39,11 +41,17 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'email' => ['required', 'string', 'email'],
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $validated['email'])->first();
+        $loginField = $validated['login'];
+
+        // Determine login method: email, phone, or username
+        $user = User::where('email', $loginField)
+            ->orWhere('username', $loginField)
+            ->orWhere('phone', $loginField)
+            ->first();
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
             return response()->json([

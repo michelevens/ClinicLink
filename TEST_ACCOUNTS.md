@@ -10,36 +10,37 @@
 
 All demo accounts use the password: `password`
 
-| Role | Email | Password | Name | Description |
-|------|-------|----------|------|-------------|
-| **Student** | student@cliniclink.com | password | Sarah Chen | Primary student demo account with full profile, credentials, applications, and hour logs |
-| **Preceptor** | preceptor@cliniclink.com | password | James Wilson | Clinical preceptor at Mercy General Hospital. Supervises students, reviews hours and evaluations |
-| **Site Manager** | site@cliniclink.com | password | Maria Garcia | Manages Mercy General, Sunshine FHC, Children's Wellness, and Coastal Rehab. Creates/manages rotation slots |
-| **Coordinator** | coordinator@cliniclink.com | password | Lisa Thompson | University coordinator at University of Miami. Manages student placements and affiliation agreements |
-| **Professor** | professor@cliniclink.com | password | Robert Martinez | Faculty member overseeing students in the program |
-| **Admin** | admin@cliniclink.com | password | Admin User | Platform administrator with full access to user management and system settings |
+You can log in with **email**, **username**, or **phone number**.
+
+| Role | Email | Username | Phone | Password | Name |
+|------|-------|----------|-------|----------|------|
+| **Student** | student@cliniclink.com | sarahchen | (305) 555-0101 | password | Sarah Chen |
+| **Preceptor** | preceptor@cliniclink.com | drwilson | (305) 555-0102 | password | James Wilson |
+| **Site Manager** | site@cliniclink.com | mariagarcia | (305) 555-0103 | password | Maria Garcia |
+| **Coordinator** | coordinator@cliniclink.com | lisathompson | (305) 555-0104 | password | Lisa Thompson |
+| **Professor** | professor@cliniclink.com | profmartinez | (305) 555-0105 | password | Robert Martinez |
+| **Admin** | admin@cliniclink.com | admin | (305) 555-0100 | password | Admin User |
 
 ---
 
 ## Additional Student Accounts
 
-| Email | Password | Name | University | Program |
-|-------|----------|------|-----------|---------|
-| emily.davis@fiu.edu | password | Emily Davis | Florida International University | MSN - Nurse Practitioner |
-| marcus.johnson@nova.edu | password | Marcus Johnson | Nova Southeastern University | PA - Physician Assistant |
-| jessica.rodriguez@ucf.edu | password | Jessica Rodriguez | University of Central Florida | DPT - Physical Therapy |
-| alex.kim@usf.edu | password | Alex Kim | University of South Florida | MSW - Social Work |
-| rachel.thompson@miami.edu | password | Rachel Thompson | University of Miami | BSN - Nursing |
+| Email | Username | Password | Name | University | Program |
+|-------|----------|----------|------|-----------|---------|
+| david.kim@fiu.edu | davidkim | password | David Kim | Florida International University | BSN - Nursing |
+| aisha.patel@nova.edu | aishapatel | password | Aisha Patel | Nova Southeastern University | MSW - Social Work |
+| marcus.johnson@ucf.edu | marcusjohnson | password | Marcus Johnson | University of Central Florida | NP - Pediatric |
+| emily.torres@usf.edu | emilytorres | password | Emily Torres | University of South Florida | BSN - Nursing |
 
 ---
 
 ## Additional Staff Accounts
 
-| Email | Password | Name | Role | Affiliation |
-|-------|----------|------|------|-------------|
-| david.park@stpete.com | password | David Park | Site Manager | St. Petersburg Medical Center, Palm Beach Urgent Care |
-| angela.brooks@mercy.com | password | Angela Brooks | Preceptor | Mercy General Hospital (ICU) |
-| michael.nguyen@coastal.com | password | Michael Nguyen | Preceptor | Coastal Rehabilitation Institute (PT) |
+| Email | Username | Password | Name | Role | Affiliation |
+|-------|----------|----------|------|------|-------------|
+| david.rodriguez@stpete-medical.com | davidrodriguez | password | David Rodriguez | Site Manager | St. Petersburg Medical Center, Palm Beach Urgent Care |
+| angela.brooks@mercy.com | angelabrooks | password | Angela Brooks | Preceptor | Mercy General Hospital (ICU) |
+| michael.nguyen@coastal.com | michaelnguyen | password | Michael Nguyen | Preceptor | Coastal Rehabilitation Institute (PT) |
 
 ---
 
@@ -71,12 +72,25 @@ All demo accounts use the password: `password`
 
 ## API Authentication
 
-### Login
+### Login (by email, username, or phone)
 ```bash
+# Login with email
 curl -X POST https://cliniclink-api-production.up.railway.app/api/auth/login \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
-  -d '{"email":"student@cliniclink.com","password":"password"}'
+  -d '{"login":"student@cliniclink.com","password":"password"}'
+
+# Login with username
+curl -X POST https://cliniclink-api-production.up.railway.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"login":"sarahchen","password":"password"}'
+
+# Login with phone
+curl -X POST https://cliniclink-api-production.up.railway.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"login":"(305) 555-0101","password":"password"}'
 ```
 
 ### Using the token

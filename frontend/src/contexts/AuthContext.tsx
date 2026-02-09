@@ -10,7 +10,7 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>
+  login: (loginId: string, password: string) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   demoLogin: (role: UserRole) => void
@@ -18,6 +18,7 @@ interface AuthContextType extends AuthState {
 
 interface RegisterData {
   email: string
+  username?: string
   password: string
   firstName: string
   lastName: string
@@ -30,6 +31,7 @@ function mapApiUser(u: ApiUser): User {
   return {
     id: u.id,
     email: u.email,
+    username: u.username || undefined,
     firstName: u.first_name,
     lastName: u.last_name,
     role: u.role as UserRole,
@@ -78,10 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (loginId: string, password: string) => {
     setState(s => ({ ...s, isLoading: true }))
     try {
-      const res = await authApi.login({ email, password })
+      const res = await authApi.login({ login: loginId, password })
       const user = mapApiUser(res.user)
       localStorage.setItem('cliniclink_token', res.token)
       localStorage.setItem('cliniclink_user', JSON.stringify(user))
@@ -99,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
+        username: data.username,
         password: data.password,
         password_confirmation: data.password,
         role: data.role,
@@ -134,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       admin: 'admin@cliniclink.com',
     }
     try {
-      const res = await authApi.login({ email: emailMap[role], password: 'password' })
+      const res = await authApi.login({ login: emailMap[role], password: 'password' })
       const user = mapApiUser(res.user)
       localStorage.setItem('cliniclink_token', res.token)
       localStorage.setItem('cliniclink_user', JSON.stringify(user))

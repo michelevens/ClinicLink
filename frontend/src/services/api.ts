@@ -77,10 +77,10 @@ export const api = new ApiClient(API_URL)
 
 // --- Auth ---
 export const authApi = {
-  register: (data: { first_name: string; last_name: string; email: string; password: string; password_confirmation: string; role: string }) =>
+  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string }) =>
     api.post<{ user: ApiUser; token: string }>('/auth/register', data),
 
-  login: (data: { email: string; password: string }) =>
+  login: (data: { login: string; password: string }) =>
     api.post<{ user: ApiUser; token: string }>('/auth/login', data),
 
   me: () => api.get<{ user: ApiUser }>('/auth/me'),
@@ -206,6 +206,7 @@ export const agreementsApi = {
 export interface ApiUser {
   id: string
   email: string
+  username: string | null
   first_name: string
   last_name: string
   role: string
