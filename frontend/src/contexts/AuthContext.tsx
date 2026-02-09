@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { User, UserRole } from '../types/index.ts'
+import { authApi, type ApiUser } from '../services/api.ts'
 
 interface AuthState {
   user: User | null
@@ -25,55 +26,26 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
+function mapApiUser(u: ApiUser): User {
+  return {
+    id: u.id,
+    email: u.email,
+    firstName: u.first_name,
+    lastName: u.last_name,
+    role: u.role as UserRole,
+    phone: u.phone || undefined,
+    avatar: u.avatar_url || undefined,
+    createdAt: u.created_at,
+  }
+}
+
 const DEMO_USERS: Record<UserRole, User> = {
-  student: {
-    id: 'demo-student-1',
-    email: 'student@cliniclink.com',
-    firstName: 'Sarah',
-    lastName: 'Chen',
-    role: 'student',
-    createdAt: new Date().toISOString(),
-  },
-  preceptor: {
-    id: 'demo-preceptor-1',
-    email: 'preceptor@cliniclink.com',
-    firstName: 'Dr. James',
-    lastName: 'Wilson',
-    role: 'preceptor',
-    createdAt: new Date().toISOString(),
-  },
-  site_manager: {
-    id: 'demo-site-1',
-    email: 'site@cliniclink.com',
-    firstName: 'Maria',
-    lastName: 'Garcia',
-    role: 'site_manager',
-    createdAt: new Date().toISOString(),
-  },
-  coordinator: {
-    id: 'demo-coord-1',
-    email: 'coordinator@cliniclink.com',
-    firstName: 'Dr. Lisa',
-    lastName: 'Thompson',
-    role: 'coordinator',
-    createdAt: new Date().toISOString(),
-  },
-  professor: {
-    id: 'demo-prof-1',
-    email: 'professor@cliniclink.com',
-    firstName: 'Prof. Robert',
-    lastName: 'Martinez',
-    role: 'professor',
-    createdAt: new Date().toISOString(),
-  },
-  admin: {
-    id: 'demo-admin-1',
-    email: 'admin@cliniclink.com',
-    firstName: 'Admin',
-    lastName: 'User',
-    role: 'admin',
-    createdAt: new Date().toISOString(),
-  },
+  student: { id: 'demo-student-1', email: 'student@cliniclink.com', firstName: 'Sarah', lastName: 'Chen', role: 'student', createdAt: new Date().toISOString() },
+  preceptor: { id: 'demo-preceptor-1', email: 'preceptor@cliniclink.com', firstName: 'Dr. James', lastName: 'Wilson', role: 'preceptor', createdAt: new Date().toISOString() },
+  site_manager: { id: 'demo-site-1', email: 'site@cliniclink.com', firstName: 'Maria', lastName: 'Garcia', role: 'site_manager', createdAt: new Date().toISOString() },
+  coordinator: { id: 'demo-coord-1', email: 'coordinator@cliniclink.com', firstName: 'Dr. Lisa', lastName: 'Thompson', role: 'coordinator', createdAt: new Date().toISOString() },
+  professor: { id: 'demo-prof-1', email: 'professor@cliniclink.com', firstName: 'Prof. Robert', lastName: 'Martinez', role: 'professor', createdAt: new Date().toISOString() },
+  admin: { id: 'demo-admin-1', email: 'admin@cliniclink.com', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString() },
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -91,51 +63,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { user: null, token: null, isAuthenticated: false, isLoading: false }
   })
 
-  const login = useCallback(async (email: string, _password: string) => {
+  // Verify token on mount (skip for demo tokens)
+  useEffect(() => {
+    if (state.token && !state.token.startsWith('demo-')) {
+      authApi.me().then(res => {
+        const user = mapApiUser(res.user)
+        localStorage.setItem('cliniclink_user', JSON.stringify(user))
+        setState(s => ({ ...s, user }))
+      }).catch(() => {
+        localStorage.removeItem('cliniclink_token')
+        localStorage.removeItem('cliniclink_user')
+        setState({ user: null, token: null, isAuthenticated: false, isLoading: false })
+      })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const login = useCallback(async (email: string, password: string) => {
     setState(s => ({ ...s, isLoading: true }))
-    // TODO: Replace with real API call
-    await new Promise(r => setTimeout(r, 800))
-    const role = email.includes('student') ? 'student' :
-                 email.includes('preceptor') ? 'preceptor' :
-                 email.includes('site') ? 'site_manager' :
-                 email.includes('coord') ? 'coordinator' :
-                 email.includes('prof') ? 'professor' : 'admin'
-    const user = DEMO_USERS[role as UserRole]
-    const token = 'demo-token-' + Date.now()
-    localStorage.setItem('cliniclink_token', token)
-    localStorage.setItem('cliniclink_user', JSON.stringify(user))
-    setState({ user, token, isAuthenticated: true, isLoading: false })
+    try {
+      const res = await authApi.login({ email, password })
+      const user = mapApiUser(res.user)
+      localStorage.setItem('cliniclink_token', res.token)
+      localStorage.setItem('cliniclink_user', JSON.stringify(user))
+      setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
+    } catch (err) {
+      setState(s => ({ ...s, isLoading: false }))
+      throw err
+    }
   }, [])
 
   const register = useCallback(async (data: RegisterData) => {
     setState(s => ({ ...s, isLoading: true }))
-    await new Promise(r => setTimeout(r, 800))
-    const user: User = {
-      id: 'user-' + Date.now(),
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      role: data.role,
-      createdAt: new Date().toISOString(),
+    try {
+      const res = await authApi.register({
+        first_name: data.firstName,
+        last_name: data.lastName,
+        email: data.email,
+        password: data.password,
+        password_confirmation: data.password,
+        role: data.role,
+      })
+      const user = mapApiUser(res.user)
+      localStorage.setItem('cliniclink_token', res.token)
+      localStorage.setItem('cliniclink_user', JSON.stringify(user))
+      setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
+    } catch (err) {
+      setState(s => ({ ...s, isLoading: false }))
+      throw err
     }
-    const token = 'demo-token-' + Date.now()
-    localStorage.setItem('cliniclink_token', token)
-    localStorage.setItem('cliniclink_user', JSON.stringify(user))
-    setState({ user, token, isAuthenticated: true, isLoading: false })
   }, [])
 
   const logout = useCallback(() => {
+    const token = localStorage.getItem('cliniclink_token')
     localStorage.removeItem('cliniclink_token')
     localStorage.removeItem('cliniclink_user')
     setState({ user: null, token: null, isAuthenticated: false, isLoading: false })
+    if (token && !token.startsWith('demo-')) {
+      authApi.logout().catch(() => {})
+    }
   }, [])
 
-  const demoLogin = useCallback((role: UserRole) => {
-    const user = DEMO_USERS[role]
-    const token = 'demo-token-' + Date.now()
-    localStorage.setItem('cliniclink_token', token)
-    localStorage.setItem('cliniclink_user', JSON.stringify(user))
-    setState({ user, token, isAuthenticated: true, isLoading: false })
+  const demoLogin = useCallback(async (role: UserRole) => {
+    setState(s => ({ ...s, isLoading: true }))
+    const emailMap: Record<UserRole, string> = {
+      student: 'student@cliniclink.com',
+      preceptor: 'preceptor@cliniclink.com',
+      site_manager: 'site@cliniclink.com',
+      coordinator: 'coordinator@cliniclink.com',
+      professor: 'professor@cliniclink.com',
+      admin: 'admin@cliniclink.com',
+    }
+    try {
+      const res = await authApi.login({ email: emailMap[role], password: 'password' })
+      const user = mapApiUser(res.user)
+      localStorage.setItem('cliniclink_token', res.token)
+      localStorage.setItem('cliniclink_user', JSON.stringify(user))
+      setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
+    } catch {
+      // Fallback to demo mode if API is unreachable
+      const user = DEMO_USERS[role]
+      const token = 'demo-token-' + Date.now()
+      localStorage.setItem('cliniclink_token', token)
+      localStorage.setItem('cliniclink_user', JSON.stringify(user))
+      setState({ user, token, isAuthenticated: true, isLoading: false })
+    }
   }, [])
 
   return (

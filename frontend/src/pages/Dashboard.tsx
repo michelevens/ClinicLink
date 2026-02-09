@@ -3,18 +3,36 @@ import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { useNavigate } from 'react-router-dom'
-import { MOCK_APPLICATIONS, MOCK_HOURS, MOCK_SLOTS } from '../data/mockData.ts'
+import { useDashboardStats, useApplications, useHourLogs } from '../hooks/useApi.ts'
 import {
   Search, Clock, FileText, CheckCircle, AlertCircle,
   Building2, Users, CalendarDays, TrendingUp, Star,
-  GraduationCap, ClipboardCheck, BarChart3, BookOpen
+  GraduationCap, ClipboardCheck, BarChart3, BookOpen, Loader2
 } from 'lucide-react'
+
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+    </div>
+  )
+}
 
 function StudentDashboard() {
   const navigate = useNavigate()
-  const totalHours = MOCK_HOURS.reduce((sum, h) => sum + h.hoursWorked, 0)
-  const approvedHours = MOCK_HOURS.filter(h => h.status === 'approved').reduce((sum, h) => sum + h.hoursWorked, 0)
-  const requiredHours = 500
+  const { data: stats, isLoading: statsLoading } = useDashboardStats()
+  const { data: appsData } = useApplications()
+  const { data: hoursData } = useHourLogs()
+
+  const applications = appsData?.applications || []
+  const hours = hoursData?.hour_logs || []
+
+  const totalHours = hours.reduce((sum, h) => sum + h.hours_worked, 0)
+  const approvedHours = hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + h.hours_worked, 0)
+  const requiredHours = stats?.hours_required || 500
+  const pendingCount = hours.filter(h => h.status === 'pending').length
+
+  if (statsLoading) return <LoadingSpinner />
 
   return (
     <div className="space-y-6">
@@ -23,29 +41,45 @@ function StudentDashboard() {
         <p className="text-stone-500">Track your clinical rotation progress</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Hours Completed', value: `${approvedHours}/${requiredHours}`, icon: <Clock className="w-5 h-5" />, color: 'primary' },
-          { label: 'Applications', value: MOCK_APPLICATIONS.length, icon: <FileText className="w-5 h-5" />, color: 'secondary' },
-          { label: 'Active Rotations', value: MOCK_APPLICATIONS.filter(a => a.status === 'accepted').length, icon: <CheckCircle className="w-5 h-5" />, color: 'green' },
-          { label: 'Pending Review', value: MOCK_HOURS.filter(h => h.status === 'pending').length, icon: <AlertCircle className="w-5 h-5" />, color: 'amber' },
-        ].map(stat => (
-          <Card key={stat.label}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                <p className="text-xs text-stone-500">{stat.label}</p>
-              </div>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center"><Clock className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{approvedHours}/{requiredHours}</p>
+              <p className="text-xs text-stone-500">Hours Completed</p>
             </div>
-          </Card>
-        ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 text-secondary-600 flex items-center justify-center"><FileText className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.applications_count || applications.length}</p>
+              <p className="text-xs text-stone-500">Applications</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><CheckCircle className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.active_rotations || applications.filter(a => a.status === 'accepted').length}</p>
+              <p className="text-xs text-stone-500">Active Rotations</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><AlertCircle className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{pendingCount}</p>
+              <p className="text-xs text-stone-500">Pending Review</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Progress Bar */}
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-stone-900">Clinical Hours Progress</h3>
@@ -64,7 +98,6 @@ function StudentDashboard() {
         </div>
       </Card>
 
-      {/* Quick Actions + Recent Applications */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <h3 className="font-semibold text-stone-900 mb-4">Quick Actions</h3>
@@ -84,10 +117,11 @@ function StudentDashboard() {
         <Card>
           <h3 className="font-semibold text-stone-900 mb-4">Recent Applications</h3>
           <div className="space-y-3">
-            {MOCK_APPLICATIONS.map(app => (
+            {applications.length === 0 && <p className="text-sm text-stone-400">No applications yet. Search for rotations to get started!</p>}
+            {applications.slice(0, 4).map(app => (
               <div key={app.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
                 <div>
-                  <p className="text-sm font-medium text-stone-900">{app.slot?.title}</p>
+                  <p className="text-sm font-medium text-stone-900">{app.slot?.title || 'Rotation'}</p>
                   <p className="text-xs text-stone-500">{app.slot?.site?.name}</p>
                 </div>
                 <Badge variant={app.status === 'accepted' ? 'success' : app.status === 'pending' ? 'warning' : 'default'}>
@@ -103,8 +137,13 @@ function StudentDashboard() {
 }
 
 function SiteManagerDashboard() {
-  const siteSlots = MOCK_SLOTS.filter(s => s.siteId === 'site-1')
   const navigate = useNavigate()
+  const { data: stats, isLoading } = useDashboardStats()
+  const { data: appsData } = useApplications()
+
+  const pendingApps = (appsData?.applications || []).filter(a => a.status === 'pending')
+
+  if (isLoading) return <LoadingSpinner />
 
   return (
     <div className="space-y-6">
@@ -114,64 +153,71 @@ function SiteManagerDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Open Slots', value: siteSlots.filter(s => s.status === 'open').length, icon: <CalendarDays className="w-5 h-5" />, color: 'primary' },
-          { label: 'Total Applications', value: 12, icon: <FileText className="w-5 h-5" />, color: 'secondary' },
-          { label: 'Active Students', value: 5, icon: <Users className="w-5 h-5" />, color: 'green' },
-          { label: 'Site Rating', value: '4.8', icon: <Star className="w-5 h-5" />, color: 'amber' },
-        ].map(stat => (
-          <Card key={stat.label}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                <p className="text-xs text-stone-500">{stat.label}</p>
-              </div>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center"><CalendarDays className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.open_slots || 0}</p>
+              <p className="text-xs text-stone-500">Open Slots</p>
             </div>
-          </Card>
-        ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 text-secondary-600 flex items-center justify-center"><FileText className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.pending_applications || 0}</p>
+              <p className="text-xs text-stone-500">Pending Applications</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><Users className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.active_students || 0}</p>
+              <p className="text-xs text-stone-500">Active Students</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><Star className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_sites || 0}</p>
+              <p className="text-xs text-stone-500">My Sites</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
-          <h3 className="font-semibold text-stone-900 mb-4">Your Rotation Slots</h3>
-          <div className="space-y-3">
-            {siteSlots.map(slot => (
-              <div key={slot.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
-                <div>
-                  <p className="text-sm font-medium text-stone-900">{slot.title}</p>
-                  <p className="text-xs text-stone-500">{slot.filled}/{slot.capacity} filled</p>
-                </div>
-                <Badge variant={slot.status === 'open' ? 'success' : slot.status === 'filled' ? 'warning' : 'default'}>
-                  {slot.status}
-                </Badge>
-              </div>
-            ))}
+          <h3 className="font-semibold text-stone-900 mb-4">Quick Actions</h3>
+          <div className="space-y-2">
+            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/slots')}>
+              <CalendarDays className="w-4 h-4" /> Manage Rotation Slots
+            </Button>
+            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/site-applications')}>
+              <FileText className="w-4 h-4" /> Review Applications
+            </Button>
+            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/site')}>
+              <Building2 className="w-4 h-4" /> Manage My Sites
+            </Button>
           </div>
-          <Button variant="outline" className="w-full mt-4" onClick={() => navigate('/slots')}>
-            Manage Slots
-          </Button>
         </Card>
 
         <Card>
           <h3 className="font-semibold text-stone-900 mb-4">Pending Applications</h3>
           <div className="space-y-3">
-            {[
-              { name: 'Sarah Chen', program: 'MSN - FNP', date: 'Feb 1' },
-              { name: 'Mike Torres', program: 'BSN', date: 'Feb 3' },
-              { name: 'Aisha Patel', program: 'DNP', date: 'Feb 5' },
-            ].map(app => (
-              <div key={app.name} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-stone-50 rounded-xl gap-2">
+            {pendingApps.length === 0 && <p className="text-sm text-stone-400">No pending applications</p>}
+            {pendingApps.slice(0, 4).map(app => (
+              <div key={app.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-stone-50 rounded-xl gap-2">
                 <div>
-                  <p className="text-sm font-medium text-stone-900">{app.name}</p>
-                  <p className="text-xs text-stone-500">{app.program} - Applied {app.date}</p>
+                  <p className="text-sm font-medium text-stone-900">{app.student?.first_name} {app.student?.last_name}</p>
+                  <p className="text-xs text-stone-500">{app.slot?.title}</p>
                 </div>
-                <div className="flex gap-1.5">
-                  <Button size="sm" variant="primary">Accept</Button>
-                  <Button size="sm" variant="ghost">Review</Button>
-                </div>
+                <Badge variant="warning">Pending</Badge>
               </div>
             ))}
           </div>
@@ -182,6 +228,10 @@ function SiteManagerDashboard() {
 }
 
 function CoordinatorDashboard() {
+  const { data: stats, isLoading } = useDashboardStats()
+
+  if (isLoading) return <LoadingSpinner />
+
   return (
     <div className="space-y-6">
       <div>
@@ -190,68 +240,40 @@ function CoordinatorDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Students', value: 156, icon: <GraduationCap className="w-5 h-5" />, color: 'primary' },
-          { label: 'Placed', value: 128, icon: <CheckCircle className="w-5 h-5" />, color: 'green' },
-          { label: 'Unplaced', value: 28, icon: <AlertCircle className="w-5 h-5" />, color: 'amber' },
-          { label: 'Placement Rate', value: '82%', icon: <TrendingUp className="w-5 h-5" />, color: 'secondary' },
-        ].map(stat => (
-          <Card key={stat.label}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                <p className="text-xs text-stone-500">{stat.label}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
         <Card>
-          <h3 className="font-semibold text-stone-900 mb-4">Placement Status by Program</h3>
-          {[
-            { program: 'BSN', placed: 45, total: 52, color: 'primary' },
-            { program: 'MSN - FNP', placed: 32, total: 38, color: 'secondary' },
-            { program: 'DNP', placed: 22, total: 28, color: 'accent' },
-            { program: 'DPT', placed: 18, total: 22, color: 'green' },
-            { program: 'MSW', placed: 11, total: 16, color: 'purple' },
-          ].map(p => (
-            <div key={p.program} className="mb-4">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-stone-700">{p.program}</span>
-                <span className="text-stone-500">{p.placed}/{p.total}</span>
-              </div>
-              <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                <div className={`h-full bg-${p.color}-500 rounded-full`} style={{ width: `${(p.placed / p.total) * 100}%` }} />
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center"><GraduationCap className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_students || 0}</p>
+              <p className="text-xs text-stone-500">Total Students</p>
             </div>
-          ))}
+          </div>
         </Card>
-
         <Card>
-          <h3 className="font-semibold text-stone-900 mb-4">Recent Activity</h3>
-          <div className="space-y-3">
-            {[
-              { text: 'Sarah Chen placed at Mercy General (ED)', time: '2 hours ago', type: 'success' },
-              { text: 'New affiliation agreement with Sunshine FHC', time: '5 hours ago', type: 'info' },
-              { text: 'Mike Torres - BLS certification expiring in 14 days', time: '1 day ago', type: 'warning' },
-              { text: '3 new rotation slots posted by Children\'s Wellness', time: '2 days ago', type: 'info' },
-            ].map((activity, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 bg-stone-50 rounded-xl">
-                <div className={`w-2 h-2 rounded-full mt-1.5 ${
-                  activity.type === 'success' ? 'bg-green-500' :
-                  activity.type === 'warning' ? 'bg-amber-500' : 'bg-primary-500'
-                }`} />
-                <div>
-                  <p className="text-sm text-stone-700">{activity.text}</p>
-                  <p className="text-xs text-stone-400">{activity.time}</p>
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><CheckCircle className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.active_placements || 0}</p>
+              <p className="text-xs text-stone-500">Active Placements</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><AlertCircle className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.pending_applications || 0}</p>
+              <p className="text-xs text-stone-500">Pending Apps</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 text-secondary-600 flex items-center justify-center"><TrendingUp className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.available_slots || 0}</p>
+              <p className="text-xs text-stone-500">Available Slots</p>
+            </div>
           </div>
         </Card>
       </div>
@@ -260,6 +282,10 @@ function CoordinatorDashboard() {
 }
 
 function PreceptorDashboard() {
+  const { data: stats, isLoading } = useDashboardStats()
+
+  if (isLoading) return <LoadingSpinner />
+
   return (
     <div className="space-y-6">
       <div>
@@ -268,54 +294,52 @@ function PreceptorDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Current Students', value: 3, icon: <Users className="w-5 h-5" />, color: 'primary' },
-          { label: 'Hours to Review', value: 12, icon: <Clock className="w-5 h-5" />, color: 'amber' },
-          { label: 'Evaluations Due', value: 2, icon: <ClipboardCheck className="w-5 h-5" />, color: 'secondary' },
-          { label: 'Your Rating', value: '4.9', icon: <Star className="w-5 h-5" />, color: 'accent' },
-        ].map(stat => (
-          <Card key={stat.label}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                <p className="text-xs text-stone-500">{stat.label}</p>
-              </div>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center"><Users className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.active_students || 0}</p>
+              <p className="text-xs text-stone-500">Current Students</p>
             </div>
-          </Card>
-        ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><Clock className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.pending_hour_reviews || 0}</p>
+              <p className="text-xs text-stone-500">Hours to Review</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 text-secondary-600 flex items-center justify-center"><ClipboardCheck className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.pending_evaluations || 0}</p>
+              <p className="text-xs text-stone-500">Evaluations Due</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent-50 text-accent-600 flex items-center justify-center"><Star className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_slots || 0}</p>
+              <p className="text-xs text-stone-500">My Slots</p>
+            </div>
+          </div>
+        </Card>
       </div>
-
-      <Card>
-        <h3 className="font-semibold text-stone-900 mb-4">Your Students</h3>
-        <div className="space-y-3">
-          {[
-            { name: 'Sarah Chen', program: 'MSN-FNP', hours: '34/160', status: 'On Track' },
-            { name: 'David Kim', program: 'BSN', hours: '92/240', status: 'On Track' },
-            { name: 'Maria Lopez', program: 'DNP', hours: '12/500', status: 'Just Started' },
-          ].map(student => (
-            <div key={student.name} className="flex items-center justify-between p-4 bg-stone-50 rounded-xl">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-semibold text-sm">
-                  {student.name.split(' ').map(n => n[0]).join('')}
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-stone-900">{student.name}</p>
-                  <p className="text-xs text-stone-500">{student.program} - {student.hours} hours</p>
-                </div>
-              </div>
-              <Badge variant="success">{student.status}</Badge>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   )
 }
 
 function AdminDashboard() {
+  const { data: stats, isLoading } = useDashboardStats()
+
+  if (isLoading) return <LoadingSpinner />
+
   return (
     <div className="space-y-6">
       <div>
@@ -324,24 +348,42 @@ function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Users', value: '2,456', icon: <Users className="w-5 h-5" />, color: 'primary' },
-          { label: 'Active Sites', value: 187, icon: <Building2 className="w-5 h-5" />, color: 'secondary' },
-          { label: 'Universities', value: 45, icon: <BookOpen className="w-5 h-5" />, color: 'accent' },
-          { label: 'Placements/Month', value: 342, icon: <BarChart3 className="w-5 h-5" />, color: 'green' },
-        ].map(stat => (
-          <Card key={stat.label}>
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center`}>
-                {stat.icon}
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-stone-900">{stat.value}</p>
-                <p className="text-xs text-stone-500">{stat.label}</p>
-              </div>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center"><Users className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_users || 0}</p>
+              <p className="text-xs text-stone-500">Total Users</p>
             </div>
-          </Card>
-        ))}
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 text-secondary-600 flex items-center justify-center"><Building2 className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_sites || 0}</p>
+              <p className="text-xs text-stone-500">Active Sites</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent-50 text-accent-600 flex items-center justify-center"><BookOpen className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_universities || 0}</p>
+              <p className="text-xs text-stone-500">Universities</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center"><BarChart3 className="w-5 h-5" /></div>
+            <div>
+              <p className="text-2xl font-bold text-stone-900">{stats?.total_slots || 0}</p>
+              <p className="text-xs text-stone-500">Total Slots</p>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   )

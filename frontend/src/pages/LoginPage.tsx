@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Stethoscope, Mail, Lock } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -14,8 +15,13 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await login(email, password)
-    navigate('/dashboard')
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.'
+      toast.error(message)
+    }
   }
 
   return (
@@ -68,7 +74,7 @@ export function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-stone-400 mt-6">
-          Demo: Use any email containing "student", "site", "preceptor", "coord", or "prof"
+          Demo: student@cliniclink.com / password (or any demo role email)
         </p>
       </div>
     </div>

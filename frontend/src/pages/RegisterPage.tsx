@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Stethoscope, Mail, Lock, User } from 'lucide-react'
+import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
 
 const ROLE_OPTIONS: { value: UserRole; label: string; desc: string }[] = [
@@ -22,8 +23,14 @@ export function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await register(form)
-    navigate('/dashboard')
+    try {
+      await register(form)
+      toast.success('Account created successfully!')
+      navigate('/onboarding')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
+      toast.error(message)
+    }
   }
 
   return (
@@ -49,7 +56,7 @@ export function RegisterPage() {
               <Input label="Last Name" placeholder="Chen" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required />
             </div>
             <Input label="Email" type="email" placeholder="you@university.edu" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} icon={<Mail className="w-4 h-4" />} required />
-            <Input label="Password" type="password" placeholder="Create a password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} icon={<Lock className="w-4 h-4" />} required />
+            <Input label="Password" type="password" placeholder="Create a password (min 8 chars)" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} icon={<Lock className="w-4 h-4" />} required />
 
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-stone-700">I am a...</label>

@@ -8,6 +8,11 @@ import { Dashboard } from './pages/Dashboard.tsx'
 import { RotationSearch } from './pages/RotationSearch.tsx'
 import { Applications } from './pages/Applications.tsx'
 import { HourLog } from './pages/HourLog.tsx'
+import { Onboarding } from './pages/Onboarding.tsx'
+import { Settings } from './pages/Settings.tsx'
+import { SlotManagement } from './pages/SlotManagement.tsx'
+import { SiteApplications } from './pages/SiteApplications.tsx'
+import { Evaluations } from './pages/Evaluations.tsx'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -20,6 +25,12 @@ function PublicRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
   return <>{children}</>
+}
+
+function OnboardingRoute() {
+  const { isAuthenticated } = useAuth()
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  return <Onboarding />
 }
 
 function ComingSoon({ title }: { title: string }) {
@@ -44,21 +55,24 @@ export default function App() {
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
+      {/* Onboarding (full-screen, no sidebar) */}
+      <Route path="/onboarding" element={<OnboardingRoute />} />
+
       {/* Protected */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/rotations" element={<ProtectedRoute><RotationSearch /></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute><Applications /></ProtectedRoute>} />
       <Route path="/hours" element={<ProtectedRoute><HourLog /></ProtectedRoute>} />
-      <Route path="/evaluations" element={<ProtectedRoute><ComingSoon title="Evaluations" /></ProtectedRoute>} />
+      <Route path="/evaluations" element={<ProtectedRoute><Evaluations /></ProtectedRoute>} />
+      <Route path="/slots" element={<ProtectedRoute><SlotManagement /></ProtectedRoute>} />
+      <Route path="/site-applications" element={<ProtectedRoute><SiteApplications /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/site" element={<ProtectedRoute><ComingSoon title="My Site" /></ProtectedRoute>} />
-      <Route path="/slots" element={<ProtectedRoute><ComingSoon title="Rotation Slots" /></ProtectedRoute>} />
-      <Route path="/site-applications" element={<ProtectedRoute><ComingSoon title="Site Applications" /></ProtectedRoute>} />
       <Route path="/students" element={<ProtectedRoute><ComingSoon title="My Students" /></ProtectedRoute>} />
       <Route path="/programs" element={<ProtectedRoute><ComingSoon title="Programs" /></ProtectedRoute>} />
       <Route path="/placements" element={<ProtectedRoute><ComingSoon title="Placements" /></ProtectedRoute>} />
       <Route path="/sites" element={<ProtectedRoute><ComingSoon title="Sites Directory" /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute><ComingSoon title="User Management" /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><ComingSoon title="Settings" /></ProtectedRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
