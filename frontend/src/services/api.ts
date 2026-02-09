@@ -173,9 +173,43 @@ export const studentApi = {
   deleteCredential: (id: string) => api.delete(`/student/credentials/${id}`),
 }
 
+// --- My Students ---
+export interface ApiMyStudent {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  university: string | null
+  program: string | null
+  degree_type: string | null
+  graduation_date: string | null
+  gpa: number | null
+  hours_completed: number
+  hours_required: number
+  pending_hours: number
+  bio: string | null
+  clinical_interests: string[]
+}
+
+export const myStudentsApi = {
+  list: () => api.get<{ students: ApiMyStudent[] }>('/my-students'),
+}
+
 // --- Dashboard ---
 export const dashboardApi = {
   stats: () => api.get<ApiDashboardStats>('/dashboard/stats'),
+}
+
+// --- Certificates ---
+export const certificatesApi = {
+  list: () => api.get<{ certificates: ApiCertificate[] }>('/certificates'),
+  get: (id: string) => api.get<{ certificate: ApiCertificate }>(`/certificates/${id}`),
+  create: (data: { student_id: string; slot_id: string; title: string }) =>
+    api.post<{ certificate: ApiCertificate }>('/certificates', data),
+  eligibility: (slotId: string, studentId: string) =>
+    api.get<CertificateEligibility>(`/certificates/eligibility/${slotId}/${studentId}`),
+  revoke: (id: string, data: { reason: string }) =>
+    api.put<{ certificate: ApiCertificate }>(`/certificates/${id}/revoke`, data),
 }
 
 // --- Universities ---
@@ -200,6 +234,20 @@ export const agreementsApi = {
     api.post<{ agreement: ApiAgreement }>('/agreements', data),
   update: (id: string, data: Partial<ApiAgreement>) =>
     api.put<{ agreement: ApiAgreement }>(`/agreements/${id}`, data),
+}
+
+// --- Admin ---
+export const adminApi = {
+  users: (params?: { search?: string; role?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.search) qs.set('search', params.search)
+    if (params?.role) qs.set('role', params.role)
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiUser>>(`/admin/users?${qs}`)
+  },
+  updateUser: (id: string, data: { role?: string; is_active?: boolean }) =>
+    api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
+  deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
 }
 
 // --- API Types (match Laravel snake_case) ---
@@ -309,6 +357,7 @@ export interface ApiHourLog {
   created_at: string
   slot?: ApiSlot
   approver?: ApiUser
+  student?: ApiUser
 }
 
 export interface ApiEvaluation {
@@ -373,6 +422,34 @@ export interface ApiAgreement {
   notes: string | null
   university?: ApiUniversity
   site?: ApiSite
+}
+
+export interface ApiCertificate {
+  id: string
+  student_id: string
+  slot_id: string
+  issued_by: string
+  certificate_number: string
+  title: string
+  total_hours: number
+  overall_score: number | null
+  status: 'issued' | 'revoked'
+  issued_date: string
+  revoked_date: string | null
+  revocation_reason: string | null
+  created_at: string
+  student?: ApiUser
+  slot?: ApiSlot
+  issuer?: ApiUser
+}
+
+export interface CertificateEligibility {
+  eligible: boolean
+  has_application: boolean
+  total_approved_hours: number
+  pending_hours: number
+  has_evaluation: boolean
+  has_certificate: boolean
 }
 
 export interface ApiDashboardStats {

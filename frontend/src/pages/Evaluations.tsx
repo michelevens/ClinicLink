@@ -5,11 +5,10 @@ import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { useEvaluations, useCreateEvaluation, useApplications } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import type { ApiEvaluation } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
   Star, Plus, ClipboardCheck, User, Calendar,
-  Building2, Loader2, FileText, ChevronDown, ChevronUp,
+  Building2, Loader2, ChevronDown, ChevronUp,
   TrendingUp, Award, BarChart3, MessageSquare, Filter
 } from 'lucide-react'
 
@@ -34,7 +33,7 @@ export function Evaluations() {
   const [viewTab, setViewTab] = useState<ViewTab>('list')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [form, setForm] = useState({
-    type: 'student_feedback' as 'mid_rotation' | 'final' | 'student_feedback',
+    type: (user?.role === 'preceptor' ? 'mid_rotation' : 'student_feedback') as 'mid_rotation' | 'final' | 'student_feedback',
     student_id: '',
     slot_id: '',
     ratings: {} as Record<string, number>,
@@ -101,6 +100,10 @@ export function Evaluations() {
       toast.error('Please select a rotation')
       return
     }
+    if (isPreceptor && !form.student_id) {
+      toast.error('Please select a student')
+      return
+    }
     if (Object.keys(form.ratings).length < 3) {
       toast.error('Please rate at least 3 categories')
       return
@@ -124,7 +127,7 @@ export function Evaluations() {
       toast.success('Evaluation submitted successfully')
       setShowCreate(false)
       setForm({
-        type: 'student_feedback',
+        type: isPreceptor ? 'mid_rotation' : 'student_feedback',
         student_id: '',
         slot_id: '',
         ratings: {},
@@ -557,28 +560,68 @@ export function Evaluations() {
                 >
                   <option value="mid_rotation">Mid-Rotation</option>
                   <option value="final">Final</option>
-                  <option value="student_feedback">Student Feedback</option>
                 </select>
               </div>
             )}
-            <div className={`space-y-1.5 ${isStudent ? 'sm:col-span-2' : ''}`}>
-              <label className="block text-sm font-medium text-stone-700">Rotation *</label>
-              <select
-                value={form.slot_id}
-                onChange={e => {
-                  const app = acceptedApps.find(a => a.slot_id === e.target.value)
-                  setForm({ ...form, slot_id: e.target.value, student_id: app?.student_id || '' })
-                }}
-                className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-              >
-                <option value="">Select rotation...</option>
-                {acceptedApps.map(app => (
-                  <option key={app.id} value={app.slot_id}>
-                    {app.slot?.title || 'Rotation'} - {app.slot?.site?.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {isPreceptor ? (
+              <>
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-stone-700">Rotation *</label>
+                  <select
+                    value={form.slot_id}
+                    onChange={e => setForm({ ...form, slot_id: e.target.value, student_id: '' })}
+                    className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                  >
+                    <option value="">Select rotation...</option>
+                    {[...new Map(acceptedApps.map(a => [a.slot_id, a])).values()].map(app => (
+                      <option key={app.slot_id} value={app.slot_id}>
+                        {app.slot?.title || 'Rotation'} - {app.slot?.site?.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <label className="block text-sm font-medium text-stone-700">Student *</label>
+                  <select
+                    value={form.student_id}
+                    onChange={e => setForm({ ...form, student_id: e.target.value })}
+                    className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                    disabled={!form.slot_id}
+                  >
+                    <option value="">{form.slot_id ? 'Select student...' : 'Select a rotation first'}</option>
+                    {acceptedApps
+                      .filter(a => a.slot_id === form.slot_id)
+                      .map(app => (
+                        <option key={app.student_id} value={app.student_id}>
+                          {app.student?.first_name} {app.student?.last_name}
+                        </option>
+                      ))}
+                  </select>
+                  {form.slot_id && acceptedApps.filter(a => a.slot_id === form.slot_id).length === 0 && (
+                    <p className="text-xs text-amber-600">No accepted students for this rotation.</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className={`space-y-1.5 ${isStudent ? 'sm:col-span-2' : ''}`}>
+                <label className="block text-sm font-medium text-stone-700">Rotation *</label>
+                <select
+                  value={form.slot_id}
+                  onChange={e => {
+                    const app = acceptedApps.find(a => a.slot_id === e.target.value)
+                    setForm({ ...form, slot_id: e.target.value, student_id: app?.student_id || '' })
+                  }}
+                  className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                >
+                  <option value="">Select rotation...</option>
+                  {acceptedApps.map(app => (
+                    <option key={app.id} value={app.slot_id}>
+                      {app.slot?.title || 'Rotation'} - {app.slot?.site?.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Ratings */}

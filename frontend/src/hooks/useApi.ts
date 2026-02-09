@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
-  evaluationsApi, studentApi, sitesApi,
+  evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -204,6 +204,49 @@ export function useUpdateEvaluation() {
   })
 }
 
+// --- Certificates ---
+export function useCertificates() {
+  return useQuery({
+    queryKey: ['certificates'],
+    queryFn: () => certificatesApi.list(),
+  })
+}
+
+export function useCreateCertificate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: certificatesApi.create,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['certificates'] })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
+  })
+}
+
+export function useCertificateEligibility(slotId: string, studentId: string) {
+  return useQuery({
+    queryKey: ['certificate-eligibility', slotId, studentId],
+    queryFn: () => certificatesApi.eligibility(slotId, studentId),
+    enabled: !!slotId && !!studentId,
+  })
+}
+
+export function useRevokeCertificate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { reason: string } }) => certificatesApi.revoke(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['certificates'] }) },
+  })
+}
+
+// --- My Students ---
+export function useMyStudents() {
+  return useQuery({
+    queryKey: ['my-students'],
+    queryFn: () => myStudentsApi.list(),
+  })
+}
+
 // --- Student Profile ---
 export function useStudentProfile() {
   return useQuery({
@@ -240,5 +283,29 @@ export function useDeleteCredential() {
   return useMutation({
     mutationFn: studentApi.deleteCredential,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['credentials'] }) },
+  })
+}
+
+// --- Admin ---
+export function useAdminUsers(params?: { search?: string; role?: string; page?: number }) {
+  return useQuery({
+    queryKey: ['admin-users', params],
+    queryFn: () => adminApi.users(params),
+  })
+}
+
+export function useUpdateUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof adminApi.updateUser>[1] }) => adminApi.updateUser(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
+  })
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.deleteUser,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
   })
 }

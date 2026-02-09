@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck,
   Building2, Users, CalendarDays, BookOpen, Settings,
-  GraduationCap, Stethoscope, LogOut, Menu, X
+  GraduationCap, Stethoscope, LogOut, Menu, X, Award
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
@@ -21,6 +21,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'My Applications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'] },
   { label: 'Hour Log', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'] },
   { label: 'Evaluations', path: '/evaluations', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['student', 'preceptor'] },
+  { label: 'Certificates', path: '/certificates', icon: <Award className="w-5 h-5" />, roles: ['student', 'preceptor', 'coordinator', 'admin'] },
   { label: 'My Site', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'] },
   { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager'] },
   { label: 'Applications', path: '/site-applications', icon: <FileText className="w-5 h-5" />, roles: ['site_manager'] },

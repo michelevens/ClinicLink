@@ -12,6 +12,7 @@ use App\Models\Credential;
 use App\Models\Application;
 use App\Models\HourLog;
 use App\Models\Evaluation;
+use App\Models\Certificate;
 use App\Models\AffiliationAgreement;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -875,6 +876,36 @@ class DatabaseSeeder extends Seeder
             'strengths' => 'Strong work ethic, excellent patient rapport, reliable and punctual',
             'areas_for_improvement' => 'Needs more confidence in clinical decision-making. Should review cardiac rhythms and ventilator modes.',
             'is_submitted' => true,
+        ]);
+
+        // =========================================
+        // CERTIFICATES
+        // =========================================
+
+        // Certificate for student3 (Aisha) at MSW Field Practicum - she has accepted app, approved hours, and mid-rotation evaluation
+        Certificate::create([
+            'student_id' => $student3->id,
+            'slot_id' => $slotMSW->id,
+            'issued_by' => $demoPreceptor->id,
+            'certificate_number' => 'CL-ABCD-2026-0001',
+            'title' => 'MSW Field Practicum - Behavioral Health Completion',
+            'total_hours' => 8.0,
+            'overall_score' => 4.1,
+            'status' => 'issued',
+            'issued_date' => '2026-02-08',
+        ]);
+
+        // Certificate for student2 (David) at ICU - has accepted app, approved hours, and mid-rotation evaluation
+        Certificate::create([
+            'student_id' => $student2->id,
+            'slot_id' => $slotICU->id,
+            'issued_by' => $preceptor2->id,
+            'certificate_number' => 'CL-EFGH-2026-0002',
+            'title' => 'Critical Care Unit - BSN Clinical Completion',
+            'total_hours' => 12.0,
+            'overall_score' => 3.7,
+            'status' => 'issued',
+            'issued_date' => '2026-02-09',
         ]);
 
         // =========================================

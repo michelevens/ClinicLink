@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HourLogController;
@@ -77,6 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/evaluations', [EvaluationController::class, 'store']);
     Route::put('/evaluations/{evaluation}', [EvaluationController::class, 'update']);
 
+    // My Students (preceptor, coordinator, professor, admin)
+    Route::get('/my-students', [StudentController::class, 'myStudents']);
+
     // Student Profile & Credentials
     Route::get('/student/profile', [StudentController::class, 'profile']);
     Route::put('/student/profile', [StudentController::class, 'updateProfile']);
@@ -84,6 +89,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/student/credentials', [StudentController::class, 'storeCredential']);
     Route::put('/student/credentials/{credential}', [StudentController::class, 'updateCredential']);
     Route::delete('/student/credentials/{credential}', [StudentController::class, 'deleteCredential']);
+
+    // Certificates
+    Route::get('/certificates', [CertificateController::class, 'index']);
+    Route::get('/certificates/{certificate}', [CertificateController::class, 'show']);
+    Route::post('/certificates', [CertificateController::class, 'store']);
+    Route::get('/certificates/eligibility/{slot}/{student}', [CertificateController::class, 'eligibility']);
+    Route::put('/certificates/{certificate}/revoke', [CertificateController::class, 'revoke']);
+
+    // Admin
+    Route::get('/admin/users', [AdminController::class, 'users']);
+    Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
+    Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
 
     // Affiliation Agreements
     Route::get('/agreements', [UniversityController::class, 'agreements']);
