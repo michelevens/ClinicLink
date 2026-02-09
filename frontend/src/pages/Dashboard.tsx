@@ -97,7 +97,7 @@ function StudentDashboard() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.first_name || 'Student'}!</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Student'}!</h1>
         <p className="text-stone-500">Track your clinical rotation progress and manage your placements.</p>
       </div>
 
@@ -258,7 +258,7 @@ function SiteManagerDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.first_name || 'Manager'}!</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Manager'}!</h1>
         <p className="text-stone-500">Manage your clinical sites, rotation slots, and student placements.</p>
       </div>
 
@@ -388,7 +388,7 @@ function PreceptorDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.first_name || 'Preceptor'}!</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Preceptor'}!</h1>
         <p className="text-stone-500">Manage your students, review hours, and complete evaluations.</p>
       </div>
 
@@ -515,7 +515,7 @@ function CoordinatorDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.first_name || 'Coordinator'}!</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Coordinator'}!</h1>
         <p className="text-stone-500">Monitor student placements, program compliance, and site partnerships.</p>
       </div>
 
@@ -622,7 +622,7 @@ function ProfessorDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.first_name || 'Professor'}!</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Professor'}!</h1>
         <p className="text-stone-500">Monitor your students' clinical progress, evaluations, and placements.</p>
       </div>
 
@@ -730,7 +730,7 @@ function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-900">Welcome, {user?.first_name || 'Admin'}!</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome, {user?.firstName || 'Admin'}!</h1>
         <p className="text-stone-500">Platform overview — manage users, sites, and monitor system health.</p>
       </div>
 
