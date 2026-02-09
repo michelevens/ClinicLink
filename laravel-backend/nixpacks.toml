@@ -6,10 +6,8 @@ cmds = ["composer install --no-dev --optimize-autoloader --ignore-platform-reqs"
 
 [phases.build]
 cmds = [
-    "php artisan key:generate --force || true",
-    "php artisan config:cache || true",
-    "php artisan route:cache || true"
+    "php artisan key:generate --force || true"
 ]
 
 [start]
-cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+cmd = "php artisan config:clear && php artisan route:clear && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
