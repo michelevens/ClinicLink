@@ -17,7 +17,7 @@ export function Applications() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Pending', count: sorted.filter(a => a.status === 'pending').length, color: 'amber' },
           { label: 'Accepted', count: sorted.filter(a => a.status === 'accepted').length, color: 'green' },

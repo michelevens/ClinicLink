@@ -2,9 +2,9 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck,
   Building2, Users, CalendarDays, BookOpen, Settings,
-  GraduationCap, Stethoscope, ChevronLeft, ChevronRight, LogOut
+  GraduationCap, Stethoscope, LogOut, Menu, X
 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import type { UserRole } from '../../types/index.ts'
 
@@ -33,9 +33,22 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const { user, logout } = useAuth()
   const location = useLocation()
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
 
   const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
 
@@ -48,32 +61,31 @@ export function Sidebar() {
     admin: 'Admin',
   }
 
-  return (
-    <aside className={`fixed left-0 top-0 h-screen bg-white border-r border-stone-200 flex flex-col transition-all duration-300 z-40 ${collapsed ? 'w-16' : 'w-64'}`}>
+  const sidebarContent = (
+    <>
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-stone-200">
-        {!collapsed && (
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-              ClinicLink
-            </span>
-          </div>
-        )}
-        {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center mx-auto">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-stone-200">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
             <Stethoscope className="w-5 h-5 text-white" />
           </div>
-        )}
+          <span className="font-bold text-lg bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            ClinicLink
+          </span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* User */}
-      {!collapsed && user && (
+      {user && (
         <div className="px-4 py-3 border-b border-stone-100">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm">
+            <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
               {user.firstName[0]}{user.lastName[0]}
             </div>
             <div className="min-w-0">
@@ -95,32 +107,70 @@ export function Sidebar() {
                 isActive || location.pathname === item.path
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
-              } ${collapsed ? 'justify-center' : ''}`
+              }`
             }
-            title={collapsed ? item.label : undefined}
           >
             {item.icon}
-            {!collapsed && <span>{item.label}</span>}
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
       {/* Bottom */}
-      <div className="border-t border-stone-200 p-2 space-y-1">
+      <div className="border-t border-stone-200 p-2">
         <button
           onClick={logout}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-red-50 hover:text-red-600 transition-all w-full ${collapsed ? 'justify-center' : ''}`}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-red-50 hover:text-red-600 transition-all w-full"
         >
           <LogOut className="w-5 h-5" />
-          {!collapsed && <span>Logout</span>}
-        </button>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center justify-center w-full py-1.5 text-stone-400 hover:text-stone-600 transition-colors"
-        >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          <span>Logout</span>
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-stone-200 flex items-center px-4 z-30">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-2 -ml-2 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="flex items-center gap-2 ml-3">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
+            <Stethoscope className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-bold text-base bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            ClinicLink
+          </span>
+        </div>
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <aside
+        className={`lg:hidden fixed left-0 top-0 h-screen w-72 bg-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-stone-200 flex-col z-40">
+        {sidebarContent}
+      </aside>
+    </>
   )
 }

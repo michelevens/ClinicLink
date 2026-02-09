@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { useNavigate } from 'react-router-dom'
-import { MOCK_APPLICATIONS, MOCK_HOURS, MOCK_SLOTS, MOCK_SITES } from '../data/mockData.ts'
+import { MOCK_APPLICATIONS, MOCK_HOURS, MOCK_SLOTS } from '../data/mockData.ts'
 import {
   Search, Clock, FileText, CheckCircle, AlertCircle,
   Building2, Users, CalendarDays, TrendingUp, Star,
@@ -57,7 +57,7 @@ function StudentDashboard() {
             style={{ width: `${Math.min((approvedHours / requiredHours) * 100, 100)}%` }}
           />
         </div>
-        <div className="flex justify-between mt-2 text-xs text-stone-500">
+        <div className="flex flex-col sm:flex-row justify-between mt-2 text-xs text-stone-500 gap-1">
           <span>{approvedHours} approved hours</span>
           <span>{totalHours - approvedHours} pending approval</span>
           <span>{requiredHours - totalHours} remaining</span>
@@ -163,7 +163,7 @@ function SiteManagerDashboard() {
               { name: 'Mike Torres', program: 'BSN', date: 'Feb 3' },
               { name: 'Aisha Patel', program: 'DNP', date: 'Feb 5' },
             ].map(app => (
-              <div key={app.name} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+              <div key={app.name} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-stone-50 rounded-xl gap-2">
                 <div>
                   <p className="text-sm font-medium text-stone-900">{app.name}</p>
                   <p className="text-xs text-stone-500">{app.program} - Applied {app.date}</p>

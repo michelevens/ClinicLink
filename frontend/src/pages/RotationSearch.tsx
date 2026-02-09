@@ -69,11 +69,11 @@ export function RotationSearch() {
               icon={<Search className="w-4 h-4" />}
             />
           </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="grid grid-cols-2 sm:flex gap-3">
             <select
               value={selectedSpecialty}
               onChange={e => setSelectedSpecialty(e.target.value)}
-              className="rounded-xl border border-stone-300 px-3 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+              className="rounded-xl border border-stone-300 px-3 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none col-span-2 sm:col-span-1"
             >
               <option value="">All Specialties</option>
               {specialties.map(s => <option key={s} value={s}>{s}</option>)}
