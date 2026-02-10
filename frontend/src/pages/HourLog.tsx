@@ -47,8 +47,8 @@ export function HourLog() {
   const deleteMutation = useDeleteHourLog()
   const reviewMutation = useReviewHourLog()
 
-  const hours = hoursData?.hour_logs || []
-  const acceptedApps = (appsData?.applications || []).filter(a => a.status === 'accepted')
+  const hours = hoursData?.data || []
+  const acceptedApps = (appsData?.data || []).filter(a => a.status === 'accepted')
 
   const totalHours = summary?.total_hours || hours.reduce((sum, h) => sum + h.hours_worked, 0)
   const approvedHours = summary?.approved_hours || hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + h.hours_worked, 0)

@@ -127,7 +127,7 @@ export const slotsApi = {
 
 // --- Applications ---
 export const applicationsApi = {
-  list: () => api.get<{ applications: ApiApplication[] }>('/applications'),
+  list: () => api.get<PaginatedResponse<ApiApplication>>('/applications'),
   get: (id: string) => api.get<{ application: ApiApplication }>(`/applications/${id}`),
   create: (data: { slot_id: string; cover_letter?: string }) =>
     api.post<{ application: ApiApplication }>('/applications', data),
@@ -139,7 +139,7 @@ export const applicationsApi = {
 
 // --- Hour Logs ---
 export const hourLogsApi = {
-  list: () => api.get<{ hour_logs: ApiHourLog[] }>('/hour-logs'),
+  list: () => api.get<PaginatedResponse<ApiHourLog>>('/hour-logs'),
   create: (data: { slot_id: string; date: string; hours_worked: number; category: string; description: string }) =>
     api.post<{ hour_log: ApiHourLog }>('/hour-logs', data),
   update: (id: string, data: Partial<ApiHourLog>) =>
@@ -152,7 +152,7 @@ export const hourLogsApi = {
 
 // --- Evaluations ---
 export const evaluationsApi = {
-  list: () => api.get<{ evaluations: ApiEvaluation[] }>('/evaluations'),
+  list: () => api.get<PaginatedResponse<ApiEvaluation>>('/evaluations'),
   get: (id: string) => api.get<{ evaluation: ApiEvaluation }>(`/evaluations/${id}`),
   create: (data: Partial<ApiEvaluation>) =>
     api.post<{ evaluation: ApiEvaluation }>('/evaluations', data),
@@ -192,7 +192,7 @@ export interface ApiMyStudent {
 }
 
 export const myStudentsApi = {
-  list: () => api.get<{ students: ApiMyStudent[] }>('/my-students'),
+  list: () => api.get<PaginatedResponse<ApiMyStudent>>('/my-students'),
 }
 
 // --- Dashboard ---
@@ -202,7 +202,7 @@ export const dashboardApi = {
 
 // --- Certificates ---
 export const certificatesApi = {
-  list: () => api.get<{ certificates: ApiCertificate[] }>('/certificates'),
+  list: () => api.get<PaginatedResponse<ApiCertificate>>('/certificates'),
   get: (id: string) => api.get<{ certificate: ApiCertificate }>(`/certificates/${id}`),
   create: (data: { student_id: string; slot_id: string; title: string }) =>
     api.post<{ certificate: ApiCertificate }>('/certificates', data),

@@ -25,7 +25,7 @@ export function Applications() {
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
 
-  const applications = data?.applications || []
+  const applications = data?.data || []
   const statusOrder: Record<string, number> = { pending: 0, waitlisted: 1, accepted: 2, declined: 3, withdrawn: 4 }
   const sorted = [...applications].sort((a, b) => (statusOrder[a.status] || 5) - (statusOrder[b.status] || 5))
   const filtered = activeFilter === 'all' ? sorted : sorted.filter(a => a.status === activeFilter)

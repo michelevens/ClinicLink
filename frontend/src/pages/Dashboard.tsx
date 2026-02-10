@@ -74,9 +74,9 @@ function StudentDashboard() {
   const { data: evalsData } = useEvaluations()
   const { data: credsData } = useCredentials()
 
-  const applications = appsData?.applications || []
-  const hours = hoursData?.hour_logs || []
-  const evaluations = evalsData?.evaluations || []
+  const applications = appsData?.data || []
+  const hours = hoursData?.data || []
+  const evaluations = evalsData?.data || []
   const credentials = credsData?.credentials || []
 
   const totalHours = hours.reduce((sum, h) => sum + h.hours_worked, 0)
@@ -246,7 +246,7 @@ function SiteManagerDashboard() {
   const { data: slotsData } = useSlots()
   const { data: sitesData } = useMySites()
 
-  const allApps = appsData?.applications || []
+  const allApps = appsData?.data || []
   const pendingApps = allApps.filter(a => a.status === 'pending')
   const acceptedApps = allApps.filter(a => a.status === 'accepted')
   const slots = slotsData?.data || []
@@ -378,8 +378,8 @@ function PreceptorDashboard() {
   const { data: hoursData } = useHourLogs()
   const { data: evalsData } = useEvaluations()
 
-  const hours = hoursData?.hour_logs || []
-  const evaluations = evalsData?.evaluations || []
+  const hours = hoursData?.data || []
+  const evaluations = evalsData?.data || []
   const pendingHours = hours.filter(h => h.status === 'pending')
   const pendingEvals = evaluations.filter(e => !e.is_submitted)
 
@@ -500,7 +500,7 @@ function CoordinatorDashboard() {
   const { data: appsData } = useApplications()
   const { data: slotsData } = useSlots()
 
-  const applications = appsData?.applications || []
+  const applications = appsData?.data || []
   const slots = slotsData?.data || []
 
   const pendingApps = applications.filter(a => a.status === 'pending')
@@ -613,8 +613,8 @@ function ProfessorDashboard() {
   const { data: appsData } = useApplications()
   const { data: evalsData } = useEvaluations()
 
-  const applications = appsData?.applications || []
-  const evaluations = evalsData?.evaluations || []
+  const applications = appsData?.data || []
+  const evaluations = evalsData?.data || []
   const activeStudents = applications.filter(a => a.status === 'accepted')
 
   if (isLoading) return <LoadingSpinner />
@@ -719,7 +719,7 @@ function AdminDashboard() {
   const { data: sitesData } = useMySites()
 
   const slots = slotsData?.data || []
-  const applications = appsData?.applications || []
+  const applications = appsData?.data || []
   const sites = sitesData?.sites || []
 
   const openSlots = slots.filter(s => s.status === 'open').length

@@ -9,7 +9,7 @@ type PlacementTab = 'active' | 'pending' | 'completed'
 
 export function Placements() {
   const { data, isLoading } = useApplications()
-  const applications = data?.applications || []
+  const applications = data?.data || []
 
   const [tab, setTab] = useState<PlacementTab>('active')
   const [search, setSearch] = useState('')

@@ -46,8 +46,8 @@ export function Evaluations() {
   const { data: appsData } = useApplications()
   const createMutation = useCreateEvaluation()
 
-  const evaluations = data?.evaluations || []
-  const acceptedApps = (appsData?.applications || []).filter(a => a.status === 'accepted')
+  const evaluations = data?.data || []
+  const acceptedApps = (appsData?.data || []).filter(a => a.status === 'accepted')
 
   const isPreceptor = user?.role === 'preceptor'
   const isStudent = user?.role === 'student'

@@ -22,7 +22,7 @@ export function SiteApplications() {
   const { data, isLoading } = useApplications()
   const reviewMutation = useReviewApplication()
 
-  const applications = data?.applications || []
+  const applications = data?.data || []
   const filtered = statusFilter === 'all' ? applications : applications.filter(a => a.status === statusFilter)
 
   const counts = {

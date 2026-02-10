@@ -15,7 +15,7 @@ export function Certificates() {
   const isAdmin = user?.role === 'admin' || user?.role === 'coordinator'
 
   const { data: certData, isLoading: certsLoading } = useCertificates()
-  const certificates = certData?.certificates || []
+  const certificates = certData?.data || []
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -344,7 +344,7 @@ function CertificateDetailModal({ certificate: cert, onClose }: { certificate: A
 function IssueCertificateModal({ onClose }: { onClose: () => void }) {
   const { data: appData, isLoading: appsLoading } = useApplications()
   const acceptedApps = useMemo(() =>
-    (appData?.applications || []).filter((a: ApiApplication) => a.status === 'accepted'),
+    (appData?.data || []).filter((a: ApiApplication) => a.status === 'accepted'),
     [appData]
   )
 

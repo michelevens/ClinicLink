@@ -14,7 +14,7 @@ export function MyStudents() {
   const isPreceptor = user?.role === 'preceptor' || user?.role === 'site_manager'
 
   const { data, isLoading } = useMyStudents()
-  const students = data?.students || []
+  const students = data?.data || []
 
   const [search, setSearch] = useState('')
   const [programFilter, setProgramFilter] = useState<string>('all')
