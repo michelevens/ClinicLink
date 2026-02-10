@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\HourLogReviewedMail;
 use App\Models\HourLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class HourLogController extends Controller
 {
@@ -101,7 +103,14 @@ class HourLogController extends Controller
             }
         }
 
-        return response()->json($hourLog->load('student'));
+        $hourLog->load('student');
+
+        // Email the student about the review
+        Mail::to($hourLog->student->email)->send(
+            new HourLogReviewedMail($hourLog, $validated['status'])
+        );
+
+        return response()->json($hourLog);
     }
 
     public function summary(Request $request): JsonResponse

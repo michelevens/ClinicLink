@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ApplicationStatusMail;
 use App\Models\Application;
 use App\Models\RotationSlot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class ApplicationController extends Controller
 {
@@ -98,7 +100,14 @@ class ApplicationController extends Controller
             }
         }
 
-        return response()->json($application->load(['student', 'slot']));
+        $application->load(['student', 'slot.site']);
+
+        // Email the student about the decision
+        Mail::to($application->student->email)->send(
+            new ApplicationStatusMail($application, $validated['status'])
+        );
+
+        return response()->json($application);
     }
 
     public function withdraw(Request $request, Application $application): JsonResponse
