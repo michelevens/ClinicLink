@@ -33,7 +33,7 @@ class ApiClient {
     if (res.status === 401) {
       localStorage.removeItem('cliniclink_token')
       localStorage.removeItem('cliniclink_user')
-      window.location.href = '/login'
+      window.location.href = import.meta.env.BASE_URL + 'login'
       throw new Error('Unauthorized')
     }
 
