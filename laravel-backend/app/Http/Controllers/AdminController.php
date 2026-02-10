@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Program;
+use App\Models\University;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 
 class AdminController extends Controller
 {
@@ -100,5 +103,21 @@ class AdminController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully.']);
+    }
+
+    public function seedUniversities(Request $request): JsonResponse
+    {
+        $exitCode = Artisan::call('scrape:universities', [
+            '--source' => 'curated',
+            '--with-programs' => true,
+        ]);
+
+        $output = Artisan::output();
+
+        return response()->json([
+            'message' => 'University seeding complete.',
+            'exit_code' => $exitCode,
+            'output' => $output,
+        ]);
     }
 }

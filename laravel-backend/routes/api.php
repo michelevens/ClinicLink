@@ -102,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/users/{user}', [AdminController::class, 'showUser']);
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
     Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
+    Route::post('/admin/seed-universities', [AdminController::class, 'seedUniversities']);
 
     // Affiliation Agreements
     Route::get('/agreements', [UniversityController::class, 'agreements']);
