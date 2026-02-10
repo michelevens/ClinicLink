@@ -32,6 +32,53 @@ class AdminController extends Controller
         return response()->json($users);
     }
 
+    public function showUser(User $user): JsonResponse
+    {
+        $relations = [];
+
+        switch ($user->role) {
+            case 'student':
+                $relations = [
+                    'studentProfile',
+                    'credentials',
+                    'applications.slot.site',
+                    'hourLogs',
+                    'evaluationsAsStudent.slot',
+                    'evaluationsAsStudent.preceptor',
+                ];
+                break;
+            case 'preceptor':
+                $relations = [
+                    'preceptorSlots.site',
+                    'evaluationsAsPreceptor.student',
+                    'evaluationsAsPreceptor.slot',
+                ];
+                break;
+            case 'site_manager':
+                $relations = [
+                    'managedSites',
+                ];
+                break;
+        }
+
+        $user->load($relations);
+
+        $stats = [
+            'applications_count' => $user->applications()->count(),
+            'hour_logs_count' => $user->hourLogs()->count(),
+            'total_hours' => (float) $user->hourLogs()->where('status', 'approved')->sum('hours_worked'),
+            'evaluations_as_student' => $user->evaluationsAsStudent()->count(),
+            'evaluations_as_preceptor' => $user->evaluationsAsPreceptor()->count(),
+            'managed_sites_count' => $user->managedSites()->count(),
+            'preceptor_slots_count' => $user->preceptorSlots()->count(),
+        ];
+
+        return response()->json([
+            'user' => $user,
+            'stats' => $stats,
+        ]);
+    }
+
     public function updateUser(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
-  evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi,
+  evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -294,6 +294,14 @@ export function useAdminUsers(params?: { search?: string; role?: string; page?: 
   })
 }
 
+export function useAdminUser(id: string | null) {
+  return useQuery({
+    queryKey: ['admin-user', id],
+    queryFn: () => adminApi.getUser(id!),
+    enabled: !!id,
+  })
+}
+
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
@@ -307,5 +315,21 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: adminApi.deleteUser,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
+  })
+}
+
+// --- Universities ---
+export function useUniversities(params?: { search?: string; state?: string; page?: number }) {
+  return useQuery({
+    queryKey: ['universities', params],
+    queryFn: () => universitiesApi.list(params),
+  })
+}
+
+export function useUniversity(id: string | null) {
+  return useQuery({
+    queryKey: ['university', id],
+    queryFn: () => universitiesApi.get(id!),
+    enabled: !!id,
   })
 }

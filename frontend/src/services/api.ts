@@ -191,6 +191,16 @@ export interface ApiMyStudent {
   clinical_interests: string[]
 }
 
+export interface AdminUserStats {
+  applications_count: number
+  hour_logs_count: number
+  total_hours: number
+  evaluations_as_student: number
+  evaluations_as_preceptor: number
+  managed_sites_count: number
+  preceptor_slots_count: number
+}
+
 export const myStudentsApi = {
   list: () => api.get<PaginatedResponse<ApiMyStudent>>('/my-students'),
 }
@@ -214,13 +224,15 @@ export const certificatesApi = {
 
 // --- Universities ---
 export const universitiesApi = {
-  list: (params?: { search?: string }) => {
+  list: (params?: { search?: string; state?: string; page?: number }) => {
     const qs = new URLSearchParams()
     if (params?.search) qs.set('search', params.search)
+    if (params?.state) qs.set('state', params.state)
+    if (params?.page) qs.set('page', String(params.page))
     return api.get<PaginatedResponse<ApiUniversity>>(`/universities?${qs}`)
   },
-  get: (id: string) => api.get<{ university: ApiUniversity }>(`/universities/${id}`),
-  programs: (id: string) => api.get<{ programs: ApiProgram[] }>(`/universities/${id}/programs`),
+  get: (id: string) => api.get<ApiUniversity>(`/universities/${id}`),
+  programs: (id: string) => api.get<ApiProgram[]>(`/universities/${id}/programs`),
 }
 
 // --- Agreements ---
@@ -245,6 +257,7 @@ export const adminApi = {
     if (params?.page) qs.set('page', String(params.page))
     return api.get<PaginatedResponse<ApiUser>>(`/admin/users?${qs}`)
   },
+  getUser: (id: string) => api.get<{ user: ApiUser; stats: AdminUserStats }>(`/admin/users/${id}`),
   updateUser: (id: string, data: { role?: string; is_active?: boolean }) =>
     api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
@@ -265,6 +278,12 @@ export interface ApiUser {
   created_at: string
   student_profile?: ApiStudentProfile
   credentials?: ApiCredential[]
+  applications?: ApiApplication[]
+  hour_logs?: ApiHourLog[]
+  evaluations_as_student?: ApiEvaluation[]
+  evaluations_as_preceptor?: ApiEvaluation[]
+  preceptor_slots?: ApiSlot[]
+  managed_sites?: ApiSite[]
 }
 
 export interface ApiStudentProfile {

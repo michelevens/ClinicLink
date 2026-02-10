@@ -20,6 +20,8 @@ import { SitesDirectory } from './pages/SitesDirectory.tsx'
 import { Programs } from './pages/Programs.tsx'
 import { Placements } from './pages/Placements.tsx'
 import { AdminUsers } from './pages/AdminUsers.tsx'
+import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
+import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -32,6 +34,21 @@ function PublicRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
   return <>{children}</>
+}
+
+function SemiProtectedRoute({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth()
+  if (isAuthenticated) {
+    return <MainLayout>{children}</MainLayout>
+  }
+  return (
+    <div className="min-h-screen bg-stone-50">
+      <PublicNav />
+      <div className="pt-16 max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {children}
+      </div>
+    </div>
+  )
 }
 
 function OnboardingRoute() {
@@ -48,12 +65,14 @@ export default function App() {
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
+      {/* Semi-protected (works for both auth and unauth users) */}
+      <Route path="/rotations" element={<SemiProtectedRoute><RotationSearch /></SemiProtectedRoute>} />
+
       {/* Onboarding (full-screen, no sidebar) */}
       <Route path="/onboarding" element={<OnboardingRoute />} />
 
       {/* Protected */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/rotations" element={<ProtectedRoute><RotationSearch /></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute><Applications /></ProtectedRoute>} />
       <Route path="/hours" element={<ProtectedRoute><HourLog /></ProtectedRoute>} />
       <Route path="/evaluations" element={<ProtectedRoute><Evaluations /></ProtectedRoute>} />
@@ -66,6 +85,7 @@ export default function App() {
       <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
       <Route path="/placements" element={<ProtectedRoute><Placements /></ProtectedRoute>} />
       <Route path="/sites" element={<ProtectedRoute><SitesDirectory /></ProtectedRoute>} />
+      <Route path="/universities" element={<ProtectedRoute><UniversityDirectory /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
 
       {/* Catch all */}

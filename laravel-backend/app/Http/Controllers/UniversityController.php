@@ -15,7 +15,14 @@ class UniversityController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where('name', 'ilike', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('city', 'ilike', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('state')) {
+            $query->where('state', $request->input('state'));
         }
 
         $universities = $query->orderBy('name')

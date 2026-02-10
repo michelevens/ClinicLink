@@ -29,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Programs', path: '/programs', icon: <BookOpen className="w-5 h-5" />, roles: ['coordinator'] },
   { label: 'Placements', path: '/placements', icon: <GraduationCap className="w-5 h-5" />, roles: ['coordinator', 'professor'] },
   { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
+  { label: 'Universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
   { label: 'All Users', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'] },
   { label: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
 ]

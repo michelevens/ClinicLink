@@ -32,6 +32,7 @@ export function LandingPage() {
             <span className="text-lg font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">ClinicLink</span>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">
+            <button onClick={() => navigate('/rotations')} className="hover:text-primary-600 transition-colors">Browse Rotations</button>
             <a href="#how-it-works" className="hover:text-primary-600 transition-colors">How It Works</a>
             <a href="#features" className="hover:text-primary-600 transition-colors">Features</a>
             <a href="#roles" className="hover:text-primary-600 transition-colors">Who It's For</a>

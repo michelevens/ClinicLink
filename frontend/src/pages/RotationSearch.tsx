@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { useSlots, useCreateApplication } from '../hooks/useApi.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
 import type { ApiSlot } from '../services/api.ts'
 import {
@@ -12,10 +14,12 @@ import {
   Building2, Clock, Users, Send, Loader2,
   Globe, Phone, Stethoscope, DollarSign,
   ChevronRight, Shield, BookOpen, CheckCircle2,
-  ArrowLeft, ExternalLink
+  ArrowLeft, ExternalLink, LogIn
 } from 'lucide-react'
 
 export function RotationSearch() {
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSpecialty, setSelectedSpecialty] = useState('')
   const [costFilter, setCostFilter] = useState<string>('all')
@@ -63,6 +67,10 @@ export function RotationSearch() {
 
   const openApply = (slot: ApiSlot, e?: React.MouseEvent) => {
     e?.stopPropagation()
+    if (!isAuthenticated) {
+      navigate('/login?redirect=/rotations')
+      return
+    }
     setSelectedSlot(slot)
     setShowApplyModal(true)
   }
@@ -206,7 +214,7 @@ export function RotationSearch() {
                       disabled={slot.status !== 'open'}
                       onClick={e => openApply(slot, e)}
                     >
-                      <Send className="w-4 h-4" /> Apply
+                      {isAuthenticated ? <><Send className="w-4 h-4" /> Apply</> : <><LogIn className="w-4 h-4" /> Sign In to Apply</>}
                     </Button>
                     <Button
                       size="sm"
@@ -273,7 +281,7 @@ export function RotationSearch() {
                     disabled={slot.status !== 'open'}
                     onClick={e => openApply(slot, e)}
                   >
-                    <Send className="w-4 h-4" /> Apply Now
+                    {isAuthenticated ? <><Send className="w-4 h-4" /> Apply Now</> : <><LogIn className="w-4 h-4" /> Sign In to Apply</>}
                   </Button>
                 </div>
               </Card>
@@ -496,9 +504,16 @@ export function RotationSearch() {
               </Button>
               <Button
                 disabled={selectedSlot.status !== 'open'}
-                onClick={() => { setShowDetail(false); setShowApplyModal(true) }}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate('/login?redirect=/rotations')
+                    return
+                  }
+                  setShowDetail(false)
+                  setShowApplyModal(true)
+                }}
               >
-                <Send className="w-4 h-4" /> Apply for This Rotation
+                {isAuthenticated ? <><Send className="w-4 h-4" /> Apply for This Rotation</> : <><LogIn className="w-4 h-4" /> Sign In to Apply</>}
               </Button>
             </div>
           </div>
