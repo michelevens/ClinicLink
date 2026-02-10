@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Mail\ApplicationStatusMail;
 use App\Models\Application;
 use App\Models\RotationSlot;
+use App\Notifications\ApplicationReviewedNotification;
+use App\Notifications\NewApplicationNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -15,7 +17,7 @@ class ApplicationController extends Controller
     {
         $user = $request->user();
 
-        $query = Application::with(['student', 'slot.site', 'reviewer']);
+        $query = Application::with(['student.studentProfile.university', 'student.studentProfile.program', 'slot.site', 'slot.preceptor', 'reviewer']);
 
         if ($user->isStudent()) {
             $query->where('student_id', $user->id);
@@ -41,7 +43,7 @@ class ApplicationController extends Controller
 
     public function show(Application $application): JsonResponse
     {
-        $application->load(['student.studentProfile', 'student.credentials', 'slot.site', 'reviewer']);
+        $application->load(['student.studentProfile.university', 'student.studentProfile.program', 'student.credentials', 'slot.site', 'slot.preceptor', 'reviewer']);
 
         return response()->json($application);
     }
@@ -74,7 +76,14 @@ class ApplicationController extends Controller
             'submitted_at' => now(),
         ]);
 
-        return response()->json($application->load('slot.site'), 201);
+        $application->load(['student', 'slot.site']);
+
+        // Notify site manager
+        if ($slot->site && $slot->site->manager) {
+            $slot->site->manager->notify(new NewApplicationNotification($application));
+        }
+
+        return response()->json($application, 201);
     }
 
     public function review(Request $request, Application $application): JsonResponse
@@ -106,6 +115,9 @@ class ApplicationController extends Controller
         Mail::to($application->student->email)->send(
             new ApplicationStatusMail($application, $validated['status'])
         );
+
+        // In-app notification for the student
+        $application->student->notify(new ApplicationReviewedNotification($application, $validated['status']));
 
         return response()->json($application);
     }

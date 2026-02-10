@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
-  evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi,
+  evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -326,10 +326,72 @@ export function useUniversities(params?: { search?: string; state?: string; page
   })
 }
 
+export function useCreateUniversity() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.createUniversity,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['universities'] }) },
+  })
+}
+
+export function useUpdateUniversity() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof adminApi.updateUniversity>[1] }) => adminApi.updateUniversity(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['universities'] }) },
+  })
+}
+
+export function useDeleteUniversity() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.deleteUniversity,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['universities'] }) },
+  })
+}
+
 export function useUniversity(id: string | null) {
   return useQuery({
     queryKey: ['university', id],
     queryFn: () => universitiesApi.get(id!),
     enabled: !!id,
+  })
+}
+
+// --- Notifications ---
+export function useNotifications(params?: { page?: number }) {
+  return useQuery({
+    queryKey: ['notifications', params],
+    queryFn: () => notificationsApi.list(params),
+  })
+}
+
+export function useUnreadCount() {
+  return useQuery({
+    queryKey: ['unread-count'],
+    queryFn: () => notificationsApi.unreadCount(),
+    refetchInterval: 30000,
+  })
+}
+
+export function useMarkAsRead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: notificationsApi.markAsRead,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] })
+      qc.invalidateQueries({ queryKey: ['unread-count'] })
+    },
+  })
+}
+
+export function useMarkAllAsRead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: notificationsApi.markAllAsRead,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] })
+      qc.invalidateQueries({ queryKey: ['unread-count'] })
+    },
   })
 }

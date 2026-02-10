@@ -9,26 +9,26 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class WelcomeMail extends Mailable
+class PasswordResetMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public User $user,
-        public ?string $resetUrl = null,
+        public string $resetUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to ClinicLink!',
+            subject: 'Reset Your Password - ClinicLink',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.welcome',
+            view: 'emails.password-reset',
         );
     }
 }

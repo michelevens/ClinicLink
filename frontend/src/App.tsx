@@ -21,6 +21,8 @@ import { Programs } from './pages/Programs.tsx'
 import { Placements } from './pages/Placements.tsx'
 import { AdminUsers } from './pages/AdminUsers.tsx'
 import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
+import { ForgotPassword } from './pages/ForgotPassword.tsx'
+import { ResetPassword } from './pages/ResetPassword.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
@@ -64,6 +66,8 @@ export default function App() {
       <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+      <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
 
       {/* Semi-protected (works for both auth and unauth users) */}
       <Route path="/rotations" element={<SemiProtectedRoute><RotationSearch /></SemiProtectedRoute>} />

@@ -48,12 +48,20 @@
                             <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
                                 <tr>
                                     <td style="background-color:#8b5cf6;border-radius:12px;">
-                                        <a href="{{ env('FRONTEND_URL', 'https://cliniclink.vercel.app') }}/dashboard" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
+                                        <a href="{{ env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') }}/dashboard" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
                                             Go to Dashboard
                                         </a>
                                     </td>
                                 </tr>
                             </table>
+                            @if($resetUrl ?? false)
+                            <div style="margin-top:24px;padding:16px;background-color:#faf5ff;border-radius:12px;border:1px solid #e9d5ff;text-align:center;">
+                                <p style="margin:0 0 12px;color:#6b21a8;font-size:14px;font-weight:600;">Want to change your password?</p>
+                                <a href="{{ $resetUrl }}" style="display:inline-block;padding:10px 24px;background-color:#ffffff;border:1px solid #c084fc;border-radius:8px;color:#7c3aed;text-decoration:none;font-size:13px;font-weight:600;">
+                                    Set a New Password
+                                </a>
+                            </div>
+                            @endif
                         </td>
                     </tr>
                     <!-- Footer -->

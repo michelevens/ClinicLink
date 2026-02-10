@@ -7,6 +7,8 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HourLogController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RotationSiteController;
 use App\Http\Controllers\RotationSlotController;
 use App\Http\Controllers\StudentController;
@@ -21,6 +23,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
 
 // Public browsing
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -103,6 +107,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
     Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
     Route::post('/admin/seed-universities', [AdminController::class, 'seedUniversities']);
+
+    // Admin University CRUD
+    Route::post('/admin/universities', [UniversityController::class, 'store']);
+    Route::put('/admin/universities/{university}', [UniversityController::class, 'update']);
+    Route::delete('/admin/universities/{university}', [UniversityController::class, 'destroy']);
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
     // Affiliation Agreements
     Route::get('/agreements', [UniversityController::class, 'agreements']);

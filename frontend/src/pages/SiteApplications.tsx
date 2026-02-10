@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
   CheckCircle, XCircle, Clock, User, FileText,
   Calendar, MapPin, Building2, Loader2, Inbox,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, GraduationCap
 } from 'lucide-react'
 
 export function SiteApplications() {
@@ -135,6 +135,15 @@ export function SiteApplications() {
                       </h3>
                       {statusBadge(app.status)}
                     </div>
+                    {app.student?.student_profile?.university && (
+                      <p className="text-xs text-stone-500 flex items-center gap-1">
+                        <GraduationCap className="w-3 h-3" />
+                        {app.student.student_profile.university.name}
+                        {app.student.student_profile.program && (
+                          <span className="text-stone-400">({app.student.student_profile.program.degree_type})</span>
+                        )}
+                      </p>
+                    )}
                     <p className="text-sm text-stone-500 mt-0.5">
                       Applied for: <span className="text-stone-700 font-medium">{app.slot?.title}</span>
                     </p>
@@ -180,6 +189,21 @@ export function SiteApplications() {
                       <p className="text-xs text-stone-500">Email</p>
                       <p className="text-sm font-medium text-stone-900 truncate">{app.student?.email}</p>
                     </div>
+                    {app.student?.student_profile?.university && (
+                      <div className="bg-white rounded-xl p-3 border border-stone-200">
+                        <p className="text-xs text-stone-500">University</p>
+                        <p className="text-sm font-medium text-stone-900 truncate">{app.student.student_profile.university.name}</p>
+                        {app.student.student_profile.program && (
+                          <p className="text-xs text-stone-500">{app.student.student_profile.program.name} ({app.student.student_profile.program.degree_type})</p>
+                        )}
+                      </div>
+                    )}
+                    {app.slot?.preceptor && (
+                      <div className="bg-white rounded-xl p-3 border border-stone-200">
+                        <p className="text-xs text-stone-500">Preceptor</p>
+                        <p className="text-sm font-medium text-stone-900">{app.slot.preceptor.first_name} {app.slot.preceptor.last_name}</p>
+                      </div>
+                    )}
                     <div className="bg-white rounded-xl p-3 border border-stone-200">
                       <p className="text-xs text-stone-500">Rotation Dates</p>
                       <p className="text-sm font-medium text-stone-900">

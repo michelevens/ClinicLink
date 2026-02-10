@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\HourLogReviewedMail;
 use App\Models\HourLog;
+use App\Notifications\HourLogReviewedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -109,6 +110,9 @@ class HourLogController extends Controller
         Mail::to($hourLog->student->email)->send(
             new HourLogReviewedMail($hourLog, $validated['status'])
         );
+
+        // In-app notification for the student
+        $hourLog->student->notify(new HourLogReviewedNotification($hourLog, $validated['status']));
 
         return response()->json($hourLog);
     }

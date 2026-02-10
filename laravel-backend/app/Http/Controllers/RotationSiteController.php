@@ -58,7 +58,11 @@ class RotationSiteController extends Controller
             'ehr_system' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $validated['manager_id'] = $request->user()->id;
+        if ($request->user()->isAdmin() && $request->filled('manager_id')) {
+            $validated['manager_id'] = $request->input('manager_id');
+        } else {
+            $validated['manager_id'] = $request->user()->id;
+        }
 
         $site = RotationSite::create($validated);
 

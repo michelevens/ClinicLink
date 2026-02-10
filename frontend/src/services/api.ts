@@ -89,6 +89,12 @@ export const authApi = {
 
   updateProfile: (data: { first_name?: string; last_name?: string; phone?: string }) =>
     api.put<{ user: ApiUser }>('/auth/profile', data),
+
+  forgotPassword: (email: string) =>
+    api.post<{ message: string }>('/auth/forgot-password', { email }),
+
+  resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) =>
+    api.post<{ message: string }>('/auth/reset-password', data),
 }
 
 // --- Rotation Sites ---
@@ -261,6 +267,23 @@ export const adminApi = {
   updateUser: (id: string, data: { role?: string; is_active?: boolean }) =>
     api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  createUniversity: (data: Partial<ApiUniversity>) =>
+    api.post<ApiUniversity>('/admin/universities', data),
+  updateUniversity: (id: string, data: Partial<ApiUniversity>) =>
+    api.put<ApiUniversity>(`/admin/universities/${id}`, data),
+  deleteUniversity: (id: string) => api.delete(`/admin/universities/${id}`),
+}
+
+// --- Notifications ---
+export const notificationsApi = {
+  list: (params?: { page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiNotification>>(`/notifications?${qs}`)
+  },
+  unreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
+  markAsRead: (id: string) => api.put<{ message: string }>(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put<{ message: string }>('/notifications/read-all'),
 }
 
 // --- API Types (match Laravel snake_case) ---
@@ -506,6 +529,19 @@ export interface HourSummary {
   approved_hours: number
   hours_required: number
   progress: number
+}
+
+export interface ApiNotification {
+  id: string
+  type: string
+  data: {
+    title: string
+    message: string
+    link?: string
+    [key: string]: unknown
+  }
+  read_at: string | null
+  created_at: string
 }
 
 export interface PaginatedResponse<T> {

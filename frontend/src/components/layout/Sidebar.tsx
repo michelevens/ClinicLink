@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { NotificationBell } from './NotificationBell.tsx'
 import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
@@ -75,12 +76,17 @@ export function Sidebar() {
             ClinicLink
           </span>
         </div>
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <div className="hidden lg:block">
+            <NotificationBell />
+          </div>
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* User */}
@@ -134,22 +140,25 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-stone-200 flex items-center px-4 z-30">
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="p-2 -ml-2 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-        <div className="flex items-center gap-2 ml-3">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
-            <Stethoscope className="w-4 h-4 text-white" />
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-stone-200 flex items-center justify-between px-4 z-30">
+        <div className="flex items-center">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-2 -ml-2 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          <div className="flex items-center gap-2 ml-3">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
+              <Stethoscope className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-base bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+              ClinicLink
+            </span>
           </div>
-          <span className="font-bold text-base bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-            ClinicLink
-          </span>
         </div>
+        <NotificationBell />
       </div>
 
       {/* Mobile overlay */}

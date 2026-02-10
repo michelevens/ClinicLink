@@ -9,6 +9,66 @@ use Illuminate\Http\Request;
 
 class UniversityController extends Controller
 {
+    public function store(Request $request): JsonResponse
+    {
+        if (!$request->user()->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'size:2'],
+            'zip' => ['nullable', 'string', 'max:10'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'website' => ['nullable', 'url', 'max:500'],
+            'is_verified' => ['nullable', 'boolean'],
+        ]);
+
+        $university = University::create($validated);
+
+        return response()->json($university->load('programs'), 201);
+    }
+
+    public function update(Request $request, University $university): JsonResponse
+    {
+        if (!$request->user()->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['sometimes', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'size:2'],
+            'zip' => ['nullable', 'string', 'max:10'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'website' => ['nullable', 'url', 'max:500'],
+            'is_verified' => ['nullable', 'boolean'],
+        ]);
+
+        $university->update($validated);
+
+        return response()->json($university->load('programs'));
+    }
+
+    public function destroy(Request $request, University $university): JsonResponse
+    {
+        if (!$request->user()->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($university->studentProfiles()->exists()) {
+            return response()->json(['message' => 'Cannot delete university with enrolled students.'], 422);
+        }
+
+        $university->programs()->delete();
+        $university->delete();
+
+        return response()->json(['message' => 'University deleted successfully.']);
+    }
+
     public function index(Request $request): JsonResponse
     {
         $query = University::with('programs');
@@ -33,7 +93,8 @@ class UniversityController extends Controller
 
     public function show(University $university): JsonResponse
     {
-        $university->load(['programs', 'affiliationAgreements.site']);
+        $university->load(['programs', 'affiliationAgreements.site'])
+            ->loadCount('studentProfiles');
 
         return response()->json($university);
     }

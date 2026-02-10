@@ -6,8 +6,10 @@ use App\Mail\WelcomeMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
@@ -34,8 +36,17 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
-        // Send welcome email
-        Mail::to($user->email)->send(new WelcomeMail($user));
+        // Generate a password reset token so the welcome email includes a "Change Password" link
+        $resetToken = Str::random(64);
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($resetToken), 'created_at' => now()],
+        );
+        $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
+            . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
+
+        // Send welcome email with password change link
+        Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
 
         return response()->json([
             'user' => $user,
