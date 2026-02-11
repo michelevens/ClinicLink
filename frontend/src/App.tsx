@@ -23,14 +23,21 @@ import { AdminUsers } from './pages/AdminUsers.tsx'
 import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
 import { OnboardingChecklists } from './pages/OnboardingChecklists.tsx'
 import { VerifyCertificate } from './pages/VerifyCertificate.tsx'
+import { SitePreceptors } from './pages/SitePreceptors.tsx'
+import { AcceptInvite } from './pages/AcceptInvite.tsx'
+import { Agreements } from './pages/Agreements.tsx'
+import { ComplianceDashboard } from './pages/ComplianceDashboard.tsx'
+import { CeCredits } from './pages/CeCredits.tsx'
+import { VerifyCeCertificate } from './pages/VerifyCeCertificate.tsx'
 import { ForgotPassword } from './pages/ForgotPassword.tsx'
 import { ResetPassword } from './pages/ResetPassword.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (user && !user.onboardingCompleted) return <Navigate to="/onboarding" replace />
   return <MainLayout>{children}</MainLayout>
 }
 
@@ -56,8 +63,9 @@ function SemiProtectedRoute({ children }: { children: ReactNode }) {
 }
 
 function OnboardingRoute() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (user && user.onboardingCompleted) return <Navigate to="/dashboard" replace />
   return <Onboarding />
 }
 
@@ -71,6 +79,8 @@ export default function App() {
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
       <Route path="/verify/:certificateNumber" element={<VerifyCertificate />} />
+      <Route path="/verify-ce/:uuid" element={<VerifyCeCertificate />} />
+      <Route path="/invite/:token" element={<AcceptInvite />} />
 
       {/* Semi-protected (works for both auth and unauth users) */}
       <Route path="/rotations" element={<SemiProtectedRoute><RotationSearch /></SemiProtectedRoute>} />
@@ -84,6 +94,7 @@ export default function App() {
       <Route path="/hours" element={<ProtectedRoute><HourLog /></ProtectedRoute>} />
       <Route path="/evaluations" element={<ProtectedRoute><Evaluations /></ProtectedRoute>} />
       <Route path="/slots" element={<ProtectedRoute><SlotManagement /></ProtectedRoute>} />
+      <Route path="/preceptors" element={<ProtectedRoute><SitePreceptors /></ProtectedRoute>} />
       <Route path="/site-applications" element={<ProtectedRoute><SiteApplications /></ProtectedRoute>} />
       <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -94,6 +105,9 @@ export default function App() {
       <Route path="/sites" element={<ProtectedRoute><SitesDirectory /></ProtectedRoute>} />
       <Route path="/universities" element={<ProtectedRoute><UniversityDirectory /></ProtectedRoute>} />
       <Route path="/onboarding-checklists" element={<ProtectedRoute><OnboardingChecklists /></ProtectedRoute>} />
+      <Route path="/agreements" element={<ProtectedRoute><Agreements /></ProtectedRoute>} />
+      <Route path="/compliance" element={<ProtectedRoute><ComplianceDashboard /></ProtectedRoute>} />
+      <Route path="/ce-credits" element={<ProtectedRoute><CeCredits /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
 
       {/* Catch all */}

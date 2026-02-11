@@ -17,6 +17,9 @@ class Credential extends Model
         'expiration_date',
         'status',
         'document_url',
+        'file_path',
+        'file_name',
+        'file_size',
     ];
 
     protected function casts(): array

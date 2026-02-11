@@ -5,12 +5,14 @@ import { Input } from '../components/ui/Input.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { authApi } from '../services/api.ts'
-import { useStudentProfile, useUpdateStudentProfile, useCredentials, useAddCredential, useDeleteCredential } from '../hooks/useApi.ts'
+import { useStudentProfile, useUpdateStudentProfile, useCredentials, useAddCredential, useDeleteCredential, useUploadCredentialFile } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import {
   User, Shield, Bell, GraduationCap, FileCheck,
-  Mail, Phone, Save, Loader2, Trash2, Plus, Calendar
+  Mail, Phone, Save, Loader2, Trash2, Plus, Calendar,
+  Upload, Download, Paperclip
 } from 'lucide-react'
+import { studentApi } from '../services/api.ts'
 
 type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications'
 
@@ -298,8 +300,10 @@ function CredentialsTab() {
   const { data, isLoading } = useCredentials()
   const addMutation = useAddCredential()
   const deleteMutation = useDeleteCredential()
+  const uploadMutation = useUploadCredentialFile()
   const [showAdd, setShowAdd] = useState(false)
   const [newCred, setNewCred] = useState({ type: 'cpr', name: '', expiration_date: '' })
+  const fileInputRefs = new Map<string, HTMLInputElement>()
 
   const credentials = data?.credentials || []
 
@@ -334,6 +338,21 @@ function CredentialsTab() {
     }
   }
 
+  const handleFileUpload = async (credId: string, file: File) => {
+    const maxBytes = 20 * 1024 * 1024
+    if (file.size > maxBytes) {
+      toast.error('File too large. Maximum size is 20MB.')
+      return
+    }
+    try {
+      await uploadMutation.mutateAsync({ id: credId, file })
+      toast.success('Document uploaded successfully')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to upload'
+      toast.error(message)
+    }
+  }
+
   const statusVariant = (s: string) => {
     switch (s) {
       case 'valid': return 'success'
@@ -341,6 +360,12 @@ function CredentialsTab() {
       case 'expired': return 'danger'
       default: return 'default'
     }
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   }
 
   if (isLoading) {
@@ -359,7 +384,7 @@ function CredentialsTab() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-semibold text-stone-900">Credentials & Documents</h2>
-            <p className="text-sm text-stone-500">Manage your clinical credentials</p>
+            <p className="text-sm text-stone-500">Manage your clinical credentials and upload supporting documents</p>
           </div>
           <Button size="sm" onClick={() => setShowAdd(!showAdd)}>
             <Plus className="w-4 h-4" /> Add
@@ -382,6 +407,7 @@ function CredentialsTab() {
                   <option value="liability_insurance">Liability Insurance</option>
                   <option value="drug_screen">Drug Screen</option>
                   <option value="license">License/Certification</option>
+                  <option value="hipaa">HIPAA Training</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -413,31 +439,85 @@ function CredentialsTab() {
             </div>
           )}
           {credentials.map(cred => (
-            <div key={cred.id} className="flex items-center gap-4 p-4 rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
-              <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
-                <FileCheck className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-stone-900 text-sm">{cred.name}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-stone-500 capitalize">{cred.type.replace('_', ' ')}</span>
-                  {cred.expiration_date && (
-                    <span className="text-xs text-stone-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Exp: {new Date(cred.expiration_date).toLocaleDateString()}
-                    </span>
-                  )}
+            <div key={cred.id} className="p-4 rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+                  <FileCheck className="w-5 h-5" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-stone-900 text-sm">{cred.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-stone-500 capitalize">{cred.type.replace('_', ' ')}</span>
+                    {cred.expiration_date && (
+                      <span className="text-xs text-stone-400 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Exp: {new Date(cred.expiration_date).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Badge variant={statusVariant(cred.status) as 'success' | 'warning' | 'danger' | 'default'}>
+                  {cred.status.replace('_', ' ')}
+                </Badge>
+                <button
+                  onClick={() => handleDelete(cred.id)}
+                  className="p-1.5 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-              <Badge variant={statusVariant(cred.status) as 'success' | 'warning' | 'danger' | 'default'}>
-                {cred.status.replace('_', ' ')}
-              </Badge>
-              <button
-                onClick={() => handleDelete(cred.id)}
-                className="p-1.5 rounded-lg hover:bg-red-50 text-stone-400 hover:text-red-500 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+
+              {/* File upload/download area */}
+              <div className="mt-3 ml-14">
+                {cred.file_name ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Paperclip className="w-3.5 h-3.5 text-stone-400" />
+                    <span className="text-stone-600 truncate">{cred.file_name}</span>
+                    {cred.file_size && (
+                      <span className="text-xs text-stone-400">({formatFileSize(cred.file_size)})</span>
+                    )}
+                    <a
+                      href={studentApi.downloadCredentialUrl(cred.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium ml-1"
+                    >
+                      <Download className="w-3 h-3" /> Download
+                    </a>
+                    <button
+                      onClick={() => fileInputRefs.get(cred.id)?.click()}
+                      className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-700 font-medium ml-1"
+                    >
+                      <Upload className="w-3 h-3" /> Replace
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRefs.get(cred.id)?.click()}
+                    disabled={uploadMutation.isPending}
+                    className="inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 font-medium py-1 px-2 rounded-lg hover:bg-primary-50 transition-colors disabled:opacity-50"
+                  >
+                    {uploadMutation.isPending ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Upload className="w-3 h-3" />
+                    )}
+                    Upload Document
+                  </button>
+                )}
+                <input
+                  ref={el => { if (el) fileInputRefs.set(cred.id, el) }}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  className="hidden"
+                  onChange={e => {
+                    if (e.target.files?.[0]) {
+                      handleFileUpload(cred.id, e.target.files[0])
+                      e.target.value = ''
+                    }
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>

@@ -3,13 +3,13 @@ import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useApplications, useReviewApplication } from '../hooks/useApi.ts'
+import { useApplications, useReviewApplication, useCompleteApplication } from '../hooks/useApi.ts'
 import type { ApiApplication } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
   CheckCircle, XCircle, Clock, User, FileText,
   Calendar, MapPin, Building2, Loader2, Inbox,
-  ChevronDown, ChevronUp, GraduationCap
+  ChevronDown, ChevronUp, GraduationCap, BadgeCheck
 } from 'lucide-react'
 
 export function SiteApplications() {
@@ -21,6 +21,7 @@ export function SiteApplications() {
 
   const { data, isLoading } = useApplications()
   const reviewMutation = useReviewApplication()
+  const completeMutation = useCompleteApplication()
 
   const applications = data?.data || []
   const filtered = statusFilter === 'all' ? applications : applications.filter(a => a.status === statusFilter)
@@ -29,6 +30,7 @@ export function SiteApplications() {
     all: applications.length,
     pending: applications.filter(a => a.status === 'pending').length,
     accepted: applications.filter(a => a.status === 'accepted').length,
+    completed: applications.filter(a => a.status === 'completed').length,
     declined: applications.filter(a => a.status === 'declined').length,
     waitlisted: applications.filter(a => a.status === 'waitlisted').length,
   }
@@ -59,9 +61,10 @@ export function SiteApplications() {
   }
 
   const statusBadge = (status: string) => {
-    const variants: Record<string, 'warning' | 'success' | 'danger' | 'secondary' | 'default'> = {
+    const variants: Record<string, 'warning' | 'success' | 'danger' | 'secondary' | 'default' | 'primary'> = {
       pending: 'warning',
       accepted: 'success',
+      completed: 'primary',
       declined: 'danger',
       waitlisted: 'secondary',
       withdrawn: 'default',
@@ -86,7 +89,7 @@ export function SiteApplications() {
 
       {/* Summary Chips */}
       <div className="flex flex-wrap gap-2">
-        {(['all', 'pending', 'accepted', 'declined', 'waitlisted'] as const).map(status => (
+        {(['all', 'pending', 'accepted', 'completed', 'declined', 'waitlisted'] as const).map(status => (
           <button
             key={status}
             onClick={() => setStatusFilter(status)}
@@ -239,6 +242,29 @@ export function SiteApplications() {
                       </Button>
                       <Button size="sm" variant="danger" onClick={() => openReview(app, 'declined')}>
                         <XCircle className="w-4 h-4" /> Decline
+                      </Button>
+                    </div>
+                  )}
+
+                  {app.status === 'accepted' && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        isLoading={completeMutation.isPending}
+                        onClick={() => {
+                          completeMutation.mutate(app.id, {
+                            onSuccess: (res) => {
+                              toast.success('Placement marked as completed!')
+                              if (res.ce?.ce_certificate_created) {
+                                toast.success(`CE certificate created (${res.ce.contact_hours} hrs) — Status: ${res.ce.ce_status}`)
+                              }
+                            },
+                            onError: (err) => toast.error(err.message),
+                          })
+                        }}
+                      >
+                        <BadgeCheck className="w-4 h-4" /> Mark Complete
                       </Button>
                     </div>
                   )}

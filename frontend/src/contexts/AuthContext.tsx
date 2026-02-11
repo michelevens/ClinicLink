@@ -14,6 +14,7 @@ interface AuthContextType extends AuthState {
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   demoLogin: (role: UserRole) => void
+  completeOnboarding: (data: Record<string, unknown>) => Promise<void>
 }
 
 interface RegisterData {
@@ -38,16 +39,17 @@ function mapApiUser(u: ApiUser): User {
     phone: u.phone || undefined,
     avatar: u.avatar_url || undefined,
     createdAt: u.created_at,
+    onboardingCompleted: u.onboarding_completed ?? false,
   }
 }
 
 const DEMO_USERS: Record<UserRole, User> = {
-  student: { id: 'demo-student-1', email: 'student@cliniclink.com', firstName: 'Sarah', lastName: 'Chen', role: 'student', createdAt: new Date().toISOString() },
-  preceptor: { id: 'demo-preceptor-1', email: 'preceptor@cliniclink.com', firstName: 'Dr. James', lastName: 'Wilson', role: 'preceptor', createdAt: new Date().toISOString() },
-  site_manager: { id: 'demo-site-1', email: 'site@cliniclink.com', firstName: 'Maria', lastName: 'Garcia', role: 'site_manager', createdAt: new Date().toISOString() },
-  coordinator: { id: 'demo-coord-1', email: 'coordinator@cliniclink.com', firstName: 'Dr. Lisa', lastName: 'Thompson', role: 'coordinator', createdAt: new Date().toISOString() },
-  professor: { id: 'demo-prof-1', email: 'professor@cliniclink.com', firstName: 'Prof. Robert', lastName: 'Martinez', role: 'professor', createdAt: new Date().toISOString() },
-  admin: { id: 'demo-admin-1', email: 'admin@cliniclink.com', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString() },
+  student: { id: 'demo-student-1', email: 'student@cliniclink.com', firstName: 'Sarah', lastName: 'Chen', role: 'student', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  preceptor: { id: 'demo-preceptor-1', email: 'preceptor@cliniclink.com', firstName: 'Dr. James', lastName: 'Wilson', role: 'preceptor', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  site_manager: { id: 'demo-site-1', email: 'site@cliniclink.com', firstName: 'Maria', lastName: 'Garcia', role: 'site_manager', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  coordinator: { id: 'demo-coord-1', email: 'coordinator@cliniclink.com', firstName: 'Dr. Lisa', lastName: 'Thompson', role: 'coordinator', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  professor: { id: 'demo-prof-1', email: 'professor@cliniclink.com', firstName: 'Prof. Robert', lastName: 'Martinez', role: 'professor', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  admin: { id: 'demo-admin-1', email: 'admin@cliniclink.com', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString(), onboardingCompleted: true },
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -69,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (state.token && !state.token.startsWith('demo-')) {
       authApi.me().then(res => {
-        const user = mapApiUser(res.user)
+        const user = mapApiUser(res)
         localStorage.setItem('cliniclink_user', JSON.stringify(user))
         setState(s => ({ ...s, user }))
       }).catch(() => {
@@ -152,8 +154,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const completeOnboarding = useCallback(async (data: Record<string, unknown>) => {
+    const res = await authApi.completeOnboarding(data)
+    const user = mapApiUser(res.user)
+    localStorage.setItem('cliniclink_user', JSON.stringify(user))
+    setState(s => ({ ...s, user }))
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, demoLogin }}>
+    <AuthContext.Provider value={{ ...state, login, register, logout, demoLogin, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )

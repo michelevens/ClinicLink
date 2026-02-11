@@ -4,12 +4,12 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useSlots, useCreateSlot, useUpdateSlot, useDeleteSlot, useMySites } from '../hooks/useApi.ts'
+import { useSlots, useCreateSlot, useUpdateSlot, useDeleteSlot, useMySites, usePreceptors } from '../hooks/useApi.ts'
 import type { ApiSlot } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
-  Plus, Pencil, Trash2, Calendar, Users, MapPin,
-  Clock, Building2, Loader2, Search, DollarSign
+  Plus, Pencil, Trash2, Calendar, Users,
+  Clock, Building2, Loader2, Search, DollarSign, User
 } from 'lucide-react'
 
 const SPECIALTIES = [
@@ -31,6 +31,7 @@ const EMPTY_FORM = {
   cost_type: 'free' as 'free' | 'paid',
   shift_schedule: '',
   requirements: '',
+  preceptor_id: '',
 }
 
 export function SlotManagement() {
@@ -43,6 +44,8 @@ export function SlotManagement() {
 
   const { data: sitesData } = useMySites()
   const sites = sitesData?.sites || []
+  const { data: preceptorsData } = usePreceptors()
+  const preceptors = preceptorsData?.preceptors || []
 
   const { data, isLoading } = useSlots({
     search: searchQuery || undefined,
@@ -77,6 +80,7 @@ export function SlotManagement() {
       cost_type: slot.cost_type,
       shift_schedule: slot.shift_schedule || '',
       requirements: slot.requirements.join(', '),
+      preceptor_id: slot.preceptor_id || '',
     })
     setShowModal(true)
   }
@@ -98,6 +102,7 @@ export function SlotManagement() {
       cost_type: form.cost_type,
       shift_schedule: form.shift_schedule || null,
       requirements: form.requirements ? form.requirements.split(',').map(r => r.trim()).filter(Boolean) : [],
+      preceptor_id: form.preceptor_id || null,
       status: 'open' as const,
     }
 
@@ -214,6 +219,7 @@ export function SlotManagement() {
                   <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{new Date(slot.start_date).toLocaleDateString()} - {new Date(slot.end_date).toLocaleDateString()}</span>
                   <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{slot.filled}/{slot.capacity} filled</span>
                   {slot.shift_schedule && <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{slot.shift_schedule}</span>}
+                  {slot.preceptor && <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" />{slot.preceptor.first_name} {slot.preceptor.last_name}</span>}
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
@@ -338,6 +344,20 @@ export function SlotManagement() {
             onChange={e => setForm({ ...form, shift_schedule: e.target.value })}
             icon={<Clock className="w-4 h-4" />}
           />
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-stone-700">Preceptor</label>
+            <select
+              value={form.preceptor_id}
+              onChange={e => setForm({ ...form, preceptor_id: e.target.value })}
+              className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+            >
+              <option value="">No preceptor assigned</option>
+              {preceptors.map(p => (
+                <option key={p.id} value={p.id}>{p.first_name} {p.last_name} ({p.email})</option>
+              ))}
+            </select>
+          </div>
 
           <Input
             label="Requirements (comma separated)"

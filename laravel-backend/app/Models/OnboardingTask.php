@@ -21,6 +21,9 @@ class OnboardingTask extends Model
         'verified_at',
         'verified_by',
         'verification_notes',
+        'file_path',
+        'file_name',
+        'file_size',
     ];
 
     protected function casts(): array

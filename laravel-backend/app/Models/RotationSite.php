@@ -69,4 +69,9 @@ class RotationSite extends Model
     {
         return $this->hasMany(OnboardingTemplate::class, 'site_id');
     }
+
+    public function invites()
+    {
+        return $this->hasMany(SiteInvite::class, 'site_id');
+    }
 }

@@ -10,6 +10,7 @@ export interface User {
   avatar?: string
   phone?: string
   createdAt: string
+  onboardingCompleted: boolean
 }
 
 export interface StudentProfile extends User {

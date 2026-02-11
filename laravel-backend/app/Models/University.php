@@ -42,4 +42,14 @@ class University extends Model
     {
         return $this->hasMany(AffiliationAgreement::class);
     }
+
+    public function cePolicy()
+    {
+        return $this->hasOne(UniversityCePolicy::class);
+    }
+
+    public function ceCertificates()
+    {
+        return $this->hasMany(CeCertificate::class);
+    }
 }

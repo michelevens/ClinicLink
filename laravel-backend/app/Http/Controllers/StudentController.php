@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -166,8 +168,63 @@ class StudentController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        // Delete associated file if exists
+        if ($credential->file_path && Storage::disk()->exists($credential->file_path)) {
+            Storage::disk()->delete($credential->file_path);
+        }
+
         $credential->delete();
 
         return response()->json(['message' => 'Credential deleted successfully.']);
+    }
+
+    public function uploadCredentialFile(Request $request, Credential $credential): JsonResponse
+    {
+        if ($credential->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:20480'],
+        ]);
+
+        // Delete old file if exists
+        if ($credential->file_path && Storage::disk()->exists($credential->file_path)) {
+            Storage::disk()->delete($credential->file_path);
+        }
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $fileName = time() . '_' . Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs("credentials/{$request->user()->id}", $fileName, config('filesystems.default'));
+
+        $credential->update([
+            'file_path' => $path,
+            'file_name' => $originalName,
+            'file_size' => $file->getSize(),
+        ]);
+
+        return response()->json([
+            'credential' => $credential->fresh(),
+            'message' => 'Document uploaded successfully.',
+        ]);
+    }
+
+    public function downloadCredentialFile(Request $request, Credential $credential)
+    {
+        if ($credential->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if (!$credential->file_path || !Storage::disk()->exists($credential->file_path)) {
+            return response()->json(['message' => 'No file found.'], 404);
+        }
+
+        $content = Storage::disk()->get($credential->file_path);
+        $mimeType = Storage::disk()->mimeType($credential->file_path) ?? 'application/octet-stream';
+
+        return response($content, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'attachment; filename="' . ($credential->file_name ?? 'document') . '"');
     }
 }

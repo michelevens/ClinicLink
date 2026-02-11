@@ -58,4 +58,14 @@ class Application extends Model
     {
         return $this->hasMany(OnboardingTask::class)->orderBy('order');
     }
+
+    public function ceCertificate()
+    {
+        return $this->hasOne(CeCertificate::class);
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->where('status', 'completed');
+    }
 }

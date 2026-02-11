@@ -17,7 +17,11 @@ class AffiliationAgreement extends Model
         'start_date',
         'end_date',
         'document_url',
+        'file_path',
+        'file_name',
+        'file_size',
         'notes',
+        'created_by',
     ];
 
     protected function casts(): array
@@ -36,6 +40,11 @@ class AffiliationAgreement extends Model
     public function site()
     {
         return $this->belongsTo(RotationSite::class, 'site_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function isActive(): bool

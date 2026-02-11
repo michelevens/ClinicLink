@@ -8,14 +8,15 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import {
   useOnboardingTemplates, useCreateOnboardingTemplate, useUpdateOnboardingTemplate, useDeleteOnboardingTemplate,
   useOnboardingTasks, useCompleteTask, useUncompleteTask, useVerifyTask, useUnverifyTask,
-  useMySites, useApplications,
+  useMySites, useApplications, useUploadTaskFile,
 } from '../hooks/useApi.ts'
 import type { ApiOnboardingTemplate, ApiOnboardingTask, ApiApplication } from '../services/api.ts'
+import { onboardingTasksApi } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
-  ClipboardList, Plus, Trash2, Edit3, Check, CheckCircle, Circle,
-  Shield, ChevronDown, ChevronUp, Loader2, Inbox, X, GripVertical,
-  Building2, User, AlertCircle,
+  ClipboardList, Plus, Trash2, Edit3, CheckCircle, Circle,
+  Shield, ChevronDown, ChevronUp, Loader2, Inbox, GripVertical,
+  Building2, User, Upload, Download, Paperclip,
 } from 'lucide-react'
 
 // ─── Site Manager: Templates Tab ──────────────────────────────────────
@@ -381,6 +382,19 @@ function StudentProgressTab() {
                           {task.verified_at && <Badge variant="success" size="sm">Verified</Badge>}
                           {task.completed_at && !task.verified_at && <Badge variant="primary" size="sm">Completed</Badge>}
                         </div>
+                        {task.file_name && (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Paperclip className="w-3 h-3 text-stone-400" />
+                            <a
+                              href={onboardingTasksApi.downloadFileUrl(task.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                            >
+                              <Download className="w-3 h-3" /> {task.file_name}
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -413,7 +427,9 @@ function StudentOnboardingView() {
   const { data: appsData } = useApplications()
   const completeTask = useCompleteTask()
   const uncompleteTask = useUncompleteTask()
+  const uploadTaskFile = useUploadTaskFile()
   const [expandedApp, setExpandedApp] = useState<string | null>(null)
+  const fileInputRefs = new Map<string, HTMLInputElement>()
 
   const tasks = tasksData?.tasks ?? []
   const applications = (appsData?.data ?? []).filter((a: ApiApplication) => a.status === 'accepted')
@@ -437,6 +453,20 @@ function StudentOnboardingView() {
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Failed to update task'
+      toast.error(msg)
+    }
+  }
+
+  async function handleFileUpload(taskId: string, file: File) {
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('File too large. Maximum size is 20MB.')
+      return
+    }
+    try {
+      await uploadTaskFile.mutateAsync({ taskId, file })
+      toast.success('File uploaded')
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Failed to upload'
       toast.error(msg)
     }
   }
@@ -530,6 +560,51 @@ function StudentOnboardingView() {
                             Completed {new Date(task.completed_at).toLocaleDateString()}
                           </span>
                         )}
+                      </div>
+                      {/* File upload/download */}
+                      <div className="mt-1.5">
+                        {task.file_name ? (
+                          <div className="flex items-center gap-1.5">
+                            <Paperclip className="w-3 h-3 text-stone-400" />
+                            <a
+                              href={onboardingTasksApi.downloadFileUrl(task.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                            >
+                              <Download className="w-3 h-3" /> {task.file_name}
+                            </a>
+                            {!task.verified_at && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); fileInputRefs.get(task.id)?.click() }}
+                                className="text-xs text-stone-500 hover:text-stone-700 ml-1"
+                              >
+                                Replace
+                              </button>
+                            )}
+                          </div>
+                        ) : !task.verified_at ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); fileInputRefs.get(task.id)?.click() }}
+                            disabled={uploadTaskFile.isPending}
+                            className="inline-flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 font-medium py-0.5 px-1.5 rounded hover:bg-primary-50 transition-colors disabled:opacity-50"
+                          >
+                            {uploadTaskFile.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                            Attach file
+                          </button>
+                        ) : null}
+                        <input
+                          ref={el => { if (el) fileInputRefs.set(task.id, el) }}
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                          className="hidden"
+                          onChange={e => {
+                            if (e.target.files?.[0]) {
+                              handleFileUpload(task.id, e.target.files[0])
+                              e.target.value = ''
+                            }
+                          }}
+                        />
                       </div>
                     </div>
                   </div>

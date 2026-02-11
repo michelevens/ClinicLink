@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 class ApiClient {
   private baseUrl: string
@@ -71,6 +71,41 @@ class ApiClient {
   delete<T>(endpoint: string) {
     return this.request<T>(endpoint, { method: 'DELETE' })
   }
+
+  async upload<T>(endpoint: string, formData: FormData): Promise<T> {
+    const token = this.getToken()
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    const res = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    })
+
+    if (res.status === 401) {
+      localStorage.removeItem('cliniclink_token')
+      localStorage.removeItem('cliniclink_user')
+      window.location.href = import.meta.env.BASE_URL + 'login'
+      throw new Error('Unauthorized')
+    }
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      const message = body.message || body.error || `Request failed (${res.status})`
+      const error = new Error(message) as Error & { status: number; errors: Record<string, string[]> }
+      error.status = res.status
+      error.errors = body.errors || {}
+      throw error
+    }
+
+    if (res.status === 204) return {} as T
+    return res.json()
+  }
 }
 
 export const api = new ApiClient(API_URL)
@@ -83,7 +118,7 @@ export const authApi = {
   login: (data: { login: string; password: string }) =>
     api.post<{ user: ApiUser; token: string }>('/auth/login', data),
 
-  me: () => api.get<{ user: ApiUser }>('/auth/me'),
+  me: () => api.get<ApiUser>('/auth/me'),
 
   logout: () => api.post<void>('/auth/logout'),
 
@@ -95,6 +130,9 @@ export const authApi = {
 
   resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) =>
     api.post<{ message: string }>('/auth/reset-password', data),
+
+  completeOnboarding: (data: Record<string, unknown>) =>
+    api.post<{ user: ApiUser }>('/auth/complete-onboarding', data),
 }
 
 // --- Rotation Sites ---
@@ -129,6 +167,74 @@ export const slotsApi = {
   create: (data: Partial<ApiSlot>) => api.post<{ slot: ApiSlot }>('/slots', data),
   update: (id: string, data: Partial<ApiSlot>) => api.put<{ slot: ApiSlot }>(`/slots/${id}`, data),
   delete: (id: string) => api.delete(`/slots/${id}`),
+  preceptors: () => api.get<{ preceptors: ApiPreceptorOption[] }>('/preceptor-options'),
+}
+
+export interface ApiPreceptorOption {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+}
+
+export interface ApiSitePreceptor {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string | null
+  slots: Array<{
+    id: string
+    title: string
+    specialty: string
+    status: string
+    start_date: string
+    end_date: string
+    site_name: string
+  }>
+}
+
+export const sitePreceptorsApi = {
+  list: () => api.get<{ preceptors: ApiSitePreceptor[] }>('/my-preceptors'),
+}
+
+// --- Site Invites ---
+export interface ApiSiteInvite {
+  id: string
+  site_id: string
+  site_name: string
+  token: string
+  email: string | null
+  status: 'pending' | 'accepted' | 'expired' | 'revoked'
+  accepted_by: { id: string; name: string; email: string } | null
+  accepted_at: string | null
+  expires_at: string
+  created_at: string
+}
+
+export interface ApiInviteDetail {
+  id: string
+  email: string | null
+  site: {
+    id: string
+    name: string
+    address: string
+    city: string
+    state: string
+    specialties: string[]
+    description: string
+  }
+  invited_by: string | null
+  expires_at: string
+}
+
+export const siteInvitesApi = {
+  list: () => api.get<{ invites: ApiSiteInvite[] }>('/site-invites'),
+  create: (data: { site_id: string; email?: string; expires_in_days?: number }) =>
+    api.post<{ invite: { id: string; token: string; url: string; email: string | null; site_name: string; expires_at: string } }>('/site-invites', data),
+  validate: (token: string) => api.get<{ invite: ApiInviteDetail }>(`/invite/${token}`),
+  accept: (token: string) => api.post<{ message: string; site: { id: string; name: string } }>(`/invite/${token}/accept`),
+  revoke: (id: string) => api.delete(`/site-invites/${id}`),
 }
 
 // --- Applications ---
@@ -177,6 +283,12 @@ export const studentApi = {
   updateCredential: (id: string, data: Partial<ApiCredential>) =>
     api.put<{ credential: ApiCredential }>(`/student/credentials/${id}`, data),
   deleteCredential: (id: string) => api.delete(`/student/credentials/${id}`),
+  uploadCredentialFile: (id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.upload<{ credential: ApiCredential; message: string }>(`/student/credentials/${id}/upload`, formData)
+  },
+  downloadCredentialUrl: (id: string) => `${API_URL}/student/credentials/${id}/download`,
 }
 
 // --- My Students ---
@@ -249,15 +361,23 @@ export const universitiesApi = {
 
 // --- Agreements ---
 export const agreementsApi = {
-  list: (params?: { status?: string }) => {
+  list: (params?: { status?: string; university_id?: string; site_id?: string }) => {
     const qs = new URLSearchParams()
     if (params?.status) qs.set('status', params.status)
+    if (params?.university_id) qs.set('university_id', params.university_id)
+    if (params?.site_id) qs.set('site_id', params.site_id)
     return api.get<{ agreements: ApiAgreement[] }>(`/agreements?${qs}`)
   },
-  create: (data: Partial<ApiAgreement>) =>
+  create: (data: { university_id: string; site_id: string; start_date?: string; end_date?: string; document_url?: string; notes?: string }) =>
     api.post<{ agreement: ApiAgreement }>('/agreements', data),
-  update: (id: string, data: Partial<ApiAgreement>) =>
+  update: (id: string, data: { status?: string; start_date?: string; end_date?: string; document_url?: string; notes?: string }) =>
     api.put<{ agreement: ApiAgreement }>(`/agreements/${id}`, data),
+  uploadDocument: (id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.upload<{ agreement: ApiAgreement; message: string }>(`/agreements/${id}/upload`, formData)
+  },
+  downloadUrl: (id: string) => `${API_URL}/agreements/${id}/download`,
 }
 
 // --- Admin ---
@@ -307,6 +427,12 @@ export const onboardingTasksApi = {
   verify: (id: string, data?: { verification_notes?: string }) => api.put<{ task: ApiOnboardingTask }>(`/onboarding-tasks/${id}/verify`, data),
   unverify: (id: string) => api.put<{ task: ApiOnboardingTask }>(`/onboarding-tasks/${id}/unverify`),
   applicationProgress: (applicationId: string) => api.get<OnboardingProgress>(`/applications/${applicationId}/onboarding-progress`),
+  uploadFile: (taskId: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.upload<{ task: ApiOnboardingTask; message: string }>(`/onboarding-tasks/${taskId}/upload`, formData)
+  },
+  downloadFileUrl: (taskId: string) => `${API_URL}/onboarding-tasks/${taskId}/download`,
 }
 
 // --- Notifications ---
@@ -342,6 +468,7 @@ export interface ApiUser {
   evaluations_as_preceptor?: ApiEvaluation[]
   preceptor_slots?: ApiSlot[]
   managed_sites?: ApiSite[]
+  onboarding_completed?: boolean
 }
 
 export interface ApiStudentProfile {
@@ -408,7 +535,7 @@ export interface ApiApplication {
   id: string
   student_id: string
   slot_id: string
-  status: 'pending' | 'accepted' | 'declined' | 'waitlisted' | 'withdrawn'
+  status: 'pending' | 'accepted' | 'declined' | 'waitlisted' | 'withdrawn' | 'completed'
   cover_letter: string | null
   submitted_at: string
   reviewed_at: string | null
@@ -463,6 +590,9 @@ export interface ApiCredential {
   expiration_date: string | null
   status: 'valid' | 'expiring_soon' | 'expired' | 'pending'
   document_url: string | null
+  file_path: string | null
+  file_name: string | null
+  file_size: number | null
 }
 
 export interface ApiUniversity {
@@ -493,12 +623,18 @@ export interface ApiAgreement {
   university_id: string
   site_id: string
   status: 'draft' | 'pending_review' | 'active' | 'expired' | 'terminated'
-  start_date: string
-  end_date: string
+  start_date: string | null
+  end_date: string | null
   document_url: string | null
+  file_path: string | null
+  file_name: string | null
+  file_size: number | null
   notes: string | null
+  created_by: string | null
+  created_at: string
   university?: ApiUniversity
   site?: ApiSite
+  creator?: ApiUser
 }
 
 export interface ApiCertificate {
@@ -632,6 +768,9 @@ export interface ApiOnboardingTask {
   verified_at: string | null
   verified_by: string | null
   verification_notes: string | null
+  file_path: string | null
+  file_name: string | null
+  file_size: number | null
   created_at: string
   application?: ApiApplication
   completed_by_user?: ApiUser
@@ -654,4 +793,141 @@ export interface PaginatedResponse<T> {
   last_page: number
   per_page: number
   total: number
+}
+
+// --- Compliance ---
+export interface ComplianceStudent {
+  student_id: string
+  student_name: string
+  student_email: string
+  application_id: string
+  rotation: string
+  site_name: string
+  overall_status: 'compliant' | 'in_progress' | 'non_compliant'
+  credentials: {
+    total: number
+    valid: number
+    no_expiration: number
+    expired: number
+    expiring_soon: number
+    has_files: number
+  }
+  tasks: {
+    total: number
+    required: number
+    completed: number
+    verified: number
+    required_completed: number
+    required_verified: number
+    with_files: number
+  }
+  agreement: {
+    status: string
+    id: string | null
+    end_date: string | null
+  }
+}
+
+export interface ComplianceSiteOverview {
+  site_id: string
+  site_name: string
+  site_city: string
+  site_state: string
+  total_students: number
+  compliant_students: number
+  compliance_percentage: number
+  students: ComplianceStudent[]
+}
+
+export const complianceApi = {
+  site: (siteId: string) => api.get<{ students: ComplianceStudent[] }>(`/compliance/site/${siteId}`),
+  student: (applicationId: string) => api.get<{ compliance: ComplianceStudent }>(`/compliance/student/${applicationId}`),
+  overview: () => api.get<{ sites: ComplianceSiteOverview[] }>('/compliance/overview'),
+}
+
+// --- CE (Continuing Education) ---
+export interface ApiCePolicy {
+  id: string
+  university_id: string
+  offers_ce: boolean
+  accrediting_body: string | null
+  contact_hours_per_rotation: number
+  max_hours_per_year: number | null
+  requires_final_evaluation: boolean
+  requires_midterm_evaluation: boolean
+  requires_minimum_hours: boolean
+  minimum_hours_required: number | null
+  approval_required: boolean
+  certificate_template_path: string | null
+  signer_name: string | null
+  signer_credentials: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ApiCeCertificate {
+  id: string
+  university_id: string
+  preceptor_id: string
+  application_id: string
+  contact_hours: number
+  status: 'pending' | 'approved' | 'issued' | 'rejected'
+  issued_at: string | null
+  approved_by: string | null
+  certificate_path: string | null
+  verification_uuid: string
+  rejection_reason: string | null
+  created_at: string
+  updated_at: string
+  university?: ApiUniversity
+  preceptor?: ApiUser
+  application?: ApiApplication
+  approved_by_user?: ApiUser
+}
+
+export interface CeEligibility {
+  eligible: boolean
+  reason: string
+  existing?: ApiCeCertificate | null
+  contact_hours?: number
+  university_id?: string
+  preceptor_id?: string
+  approved_hours?: number
+  approval_required?: boolean
+}
+
+export const cePolicyApi = {
+  get: (universityId: string) =>
+    api.get<{ policy: ApiCePolicy | null }>(`/universities/${universityId}/ce-policy`),
+  upsert: (universityId: string, data: Partial<ApiCePolicy>) =>
+    api.put<{ policy: ApiCePolicy }>(`/universities/${universityId}/ce-policy`, data),
+}
+
+export const ceCertificatesApi = {
+  list: (params?: { university_id?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.university_id) qs.set('university_id', params.university_id)
+    return api.get<{ ce_certificates: ApiCeCertificate[] }>(`/ce-certificates?${qs}`)
+  },
+  get: (id: string) => api.get<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}`),
+  approve: (id: string) => api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/approve`),
+  reject: (id: string, data: { rejection_reason: string }) =>
+    api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/reject`, data),
+  downloadUrl: (id: string) => {
+    const token = localStorage.getItem('cliniclink_token')
+    return `${API_URL}/ce-certificates/${id}/download?token=${token}`
+  },
+  eligibility: (applicationId: string) =>
+    api.get<CeEligibility>(`/ce-eligibility/${applicationId}`),
+  publicVerify: (uuid: string) =>
+    api.get<{
+      valid: boolean; status: string; verification_uuid: string;
+      preceptor_name: string; contact_hours: number; university_name: string;
+      specialty: string; site_name: string; rotation_period: string; issued_at: string | null;
+    }>(`/verify-ce/${uuid}`),
+}
+
+export const applicationsExtApi = {
+  complete: (id: string) =>
+    api.put<{ application: ApiApplication; ce: { ce_certificate_created: boolean; ce_status?: string; contact_hours?: number; ce_reason?: string } }>(`/applications/${id}/complete`),
 }

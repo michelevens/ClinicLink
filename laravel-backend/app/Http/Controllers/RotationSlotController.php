@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\RotationSite;
 use App\Models\RotationSlot;
+use App\Models\SiteInvite;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -98,5 +101,95 @@ class RotationSlotController extends Controller
         $slot->delete();
 
         return response()->json(['message' => 'Slot deleted successfully.']);
+    }
+
+    public function preceptors(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Site managers only see preceptors associated with their sites (via invites or slot assignments)
+        if ($user->role === 'site_manager') {
+            $siteIds = RotationSite::where('manager_id', $user->id)->pluck('id');
+
+            // Preceptors from accepted invites
+            $invitePreceptorIds = SiteInvite::whereIn('site_id', $siteIds)
+                ->where('status', 'accepted')
+                ->whereNotNull('accepted_by')
+                ->pluck('accepted_by');
+
+            // Preceptors from slot assignments
+            $slotPreceptorIds = RotationSlot::whereIn('site_id', $siteIds)
+                ->whereNotNull('preceptor_id')
+                ->pluck('preceptor_id');
+
+            $allIds = $invitePreceptorIds->merge($slotPreceptorIds)->unique();
+
+            $preceptors = User::where('role', 'preceptor')
+                ->where('is_active', true)
+                ->whereIn('id', $allIds)
+                ->select('id', 'first_name', 'last_name', 'email')
+                ->orderBy('last_name')
+                ->get();
+        } else {
+            $preceptors = User::where('role', 'preceptor')
+                ->where('is_active', true)
+                ->select('id', 'first_name', 'last_name', 'email')
+                ->orderBy('last_name')
+                ->get();
+        }
+
+        return response()->json(['preceptors' => $preceptors]);
+    }
+
+    public function myPreceptors(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Get sites managed by this user
+        $siteIds = RotationSite::where('manager_id', $user->id)->pluck('id');
+
+        // Preceptors from slot assignments
+        $slotPreceptorIds = RotationSlot::whereIn('site_id', $siteIds)
+            ->whereNotNull('preceptor_id')
+            ->pluck('preceptor_id');
+
+        // Preceptors from accepted invites
+        $invitePreceptorIds = SiteInvite::whereIn('site_id', $siteIds)
+            ->where('status', 'accepted')
+            ->whereNotNull('accepted_by')
+            ->pluck('accepted_by');
+
+        $allPreceptorIds = $slotPreceptorIds->merge($invitePreceptorIds)->unique();
+
+        $preceptors = User::where('role', 'preceptor')
+            ->where('is_active', true)
+            ->whereIn('id', $allPreceptorIds)
+            ->with(['preceptorSlots' => function ($q) use ($siteIds) {
+                $q->whereIn('site_id', $siteIds)->with('site');
+            }])
+            ->orderBy('last_name')
+            ->get()
+            ->map(function ($preceptor) {
+                return [
+                    'id' => $preceptor->id,
+                    'first_name' => $preceptor->first_name,
+                    'last_name' => $preceptor->last_name,
+                    'email' => $preceptor->email,
+                    'phone' => $preceptor->phone,
+                    'slots' => $preceptor->preceptorSlots->map(function ($slot) {
+                        return [
+                            'id' => $slot->id,
+                            'title' => $slot->title,
+                            'specialty' => $slot->specialty,
+                            'status' => $slot->status,
+                            'start_date' => $slot->start_date,
+                            'end_date' => $slot->end_date,
+                            'site_name' => $slot->site?->name,
+                        ];
+                    }),
+                ];
+            });
+
+        return response()->json(['preceptors' => $preceptors]);
     }
 }

@@ -6,6 +6,8 @@ use App\Models\Application;
 use App\Models\OnboardingTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class OnboardingTaskController extends Controller
 {
@@ -120,6 +122,65 @@ class OnboardingTaskController extends Controller
         ]);
 
         return response()->json(['task' => $task->fresh()]);
+    }
+
+    public function uploadFile(Request $request, OnboardingTask $task): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($task->application->student_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,doc,docx', 'max:20480'],
+        ]);
+
+        // Delete old file if exists
+        if ($task->file_path && Storage::disk()->exists($task->file_path)) {
+            Storage::disk()->delete($task->file_path);
+        }
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $fileName = time() . '_' . Str::slug(pathinfo($originalName, PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs("onboarding-tasks/{$task->application_id}", $fileName, config('filesystems.default'));
+
+        $task->update([
+            'file_path' => $path,
+            'file_name' => $originalName,
+            'file_size' => $file->getSize(),
+        ]);
+
+        return response()->json([
+            'task' => $task->fresh()->load(['completedBy', 'verifiedBy']),
+            'message' => 'File uploaded successfully.',
+        ]);
+    }
+
+    public function downloadFile(Request $request, OnboardingTask $task)
+    {
+        $user = $request->user();
+
+        // Students can download their own, site managers can download for their sites
+        $isOwner = $task->application->student_id === $user->id;
+        $siteId = $task->application->slot->site_id;
+        $isManager = $user->managedSites()->where('id', $siteId)->exists();
+
+        if (!$isOwner && !$isManager && !$user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if (!$task->file_path || !Storage::disk()->exists($task->file_path)) {
+            return response()->json(['message' => 'No file found.'], 404);
+        }
+
+        $content = Storage::disk()->get($task->file_path);
+        $mimeType = Storage::disk()->mimeType($task->file_path) ?? 'application/octet-stream';
+
+        return response($content, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'attachment; filename="' . ($task->file_name ?? 'document') . '"');
     }
 
     public function applicationProgress(Application $application): JsonResponse

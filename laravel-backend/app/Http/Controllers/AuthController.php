@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\WelcomeMail;
+use App\Models\RotationSite;
+use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,8 +50,11 @@ class AuthController extends Controller
         // Send welcome email with password change link
         Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
 
+        $userData = $user->toArray();
+        $userData['onboarding_completed'] = false;
+
         return response()->json([
-            'user' => $user,
+            'user' => $userData,
             'token' => $token,
         ], 201);
     }
@@ -77,8 +82,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        $userData = $user->toArray();
+        $userData['onboarding_completed'] = !is_null($user->onboarding_completed_at);
+
         return response()->json([
-            'user' => $user,
+            'user' => $userData,
             'token' => $token,
         ]);
     }
@@ -89,7 +97,10 @@ class AuthController extends Controller
 
         $user->load(['studentProfile', 'credentials']);
 
-        return response()->json($user);
+        $data = $user->toArray();
+        $data['onboarding_completed'] = !is_null($user->onboarding_completed_at);
+
+        return response()->json($data);
     }
 
     public function logout(Request $request): JsonResponse
@@ -113,5 +124,69 @@ class AuthController extends Controller
         $user->update($validated);
 
         return response()->json($user);
+    }
+
+    public function completeOnboarding(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Common: update phone
+        if ($request->filled('phone')) {
+            $user->update(['phone' => $request->input('phone')]);
+        }
+
+        // Role-specific saves
+        switch ($user->role) {
+            case 'student':
+                StudentProfile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    array_filter([
+                        'graduation_date' => $request->input('graduation_date'),
+                        'gpa' => $request->input('gpa') ? (float) $request->input('gpa') : null,
+                        'clinical_interests' => $request->input('clinical_interests', []),
+                        'bio' => $request->input('bio'),
+                        'university_id' => $request->input('university_id'),
+                        'program_id' => $request->input('program_id'),
+                    ], fn ($v) => !is_null($v))
+                );
+                break;
+
+            case 'site_manager':
+                if ($request->filled('facility_name')) {
+                    RotationSite::updateOrCreate(
+                        ['manager_id' => $user->id],
+                        [
+                            'name' => $request->input('facility_name'),
+                            'address' => $request->input('facility_address', ''),
+                            'city' => $request->input('facility_city', ''),
+                            'state' => $request->input('facility_state', ''),
+                            'zip' => $request->input('facility_zip', ''),
+                            'phone' => $request->input('facility_phone', ''),
+                            'description' => $request->input('facility_description'),
+                            'specialties' => $request->input('facility_specialties', []),
+                            'ehr_system' => $request->input('ehr_system'),
+                        ]
+                    );
+                }
+                break;
+
+            case 'preceptor':
+                // Store specialties in a future preceptor_profiles table or as metadata
+                break;
+
+            case 'coordinator':
+            case 'professor':
+                // University association handled separately
+                break;
+        }
+
+        // Mark onboarding as complete
+        $user->update(['onboarding_completed_at' => now()]);
+
+        $user->refresh();
+        $userData = $user->toArray();
+        $userData['onboarding_completed'] = true;
+
+        return response()->json(['user' => $userData]);
     }
 }

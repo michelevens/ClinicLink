@@ -8,6 +8,8 @@ use App\Models\OnboardingTask;
 use App\Models\RotationSlot;
 use App\Notifications\ApplicationReviewedNotification;
 use App\Notifications\NewApplicationNotification;
+use App\Services\CECertificateGenerator;
+use App\Services\CEEligibilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -152,5 +154,48 @@ class ApplicationController extends Controller
         $application->update(['status' => 'withdrawn']);
 
         return response()->json($application);
+    }
+
+    public function complete(Request $request, Application $application): JsonResponse
+    {
+        $user = $request->user();
+
+        // Only site_manager, preceptor, coordinator, or admin can mark complete
+        if ($user->isStudent()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($application->status !== 'accepted') {
+            return response()->json(['message' => 'Only accepted applications can be marked as completed.'], 422);
+        }
+
+        $application->update(['status' => 'completed']);
+
+        // Auto-trigger CE eligibility check
+        $ceResult = null;
+        $eligibilityService = new CEEligibilityService();
+        $eligibility = $eligibilityService->check($application);
+
+        if ($eligibility['eligible']) {
+            $generator = new CECertificateGenerator();
+            $ceCert = $generator->createFromEligibility($application, $eligibility);
+            $ceResult = [
+                'ce_certificate_created' => true,
+                'ce_status' => $ceCert->status,
+                'contact_hours' => $ceCert->contact_hours,
+            ];
+        } else {
+            $ceResult = [
+                'ce_certificate_created' => false,
+                'ce_reason' => $eligibility['reason'],
+            ];
+        }
+
+        $application->load(['student', 'slot.site', 'ceCertificate']);
+
+        return response()->json([
+            'application' => $application,
+            'ce' => $ceResult,
+        ]);
     }
 }

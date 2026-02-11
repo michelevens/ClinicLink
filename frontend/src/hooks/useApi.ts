@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
-  onboardingTemplatesApi, onboardingTasksApi,
+  onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
+  cePolicyApi, ceCertificatesApi, applicationsExtApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -50,6 +51,13 @@ export function useDeleteSlot() {
   return useMutation({
     mutationFn: slotsApi.delete,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['slots'] }) },
+  })
+}
+
+export function usePreceptors() {
+  return useQuery({
+    queryKey: ['preceptors'],
+    queryFn: () => slotsApi.preceptors(),
   })
 }
 
@@ -287,6 +295,14 @@ export function useDeleteCredential() {
   })
 }
 
+export function useUploadCredentialFile() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => studentApi.uploadCredentialFile(id, file),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['credentials'] }) },
+  })
+}
+
 // --- Admin ---
 export function useAdminUsers(params?: { search?: string; role?: string; page?: number }) {
   return useQuery({
@@ -486,5 +502,180 @@ export function useOnboardingProgress(applicationId: string | null) {
     queryKey: ['onboarding-progress', applicationId],
     queryFn: () => onboardingTasksApi.applicationProgress(applicationId!),
     enabled: !!applicationId,
+  })
+}
+
+export function useUploadTaskFile() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ taskId, file }: { taskId: string; file: File }) => onboardingTasksApi.uploadFile(taskId, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding-tasks'] })
+      qc.invalidateQueries({ queryKey: ['onboarding-progress'] })
+    },
+  })
+}
+
+// --- Agreements ---
+export function useAgreements(params?: { status?: string; university_id?: string; site_id?: string }) {
+  return useQuery({
+    queryKey: ['agreements', params],
+    queryFn: () => agreementsApi.list(params),
+  })
+}
+
+export function useCreateAgreement() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: agreementsApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreements'] }) },
+  })
+}
+
+export function useUpdateAgreement() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof agreementsApi.update>[1] }) => agreementsApi.update(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreements'] }) },
+  })
+}
+
+export function useUploadAgreementDocument() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => agreementsApi.uploadDocument(id, file),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreements'] }) },
+  })
+}
+
+// --- Site Preceptors ---
+export function useSitePreceptors() {
+  return useQuery({
+    queryKey: ['site-preceptors'],
+    queryFn: () => sitePreceptorsApi.list(),
+  })
+}
+
+// --- Site Invites ---
+export function useSiteInvites() {
+  return useQuery({
+    queryKey: ['site-invites'],
+    queryFn: () => siteInvitesApi.list(),
+  })
+}
+
+export function useCreateInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: siteInvitesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['site-invites'] }) },
+  })
+}
+
+export function useAcceptInvite() {
+  return useMutation({
+    mutationFn: siteInvitesApi.accept,
+  })
+}
+
+export function useRevokeInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: siteInvitesApi.revoke,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['site-invites'] }) },
+  })
+}
+
+// --- Compliance ---
+export function useComplianceSite(siteId: string | null) {
+  return useQuery({
+    queryKey: ['compliance-site', siteId],
+    queryFn: () => complianceApi.site(siteId!),
+    enabled: !!siteId,
+  })
+}
+
+export function useComplianceStudent(applicationId: string | null) {
+  return useQuery({
+    queryKey: ['compliance-student', applicationId],
+    queryFn: () => complianceApi.student(applicationId!),
+    enabled: !!applicationId,
+  })
+}
+
+export function useComplianceOverview() {
+  return useQuery({
+    queryKey: ['compliance-overview'],
+    queryFn: () => complianceApi.overview(),
+  })
+}
+
+// --- CE Policy ---
+export function useCePolicy(universityId: string | null) {
+  return useQuery({
+    queryKey: ['ce-policy', universityId],
+    queryFn: () => cePolicyApi.get(universityId!),
+    enabled: !!universityId,
+  })
+}
+
+export function useUpsertCePolicy() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ universityId, data }: { universityId: string; data: Parameters<typeof cePolicyApi.upsert>[1] }) =>
+      cePolicyApi.upsert(universityId, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ce-policy'] }) },
+  })
+}
+
+// --- CE Certificates ---
+export function useCeCertificates(params?: { university_id?: string }) {
+  return useQuery({
+    queryKey: ['ce-certificates', params],
+    queryFn: () => ceCertificatesApi.list(params),
+  })
+}
+
+export function useCeCertificate(id: string | null) {
+  return useQuery({
+    queryKey: ['ce-certificate', id],
+    queryFn: () => ceCertificatesApi.get(id!),
+    enabled: !!id,
+  })
+}
+
+export function useApproveCeCertificate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ceCertificatesApi.approve,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ce-certificates'] }) },
+  })
+}
+
+export function useRejectCeCertificate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { rejection_reason: string } }) => ceCertificatesApi.reject(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ce-certificates'] }) },
+  })
+}
+
+export function useCeEligibility(applicationId: string | null) {
+  return useQuery({
+    queryKey: ['ce-eligibility', applicationId],
+    queryFn: () => ceCertificatesApi.eligibility(applicationId!),
+    enabled: !!applicationId,
+  })
+}
+
+export function useCompleteApplication() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: applicationsExtApi.complete,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['applications'] })
+      qc.invalidateQueries({ queryKey: ['ce-certificates'] })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
+    },
   })
 }

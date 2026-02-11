@@ -107,10 +107,25 @@ class RotationSiteController extends Controller
 
     public function mySites(Request $request): JsonResponse
     {
-        $sites = RotationSite::with('slots')
-            ->where('manager_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $user = $request->user();
+
+        if ($user->isPreceptor()) {
+            // Preceptors: return sites where they have assigned slots
+            $siteIds = \App\Models\RotationSlot::where('preceptor_id', $user->id)
+                ->distinct()
+                ->pluck('site_id');
+
+            $sites = RotationSite::with('slots')
+                ->whereIn('id', $siteIds)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            // Site managers: return sites they manage
+            $sites = RotationSite::with('slots')
+                ->where('manager_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         return response()->json(['sites' => $sites]);
     }

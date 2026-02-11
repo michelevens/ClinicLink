@@ -377,11 +377,13 @@ function PreceptorDashboard() {
   const { data: stats, isLoading } = useDashboardStats()
   const { data: hoursData } = useHourLogs()
   const { data: evalsData } = useEvaluations()
+  const { data: sitesData } = useMySites()
 
   const hours = hoursData?.data || []
   const evaluations = evalsData?.data || []
   const pendingHours = hours.filter(h => h.status === 'pending')
   const pendingEvals = evaluations.filter(e => !e.is_submitted)
+  const sites = sitesData?.sites || []
 
   if (isLoading) return <LoadingSpinner />
 
@@ -399,6 +401,43 @@ function PreceptorDashboard() {
         <StatCard icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations Due" value={stats?.pending_evaluations || pendingEvals.length} color="secondary" />
         <StatCard icon={<Award className="w-5 h-5" />} label="Total Hours Supervised" value={hours.filter(h => h.status === 'approved').reduce((s, h) => s + h.hours_worked, 0)} color="green" />
       </div>
+
+      {/* Site Affiliation */}
+      {sites.length > 0 && (
+        <Card>
+          <SectionHeader title="My Site Affiliation" actionLabel="View Site" onAction={() => navigate('/site')} />
+          <div className="mt-4 space-y-3">
+            {sites.map(site => {
+              const activeSlots = site.slots?.filter(s => s.status === 'open') || []
+              return (
+                <div key={site.id} className="flex items-start gap-4 p-4 bg-stone-50 rounded-xl">
+                  <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-primary-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-stone-900">{site.name}</p>
+                    <div className="flex items-center gap-1 text-sm text-stone-500 mt-0.5">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{site.city}, {site.state}</span>
+                    </div>
+                    {site.specialties?.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {site.specialties.slice(0, 4).map(s => (
+                          <Badge key={s} variant="secondary">{s}</Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-lg font-bold text-primary-600">{activeSlots.length}</p>
+                    <p className="text-xs text-stone-500">Active Slots</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Urgent Items Banner */}
       {(pendingHours.length > 0 || pendingEvals.length > 0) && (

@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\ComplianceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HourLogController;
@@ -14,6 +15,8 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RotationSiteController;
 use App\Http\Controllers\RotationSlotController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SiteInviteController;
+use App\Http\Controllers\CeCertificateController;
 use App\Http\Controllers\UniversityController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +34,12 @@ Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassw
 // Public certificate verification & PDF download (token-based auth)
 Route::get('/verify/{certificateNumber}', [CertificateController::class, 'publicVerify']);
 Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
+
+// Public CE certificate verification
+Route::get('/verify-ce/{uuid}', [CeCertificateController::class, 'publicVerify']);
+
+// Public invite validation
+Route::get('/invite/{token}', [SiteInviteController::class, 'show']);
 
 // Public browsing
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -53,6 +62,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/auth/complete-onboarding', [AuthController::class, 'completeOnboarding']);
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
@@ -64,6 +74,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-sites', [RotationSiteController::class, 'mySites']);
 
     // Slots (management)
+    Route::get('/preceptor-options', [RotationSlotController::class, 'preceptors']);
+    Route::get('/my-preceptors', [RotationSlotController::class, 'myPreceptors']);
     Route::post('/slots', [RotationSlotController::class, 'store']);
     Route::put('/slots/{slot}', [RotationSlotController::class, 'update']);
     Route::delete('/slots/{slot}', [RotationSlotController::class, 'destroy']);
@@ -99,6 +111,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/student/credentials', [StudentController::class, 'storeCredential']);
     Route::put('/student/credentials/{credential}', [StudentController::class, 'updateCredential']);
     Route::delete('/student/credentials/{credential}', [StudentController::class, 'deleteCredential']);
+    Route::post('/student/credentials/{credential}/upload', [StudentController::class, 'uploadCredentialFile']);
+    Route::get('/student/credentials/{credential}/download', [StudentController::class, 'downloadCredentialFile']);
 
     // Certificates
     Route::get('/certificates', [CertificateController::class, 'index']);
@@ -138,10 +152,40 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/onboarding-tasks/{task}/uncomplete', [OnboardingTaskController::class, 'uncomplete']);
     Route::put('/onboarding-tasks/{task}/verify', [OnboardingTaskController::class, 'verify']);
     Route::put('/onboarding-tasks/{task}/unverify', [OnboardingTaskController::class, 'unverify']);
+    Route::post('/onboarding-tasks/{task}/upload', [OnboardingTaskController::class, 'uploadFile']);
+    Route::get('/onboarding-tasks/{task}/download', [OnboardingTaskController::class, 'downloadFile']);
     Route::get('/applications/{application}/onboarding-progress', [OnboardingTaskController::class, 'applicationProgress']);
 
     // Affiliation Agreements
     Route::get('/agreements', [UniversityController::class, 'agreements']);
     Route::post('/agreements', [UniversityController::class, 'storeAgreement']);
     Route::put('/agreements/{agreement}', [UniversityController::class, 'updateAgreement']);
+    Route::post('/agreements/{agreement}/upload', [UniversityController::class, 'uploadAgreementDocument']);
+    Route::get('/agreements/{agreement}/download', [UniversityController::class, 'downloadAgreementDocument']);
+
+    // Compliance
+    Route::get('/compliance/site/{site}', [ComplianceController::class, 'site']);
+    Route::get('/compliance/student/{application}', [ComplianceController::class, 'student']);
+    Route::get('/compliance/overview', [ComplianceController::class, 'overview']);
+
+    // Site Invites (preceptor invite links)
+    Route::get('/site-invites', [SiteInviteController::class, 'index']);
+    Route::post('/site-invites', [SiteInviteController::class, 'store']);
+    Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);
+    Route::delete('/site-invites/{invite}', [SiteInviteController::class, 'destroy']);
+
+    // CE Certificates
+    Route::get('/ce-certificates', [CeCertificateController::class, 'index']);
+    Route::get('/ce-certificates/{ceCertificate}', [CeCertificateController::class, 'show']);
+    Route::put('/ce-certificates/{ceCertificate}/approve', [CeCertificateController::class, 'approve']);
+    Route::put('/ce-certificates/{ceCertificate}/reject', [CeCertificateController::class, 'reject']);
+    Route::get('/ce-certificates/{ceCertificate}/download', [CeCertificateController::class, 'download']);
+    Route::get('/ce-eligibility/{application}', [CeCertificateController::class, 'checkEligibility']);
+
+    // CE Policies (university-level)
+    Route::get('/universities/{university}/ce-policy', [CeCertificateController::class, 'getPolicy']);
+    Route::put('/universities/{university}/ce-policy', [CeCertificateController::class, 'upsertPolicy']);
+
+    // Application completion (triggers CE)
+    Route::put('/applications/{application}/complete', [ApplicationController::class, 'complete']);
 });
