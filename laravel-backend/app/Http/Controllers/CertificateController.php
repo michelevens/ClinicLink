@@ -6,6 +6,7 @@ use App\Models\Certificate;
 use App\Models\HourLog;
 use App\Models\Evaluation;
 use App\Models\Application;
+use App\Models\StudentProfile;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,8 +36,14 @@ class CertificateController extends Controller
         return response()->json(['certificates' => $certificates]);
     }
 
-    public function show(Certificate $certificate): JsonResponse
+    public function show(Request $request, Certificate $certificate): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$this->canAccessCertificate($user, $certificate)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $certificate->load(['student.studentProfile.university', 'student.studentProfile.program', 'slot.site', 'issuer']);
 
         return response()->json(['certificate' => $certificate]);
@@ -44,6 +51,13 @@ class CertificateController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // Only preceptor, site_manager, or admin can issue certificates
+        if (!$user->isPreceptor() && !$user->isSiteManager() && !$user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $validated = $request->validate([
             'student_id' => ['required', 'uuid', 'exists:users,id'],
             'slot_id' => ['required', 'uuid', 'exists:rotation_slots,id'],
@@ -91,7 +105,7 @@ class CertificateController extends Controller
         $certificate = Certificate::create([
             'student_id' => $validated['student_id'],
             'slot_id' => $validated['slot_id'],
-            'issued_by' => $request->user()->id,
+            'issued_by' => $user->id,
             'certificate_number' => $certNumber,
             'title' => $validated['title'],
             'total_hours' => $totalHours,
@@ -107,6 +121,13 @@ class CertificateController extends Controller
 
     public function eligibility(Request $request, string $slotId, string $studentId): JsonResponse
     {
+        $user = $request->user();
+
+        // Only preceptor, site_manager, coordinator, or admin can check eligibility
+        if (!$user->isPreceptor() && !$user->isSiteManager() && !$user->isCoordinator() && !$user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         // Get accepted application
         $application = Application::where('student_id', $studentId)
             ->where('slot_id', $slotId)
@@ -156,6 +177,16 @@ class CertificateController extends Controller
             if (!$token) {
                 return response()->json(['message' => 'Unauthorized.'], 401);
             }
+            $user = $token->tokenable;
+        }
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        // Authorization: only the student, issuer, site manager, coordinator, or admin
+        if (!$this->canAccessCertificate($user, $certificate)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $certificate->load([
@@ -219,8 +250,21 @@ class CertificateController extends Controller
 
     public function revoke(Request $request, Certificate $certificate): JsonResponse
     {
+        $user = $request->user();
+
         if ($certificate->status === 'revoked') {
             return response()->json(['message' => 'Certificate is already revoked.'], 422);
+        }
+
+        // Only the issuer, site manager for the cert's site, coordinator, or admin
+        $certificate->loadMissing('slot.site');
+        $canRevoke = $user->isAdmin()
+            || $certificate->issued_by === $user->id
+            || ($user->isSiteManager() && $certificate->slot->site->manager_id === $user->id)
+            || $user->isCoordinator();
+
+        if (!$canRevoke) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $validated = $request->validate([
@@ -234,5 +278,32 @@ class CertificateController extends Controller
         ]);
 
         return response()->json(['certificate' => $certificate->load(['student', 'slot.site', 'issuer'])]);
+    }
+
+    private function canAccessCertificate($user, Certificate $certificate): bool
+    {
+        if ($user->isAdmin()) return true;
+
+        // Student who owns it
+        if ($certificate->student_id === $user->id) return true;
+
+        // The issuer
+        if ($certificate->issued_by === $user->id) return true;
+
+        // Site manager for the certificate's site
+        if ($user->isSiteManager()) {
+            $certificate->loadMissing('slot.site');
+            if ($certificate->slot->site->manager_id === $user->id) return true;
+        }
+
+        // Coordinator or professor for the same university
+        if ($user->isCoordinator() || $user->role === 'professor') {
+            $certificate->loadMissing('student.studentProfile');
+            $studentUni = $certificate->student->studentProfile?->university_id;
+            $userUni = $user->studentProfile?->university_id;
+            if ($studentUni && $userUni && $studentUni === $userUni) return true;
+        }
+
+        return false;
     }
 }

@@ -31,8 +31,22 @@ class OnboardingTemplateController extends Controller
         return response()->json(['templates' => $templates]);
     }
 
-    public function show(OnboardingTemplate $template): JsonResponse
+    public function show(Request $request, OnboardingTemplate $template): JsonResponse
     {
+        $user = $request->user();
+
+        // Authorization: site manager for the template's site, coordinator, or admin
+        if (!$user->isAdmin() && !$user->isCoordinator()) {
+            if ($user->isSiteManager()) {
+                $template->loadMissing('site');
+                if ($template->site->manager_id !== $user->id) {
+                    return response()->json(['message' => 'Unauthorized.'], 403);
+                }
+            } else {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
         $template->load(['site', 'items', 'creator']);
 
         return response()->json(['template' => $template]);

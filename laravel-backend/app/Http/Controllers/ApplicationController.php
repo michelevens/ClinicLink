@@ -6,6 +6,7 @@ use App\Mail\ApplicationStatusMail;
 use App\Models\Application;
 use App\Models\OnboardingTask;
 use App\Models\RotationSlot;
+use App\Models\StudentProfile;
 use App\Notifications\ApplicationReviewedNotification;
 use App\Notifications\NewApplicationNotification;
 use App\Services\CECertificateGenerator;
@@ -32,6 +33,13 @@ class ApplicationController extends Controller
             $query->whereHas('slot', function ($q) use ($user) {
                 $q->where('preceptor_id', $user->id);
             });
+        } elseif ($user->isCoordinator() || $user->role === 'professor') {
+            // Scope to students from the same university
+            $universityId = $user->studentProfile?->university_id;
+            if ($universityId) {
+                $studentIds = StudentProfile::where('university_id', $universityId)->pluck('user_id');
+                $query->whereIn('student_id', $studentIds);
+            }
         }
 
         if ($request->filled('status')) {
@@ -44,8 +52,14 @@ class ApplicationController extends Controller
         return response()->json($applications);
     }
 
-    public function show(Application $application): JsonResponse
+    public function show(Request $request, Application $application): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$this->canAccessApplication($user, $application)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $application->load(['student.studentProfile.university', 'student.studentProfile.program', 'student.credentials', 'slot.site', 'slot.preceptor', 'reviewer']);
 
         return response()->json($application);
@@ -53,6 +67,12 @@ class ApplicationController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$user->isStudent()) {
+            return response()->json(['message' => 'Only students can create applications.'], 403);
+        }
+
         $validated = $request->validate([
             'slot_id' => ['required', 'uuid', 'exists:rotation_slots,id'],
             'cover_letter' => ['nullable', 'string', 'max:5000'],
@@ -64,7 +84,7 @@ class ApplicationController extends Controller
             return response()->json(['message' => 'This rotation slot is full.'], 422);
         }
 
-        $existing = Application::where('student_id', $request->user()->id)
+        $existing = Application::where('student_id', $user->id)
             ->where('slot_id', $validated['slot_id'])
             ->first();
 
@@ -73,7 +93,7 @@ class ApplicationController extends Controller
         }
 
         $application = Application::create([
-            'student_id' => $request->user()->id,
+            'student_id' => $user->id,
             'slot_id' => $validated['slot_id'],
             'cover_letter' => $validated['cover_letter'] ?? null,
             'submitted_at' => now(),
@@ -91,6 +111,12 @@ class ApplicationController extends Controller
 
     public function review(Request $request, Application $application): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$this->canReviewApplication($user, $application)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $validated = $request->validate([
             'status' => ['required', 'in:accepted,declined,waitlisted'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -100,7 +126,7 @@ class ApplicationController extends Controller
             'status' => $validated['status'],
             'notes' => $validated['notes'] ?? null,
             'reviewed_at' => now(),
-            'reviewed_by' => $request->user()->id,
+            'reviewed_by' => $user->id,
         ]);
 
         if ($validated['status'] === 'accepted') {
@@ -160,8 +186,8 @@ class ApplicationController extends Controller
     {
         $user = $request->user();
 
-        // Only site_manager, preceptor, coordinator, or admin can mark complete
-        if ($user->isStudent()) {
+        // Only site_manager (for the app's site), preceptor (for the slot), coordinator, or admin can mark complete
+        if (!$this->canReviewApplication($user, $application)) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -197,5 +223,41 @@ class ApplicationController extends Controller
             'application' => $application,
             'ce' => $ceResult,
         ]);
+    }
+
+    private function canAccessApplication($user, Application $application): bool
+    {
+        if ($user->isAdmin()) return true;
+        if ($application->student_id === $user->id) return true;
+
+        $application->loadMissing('slot.site');
+        $slot = $application->slot;
+
+        if ($user->isSiteManager() && $slot->site->manager_id === $user->id) return true;
+        if ($user->isPreceptor() && $slot->preceptor_id === $user->id) return true;
+
+        if ($user->isCoordinator() || $user->role === 'professor') {
+            $application->loadMissing('student.studentProfile');
+            $studentUni = $application->student->studentProfile?->university_id;
+            $userUni = $user->studentProfile?->university_id;
+            if ($studentUni && $userUni && $studentUni === $userUni) return true;
+        }
+
+        return false;
+    }
+
+    private function canReviewApplication($user, Application $application): bool
+    {
+        if ($user->isAdmin()) return true;
+        if ($user->isStudent()) return false;
+
+        $application->loadMissing('slot.site');
+        $slot = $application->slot;
+
+        if ($user->isSiteManager() && $slot->site->manager_id === $user->id) return true;
+        if ($user->isPreceptor() && $slot->preceptor_id === $user->id) return true;
+        if ($user->isCoordinator()) return true;
+
+        return false;
     }
 }

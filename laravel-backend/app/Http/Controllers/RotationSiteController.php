@@ -10,7 +10,12 @@ class RotationSiteController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = RotationSite::with(['manager', 'slots'])
+        $query = RotationSite::with([
+                'manager' => function ($q) {
+                    $q->select('id', 'first_name', 'last_name');
+                },
+                'slots',
+            ])
             ->active();
 
         if ($request->filled('search')) {
@@ -38,13 +43,26 @@ class RotationSiteController extends Controller
 
     public function show(RotationSite $site): JsonResponse
     {
-        $site->load(['manager', 'slots.preceptor', 'affiliationAgreements.university']);
+        $site->load([
+            'manager' => function ($q) {
+                $q->select('id', 'first_name', 'last_name');
+            },
+            'slots.preceptor',
+            'affiliationAgreements.university',
+        ]);
 
         return response()->json($site);
     }
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // Only site_manager or admin can create sites
+        if (!$user->isSiteManager() && !$user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:500'],
@@ -58,10 +76,10 @@ class RotationSiteController extends Controller
             'ehr_system' => ['nullable', 'string', 'max:255'],
         ]);
 
-        if ($request->user()->isAdmin() && $request->filled('manager_id')) {
+        if ($user->isAdmin() && $request->filled('manager_id')) {
             $validated['manager_id'] = $request->input('manager_id');
         } else {
-            $validated['manager_id'] = $request->user()->id;
+            $validated['manager_id'] = $user->id;
         }
 
         $site = RotationSite::create($validated);

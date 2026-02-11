@@ -16,7 +16,7 @@ export function Certificates() {
   const isAdmin = user?.role === 'admin' || user?.role === 'coordinator'
 
   const { data: certData, isLoading: certsLoading } = useCertificates()
-  const certificates = certData?.data || []
+  const certificates = certData?.certificates || []
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')

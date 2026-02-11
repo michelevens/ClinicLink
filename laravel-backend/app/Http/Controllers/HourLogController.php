@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Mail\HourLogReviewedMail;
+use App\Models\Application;
 use App\Models\HourLog;
+use App\Models\StudentProfile;
 use App\Notifications\HourLogReviewedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +29,13 @@ class HourLogController extends Controller
             $query->whereHas('slot.site', function ($q) use ($user) {
                 $q->where('manager_id', $user->id);
             });
+        } elseif ($user->isCoordinator() || $user->role === 'professor') {
+            // Scope to students from the same university
+            $universityId = $user->studentProfile?->university_id;
+            if ($universityId) {
+                $studentIds = StudentProfile::where('university_id', $universityId)->pluck('user_id');
+                $query->whereIn('student_id', $studentIds);
+            }
         }
 
         if ($request->filled('status')) {
@@ -45,6 +54,12 @@ class HourLogController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$user->isStudent()) {
+            return response()->json(['message' => 'Only students can log hours.'], 403);
+        }
+
         $validated = $request->validate([
             'slot_id' => ['required', 'uuid', 'exists:rotation_slots,id'],
             'date' => ['required', 'date', 'before_or_equal:today'],
@@ -53,7 +68,17 @@ class HourLogController extends Controller
             'description' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $validated['student_id'] = $request->user()->id;
+        // Verify the student has an accepted application for this slot
+        $hasAcceptedApp = Application::where('student_id', $user->id)
+            ->where('slot_id', $validated['slot_id'])
+            ->where('status', 'accepted')
+            ->exists();
+
+        if (!$hasAcceptedApp) {
+            return response()->json(['message' => 'You do not have an accepted application for this slot.'], 403);
+        }
+
+        $validated['student_id'] = $user->id;
 
         $log = HourLog::create($validated);
 
@@ -84,6 +109,12 @@ class HourLogController extends Controller
 
     public function review(Request $request, HourLog $hourLog): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$this->canReviewHourLog($user, $hourLog)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $validated = $request->validate([
             'status' => ['required', 'in:approved,rejected'],
             'rejection_reason' => ['required_if:status,rejected', 'nullable', 'string', 'max:1000'],
@@ -91,7 +122,7 @@ class HourLogController extends Controller
 
         $hourLog->update([
             'status' => $validated['status'],
-            'approved_by' => $request->user()->id,
+            'approved_by' => $user->id,
             'approved_at' => now(),
             'rejection_reason' => $validated['rejection_reason'] ?? null,
         ]);
@@ -154,5 +185,20 @@ class HourLogController extends Controller
         $hourLog->delete();
 
         return response()->json(['message' => 'Hour log deleted successfully.']);
+    }
+
+    private function canReviewHourLog($user, HourLog $hourLog): bool
+    {
+        if ($user->isAdmin()) return true;
+        if ($user->isStudent()) return false;
+
+        $hourLog->loadMissing('slot.site');
+        $slot = $hourLog->slot;
+
+        if ($user->isPreceptor() && $slot->preceptor_id === $user->id) return true;
+        if ($user->isSiteManager() && $slot->site->manager_id === $user->id) return true;
+        if ($user->isCoordinator()) return true;
+
+        return false;
     }
 }

@@ -24,7 +24,7 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users', 'regex:/^[a-z0-9._-]+$/'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
+            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor'],
         ]);
 
         $user = User::create([

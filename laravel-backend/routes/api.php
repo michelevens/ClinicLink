@@ -22,26 +22,25 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| Public Routes (rate-limited auth endpoints)
 |--------------------------------------------------------------------------
 */
 
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
-Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
+});
 
-// Public certificate verification & PDF download (token-based auth)
+// Public certificate verification
 Route::get('/verify/{certificateNumber}', [CertificateController::class, 'publicVerify']);
-Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
-
-// Public CE certificate verification
 Route::get('/verify-ce/{uuid}', [CeCertificateController::class, 'publicVerify']);
 
 // Public invite validation
 Route::get('/invite/{token}', [SiteInviteController::class, 'show']);
 
-// Public browsing
+// Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
 Route::get('/sites/{site}', [RotationSiteController::class, 'show']);
 Route::get('/slots', [RotationSlotController::class, 'index']);
@@ -86,6 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/applications', [ApplicationController::class, 'store']);
     Route::put('/applications/{application}/review', [ApplicationController::class, 'review']);
     Route::put('/applications/{application}/withdraw', [ApplicationController::class, 'withdraw']);
+    Route::put('/applications/{application}/complete', [ApplicationController::class, 'complete']);
 
     // Hour Logs
     Route::get('/hour-logs', [HourLogController::class, 'index']);
@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/evaluations', [EvaluationController::class, 'store']);
     Route::put('/evaluations/{evaluation}', [EvaluationController::class, 'update']);
 
-    // My Students (preceptor, coordinator, professor, admin)
+    // My Students (preceptor, site_manager, coordinator, professor, admin)
     Route::get('/my-students', [StudentController::class, 'myStudents']);
 
     // Student Profile & Credentials
@@ -114,24 +114,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/student/credentials/{credential}/upload', [StudentController::class, 'uploadCredentialFile']);
     Route::get('/student/credentials/{credential}/download', [StudentController::class, 'downloadCredentialFile']);
 
-    // Certificates
+    // Certificates (moved PDF download behind auth)
     Route::get('/certificates', [CertificateController::class, 'index']);
-    Route::get('/certificates/{certificate}', [CertificateController::class, 'show']);
-    Route::post('/certificates', [CertificateController::class, 'store']);
     Route::get('/certificates/eligibility/{slot}/{student}', [CertificateController::class, 'eligibility']);
+    Route::get('/certificates/{certificate}', [CertificateController::class, 'show']);
+    Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
+    Route::post('/certificates', [CertificateController::class, 'store']);
     Route::put('/certificates/{certificate}/revoke', [CertificateController::class, 'revoke']);
-
-    // Admin
-    Route::get('/admin/users', [AdminController::class, 'users']);
-    Route::get('/admin/users/{user}', [AdminController::class, 'showUser']);
-    Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
-    Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
-    Route::post('/admin/seed-universities', [AdminController::class, 'seedUniversities']);
-
-    // Admin University CRUD
-    Route::post('/admin/universities', [UniversityController::class, 'store']);
-    Route::put('/admin/universities/{university}', [UniversityController::class, 'update']);
-    Route::delete('/admin/universities/{university}', [UniversityController::class, 'destroy']);
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -186,6 +175,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/universities/{university}/ce-policy', [CeCertificateController::class, 'getPolicy']);
     Route::put('/universities/{university}/ce-policy', [CeCertificateController::class, 'upsertPolicy']);
 
-    // Application completion (triggers CE)
-    Route::put('/applications/{application}/complete', [ApplicationController::class, 'complete']);
+    /*
+    |--------------------------------------------------------------------------
+    | Admin-only Routes (require admin role via middleware)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/users', [AdminController::class, 'users']);
+        Route::get('/users/{user}', [AdminController::class, 'showUser']);
+        Route::put('/users/{user}', [AdminController::class, 'updateUser']);
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+        Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
+
+        Route::post('/universities', [UniversityController::class, 'store']);
+        Route::put('/universities/{university}', [UniversityController::class, 'update']);
+        Route::delete('/universities/{university}', [UniversityController::class, 'destroy']);
+    });
 });

@@ -47,13 +47,16 @@ class RotationSlotController extends Controller
 
     public function show(RotationSlot $slot): JsonResponse
     {
-        $slot->load(['site', 'preceptor', 'applications.student']);
+        $slot->load(['site', 'preceptor']);
 
         return response()->json($slot);
     }
 
     public function store(Request $request): JsonResponse
     {
+        $user = $request->user();
+
+        // Only site_manager (for the site_id) or admin can create slots
         $validated = $request->validate([
             'site_id' => ['required', 'uuid', 'exists:rotation_sites,id'],
             'specialty' => ['required', 'string', 'max:255'],
@@ -69,6 +72,13 @@ class RotationSlotController extends Controller
             'shift_schedule' => ['nullable', 'string', 'max:255'],
         ]);
 
+        if (!$user->isAdmin()) {
+            $site = RotationSite::findOrFail($validated['site_id']);
+            if (!$user->isSiteManager() || $site->manager_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
         $slot = RotationSlot::create($validated);
 
         return response()->json($slot->load('site'), 201);
@@ -76,6 +86,16 @@ class RotationSlotController extends Controller
 
     public function update(Request $request, RotationSlot $slot): JsonResponse
     {
+        $user = $request->user();
+
+        // Only site_manager (for the slot's site) or admin can update
+        if (!$user->isAdmin()) {
+            $slot->loadMissing('site');
+            if (!$user->isSiteManager() || $slot->site->manager_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
         $validated = $request->validate([
             'specialty' => ['sometimes', 'string', 'max:255'],
             'title' => ['sometimes', 'string', 'max:255'],
@@ -96,8 +116,18 @@ class RotationSlotController extends Controller
         return response()->json($slot);
     }
 
-    public function destroy(RotationSlot $slot): JsonResponse
+    public function destroy(Request $request, RotationSlot $slot): JsonResponse
     {
+        $user = $request->user();
+
+        // Only site_manager (for the slot's site) or admin can delete
+        if (!$user->isAdmin()) {
+            $slot->loadMissing('site');
+            if (!$user->isSiteManager() || $slot->site->manager_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
+        }
+
         $slot->delete();
 
         return response()->json(['message' => 'Slot deleted successfully.']);

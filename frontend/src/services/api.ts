@@ -330,7 +330,7 @@ export const dashboardApi = {
 
 // --- Certificates ---
 export const certificatesApi = {
-  list: () => api.get<PaginatedResponse<ApiCertificate>>('/certificates'),
+  list: () => api.get<{ certificates: ApiCertificate[] }>('/certificates'),
   get: (id: string) => api.get<{ certificate: ApiCertificate }>(`/certificates/${id}`),
   create: (data: { student_id: string; slot_id: string; title: string }) =>
     api.post<{ certificate: ApiCertificate }>('/certificates', data),

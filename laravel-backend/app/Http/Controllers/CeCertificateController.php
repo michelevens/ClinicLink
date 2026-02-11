@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\CeCertificate;
+use App\Models\StudentProfile;
 use App\Models\UniversityCePolicy;
 use App\Services\CECertificateGenerator;
 use App\Services\CEEligibilityService;
@@ -59,7 +60,10 @@ class CeCertificateController extends Controller
 
         $query = CeCertificate::with(['university', 'preceptor', 'application.slot.site', 'approvedByUser']);
 
-        if ($user->isPreceptor()) {
+        if ($user->isStudent() || $user->isSiteManager()) {
+            // Students and site managers should not see CE certificates in the list
+            return response()->json(['ce_certificates' => []]);
+        } elseif ($user->isPreceptor()) {
             $query->where('preceptor_id', $user->id);
         } elseif ($user->isCoordinator()) {
             // Filter by university_id param or coordinator's own university
@@ -75,8 +79,14 @@ class CeCertificateController extends Controller
         return response()->json(['ce_certificates' => $certificates]);
     }
 
-    public function show(CeCertificate $ceCertificate): JsonResponse
+    public function show(Request $request, CeCertificate $ceCertificate): JsonResponse
     {
+        $user = $request->user();
+
+        if (!$this->canAccessCeCertificate($user, $ceCertificate)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $ceCertificate->load([
             'university',
             'preceptor',
@@ -150,6 +160,16 @@ class CeCertificateController extends Controller
             if (!$token) {
                 return response()->json(['message' => 'Unauthorized.'], 401);
             }
+            $user = $token->tokenable;
+        }
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        // Authorization: preceptor who owns it, coordinator for the university, or admin
+        if (!$this->canAccessCeCertificate($user, $ceCertificate)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         if (!$ceCertificate->certificate_path || $ceCertificate->status !== 'issued') {
@@ -189,11 +209,42 @@ class CeCertificateController extends Controller
 
     // ─── Eligibility check ───────────────────────────────────────
 
-    public function checkEligibility(Application $application): JsonResponse
+    public function checkEligibility(Request $request, Application $application): JsonResponse
     {
+        $user = $request->user();
+
+        // Must be the preceptor, site_manager for the site, coordinator, or admin
+        $application->loadMissing('slot.site');
+        $slot = $application->slot;
+
+        $canCheck = $user->isAdmin()
+            || ($user->isPreceptor() && $slot->preceptor_id === $user->id)
+            || ($user->isSiteManager() && $slot->site->manager_id === $user->id)
+            || $user->isCoordinator();
+
+        if (!$canCheck) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $service = new CEEligibilityService();
         $result = $service->check($application);
 
         return response()->json($result);
+    }
+
+    private function canAccessCeCertificate($user, CeCertificate $ceCertificate): bool
+    {
+        if ($user->isAdmin()) return true;
+
+        // Preceptor who owns it
+        if ($user->isPreceptor() && $ceCertificate->preceptor_id === $user->id) return true;
+
+        // Coordinator for the same university
+        if ($user->isCoordinator()) {
+            $userUni = $user->studentProfile?->university_id;
+            if ($userUni && $ceCertificate->university_id === $userUni) return true;
+        }
+
+        return false;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\OnboardingTask;
+use App\Models\StudentProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +30,19 @@ class OnboardingTaskController extends Controller
         } elseif ($user->isSiteManager()) {
             $siteIds = $user->managedSites()->pluck('id');
             $query->whereHas('application.slot.site', fn($q) => $q->whereIn('id', $siteIds));
+        } elseif ($user->isPreceptor()) {
+            // Scope to tasks for applications in the preceptor's slots
+            $slotIds = $user->preceptorSlots()->pluck('id');
+            $query->whereHas('application.slot', fn($q) => $q->whereIn('id', $slotIds));
+        } elseif ($user->isCoordinator() || $user->role === 'professor') {
+            // Scope to tasks for students from the same university
+            $universityId = $user->studentProfile?->university_id;
+            if ($universityId) {
+                $studentIds = StudentProfile::where('university_id', $universityId)->pluck('user_id');
+                $query->whereHas('application', fn($q) => $q->whereIn('student_id', $studentIds));
+            }
         }
+        // Admin sees all
 
         if ($request->filled('application_id')) {
             $query->where('application_id', $request->input('application_id'));
@@ -183,8 +196,15 @@ class OnboardingTaskController extends Controller
             ->header('Content-Disposition', 'attachment; filename="' . ($task->file_name ?? 'document') . '"');
     }
 
-    public function applicationProgress(Application $application): JsonResponse
+    public function applicationProgress(Request $request, Application $application): JsonResponse
     {
+        $user = $request->user();
+
+        // Authorization: student who owns it, site manager, preceptor for the slot, coordinator, or admin
+        if (!$this->canAccessApplicationProgress($user, $application)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $tasks = $application->onboardingTasks;
         $requiredTasks = $tasks->where('is_required', true);
         $requiredCount = $requiredTasks->count();
@@ -200,5 +220,32 @@ class OnboardingTaskController extends Controller
             'all_required_completed' => $requiredCount > 0 ? $requiredTasks->every(fn($t) => $t->completed_at !== null) : true,
             'all_required_verified' => $requiredCount > 0 ? $requiredTasks->every(fn($t) => $t->verified_at !== null) : true,
         ]);
+    }
+
+    private function canAccessApplicationProgress($user, Application $application): bool
+    {
+        if ($user->isAdmin()) return true;
+
+        // Student who owns the application
+        if ($application->student_id === $user->id) return true;
+
+        $application->loadMissing('slot.site');
+        $slot = $application->slot;
+
+        // Site manager for the application's site
+        if ($user->isSiteManager() && $slot->site->manager_id === $user->id) return true;
+
+        // Preceptor for the slot
+        if ($user->isPreceptor() && $slot->preceptor_id === $user->id) return true;
+
+        // Coordinator (same university)
+        if ($user->isCoordinator() || $user->role === 'professor') {
+            $application->loadMissing('student.studentProfile');
+            $studentUni = $application->student->studentProfile?->university_id;
+            $userUni = $user->studentProfile?->university_id;
+            if ($studentUni && $userUni && $studentUni === $userUni) return true;
+        }
+
+        return false;
     }
 }

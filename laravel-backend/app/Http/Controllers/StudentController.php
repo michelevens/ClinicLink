@@ -24,6 +24,11 @@ class StudentController extends Controller
     {
         $user = $request->user();
 
+        // Students cannot access this endpoint
+        if ($user->isStudent()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         if ($user->isPreceptor()) {
             // Students with accepted applications for this preceptor's slots
             $slotIds = $user->preceptorSlots()->pluck('id');
@@ -47,11 +52,26 @@ class StudentController extends Controller
             $students = User::whereIn('id', $studentIds)
                 ->with(['studentProfile.university', 'studentProfile.program'])
                 ->get();
+        } elseif ($user->isCoordinator() || $user->role === 'professor' || $user->isAdmin()) {
+            // Coordinator/Professor: students from same university; Admin: all students
+            if ($user->isAdmin()) {
+                $students = User::where('role', 'student')
+                    ->with(['studentProfile.university', 'studentProfile.program'])
+                    ->get();
+            } else {
+                $universityId = $user->studentProfile?->university_id;
+                if ($universityId) {
+                    $studentUserIds = StudentProfile::where('university_id', $universityId)->pluck('user_id');
+                    $students = User::where('role', 'student')
+                        ->whereIn('id', $studentUserIds)
+                        ->with(['studentProfile.university', 'studentProfile.program'])
+                        ->get();
+                } else {
+                    $students = collect();
+                }
+            }
         } else {
-            // Coordinator, Professor, Admin: all students
-            $students = User::where('role', 'student')
-                ->with(['studentProfile.university', 'studentProfile.program'])
-                ->get();
+            return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         // Enrich with hour summaries and latest evaluation for each student

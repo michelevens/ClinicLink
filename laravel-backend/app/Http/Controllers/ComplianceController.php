@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\AffiliationAgreement;
 use App\Models\Application;
-use App\Models\Credential;
-use App\Models\OnboardingTask;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,12 +40,19 @@ class ComplianceController extends Controller
 
     /**
      * Student compliance: their own checklist for a specific application/rotation.
+     * Accessible by the student themselves, site managers who manage the site of the application, or admin.
      */
     public function student(Request $request, Application $application): JsonResponse
     {
         $user = $request->user();
 
-        if ($application->student_id !== $user->id && !$user->isAdmin()) {
+        $application->loadMissing('slot.site');
+
+        $canAccess = $application->student_id === $user->id
+            || $user->isAdmin()
+            || ($user->isSiteManager() && $application->slot->site->manager_id === $user->id);
+
+        if (!$canAccess) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
