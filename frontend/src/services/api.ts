@@ -226,6 +226,12 @@ export const certificatesApi = {
     api.get<CertificateEligibility>(`/certificates/eligibility/${slotId}/${studentId}`),
   revoke: (id: string, data: { reason: string }) =>
     api.put<{ certificate: ApiCertificate }>(`/certificates/${id}/revoke`, data),
+  getPdfUrl: (id: string) => {
+    const token = localStorage.getItem('cliniclink_token')
+    return `${API_URL}/certificates/${id}/pdf?token=${token}`
+  },
+  publicVerify: (certNumber: string) =>
+    api.get<CertificateVerification>(`/verify/${certNumber}`),
 }
 
 // --- Universities ---
@@ -272,6 +278,35 @@ export const adminApi = {
   updateUniversity: (id: string, data: Partial<ApiUniversity>) =>
     api.put<ApiUniversity>(`/admin/universities/${id}`, data),
   deleteUniversity: (id: string) => api.delete(`/admin/universities/${id}`),
+}
+
+// --- Onboarding Templates ---
+export const onboardingTemplatesApi = {
+  list: (params?: { site_id?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.site_id) qs.set('site_id', params.site_id)
+    return api.get<{ templates: ApiOnboardingTemplate[] }>(`/onboarding-templates?${qs}`)
+  },
+  get: (id: string) => api.get<{ template: ApiOnboardingTemplate }>(`/onboarding-templates/${id}`),
+  create: (data: { site_id: string; name: string; description?: string; is_active?: boolean; items: Array<{ title: string; description?: string; is_required?: boolean }> }) =>
+    api.post<{ template: ApiOnboardingTemplate }>('/onboarding-templates', data),
+  update: (id: string, data: { name?: string; description?: string; is_active?: boolean; items?: Array<{ title: string; description?: string; is_required?: boolean }> }) =>
+    api.put<{ template: ApiOnboardingTemplate }>(`/onboarding-templates/${id}`, data),
+  delete: (id: string) => api.delete(`/onboarding-templates/${id}`),
+}
+
+// --- Onboarding Tasks ---
+export const onboardingTasksApi = {
+  list: (params?: { application_id?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.application_id) qs.set('application_id', params.application_id)
+    return api.get<{ tasks: ApiOnboardingTask[] }>(`/onboarding-tasks?${qs}`)
+  },
+  complete: (id: string) => api.put<{ task: ApiOnboardingTask }>(`/onboarding-tasks/${id}/complete`),
+  uncomplete: (id: string) => api.put<{ task: ApiOnboardingTask }>(`/onboarding-tasks/${id}/uncomplete`),
+  verify: (id: string, data?: { verification_notes?: string }) => api.put<{ task: ApiOnboardingTask }>(`/onboarding-tasks/${id}/verify`, data),
+  unverify: (id: string) => api.put<{ task: ApiOnboardingTask }>(`/onboarding-tasks/${id}/unverify`),
+  applicationProgress: (applicationId: string) => api.get<OnboardingProgress>(`/applications/${applicationId}/onboarding-progress`),
 }
 
 // --- Notifications ---
@@ -494,6 +529,23 @@ export interface CertificateEligibility {
   has_certificate: boolean
 }
 
+export interface CertificateVerification {
+  valid: boolean
+  status: 'issued' | 'revoked'
+  certificate_number: string
+  title: string
+  student_name: string
+  specialty: string
+  site_name: string
+  preceptor_name: string | null
+  total_hours: number
+  overall_score: number | null
+  issued_date: string
+  issued_by: string
+  revoked_date: string | null
+  revocation_reason: string | null
+}
+
 export interface ApiDashboardStats {
   // Student stats
   applications_count?: number
@@ -542,6 +594,58 @@ export interface ApiNotification {
   }
   read_at: string | null
   created_at: string
+}
+
+export interface ApiOnboardingTemplate {
+  id: string
+  site_id: string
+  name: string
+  description: string | null
+  is_active: boolean
+  created_by: string
+  created_at: string
+  updated_at: string
+  site?: ApiSite
+  creator?: ApiUser
+  items?: ApiOnboardingItem[]
+}
+
+export interface ApiOnboardingItem {
+  id: string
+  template_id: string
+  title: string
+  description: string | null
+  is_required: boolean
+  order: number
+}
+
+export interface ApiOnboardingTask {
+  id: string
+  application_id: string
+  item_id: string | null
+  title: string
+  description: string | null
+  is_required: boolean
+  order: number
+  completed_at: string | null
+  completed_by: string | null
+  verified_at: string | null
+  verified_by: string | null
+  verification_notes: string | null
+  created_at: string
+  application?: ApiApplication
+  completed_by_user?: ApiUser
+  verified_by_user?: ApiUser
+}
+
+export interface OnboardingProgress {
+  total_tasks: number
+  required_tasks: number
+  completed_required: number
+  verified_required: number
+  progress_percentage: number
+  all_required_completed: boolean
+  all_required_verified: boolean
 }
 
 export interface PaginatedResponse<T> {

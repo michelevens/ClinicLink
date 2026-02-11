@@ -21,6 +21,8 @@ import { Programs } from './pages/Programs.tsx'
 import { Placements } from './pages/Placements.tsx'
 import { AdminUsers } from './pages/AdminUsers.tsx'
 import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
+import { OnboardingChecklists } from './pages/OnboardingChecklists.tsx'
+import { VerifyCertificate } from './pages/VerifyCertificate.tsx'
 import { ForgotPassword } from './pages/ForgotPassword.tsx'
 import { ResetPassword } from './pages/ResetPassword.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
@@ -68,6 +70,7 @@ export default function App() {
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+      <Route path="/verify/:certificateNumber" element={<VerifyCertificate />} />
 
       {/* Semi-protected (works for both auth and unauth users) */}
       <Route path="/rotations" element={<SemiProtectedRoute><RotationSearch /></SemiProtectedRoute>} />
@@ -90,6 +93,7 @@ export default function App() {
       <Route path="/placements" element={<ProtectedRoute><Placements /></ProtectedRoute>} />
       <Route path="/sites" element={<ProtectedRoute><SitesDirectory /></ProtectedRoute>} />
       <Route path="/universities" element={<ProtectedRoute><UniversityDirectory /></ProtectedRoute>} />
+      <Route path="/onboarding-checklists" element={<ProtectedRoute><OnboardingChecklists /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
 
       {/* Catch all */}

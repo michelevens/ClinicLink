@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\ApplicationStatusMail;
 use App\Models\Application;
+use App\Models\OnboardingTask;
 use App\Models\RotationSlot;
 use App\Notifications\ApplicationReviewedNotification;
 use App\Notifications\NewApplicationNotification;
@@ -106,6 +107,22 @@ class ApplicationController extends Controller
 
             if ($slot->filled >= $slot->capacity) {
                 $slot->update(['status' => 'filled']);
+            }
+
+            // Auto-create onboarding tasks from site's active template
+            $site = $slot->site;
+            $template = $site->onboardingTemplates()->where('is_active', true)->latest()->first();
+            if ($template) {
+                foreach ($template->items()->orderBy('order')->get() as $item) {
+                    OnboardingTask::create([
+                        'application_id' => $application->id,
+                        'item_id' => $item->id,
+                        'title' => $item->title,
+                        'description' => $item->description,
+                        'is_required' => $item->is_required,
+                        'order' => $item->order,
+                    ]);
+                }
             }
         }
 

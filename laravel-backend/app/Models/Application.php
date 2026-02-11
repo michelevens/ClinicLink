@@ -53,4 +53,9 @@ class Application extends Model
     {
         return $query->where('status', 'accepted');
     }
+
+    public function onboardingTasks()
+    {
+        return $this->hasMany(OnboardingTask::class)->orderBy('order');
+    }
 }

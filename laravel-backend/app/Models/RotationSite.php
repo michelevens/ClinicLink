@@ -64,4 +64,9 @@ class RotationSite extends Model
     {
         return $query->where('is_verified', true);
     }
+
+    public function onboardingTemplates()
+    {
+        return $this->hasMany(OnboardingTemplate::class, 'site_id');
+    }
 }

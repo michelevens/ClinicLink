@@ -8,6 +8,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HourLogController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OnboardingTemplateController;
+use App\Http\Controllers\OnboardingTaskController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RotationSiteController;
 use App\Http\Controllers\RotationSlotController;
@@ -25,6 +27,10 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
 Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
+
+// Public certificate verification & PDF download (token-based auth)
+Route::get('/verify/{certificateNumber}', [CertificateController::class, 'publicVerify']);
+Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
 
 // Public browsing
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -118,6 +124,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // Onboarding Templates
+    Route::get('/onboarding-templates', [OnboardingTemplateController::class, 'index']);
+    Route::get('/onboarding-templates/{template}', [OnboardingTemplateController::class, 'show']);
+    Route::post('/onboarding-templates', [OnboardingTemplateController::class, 'store']);
+    Route::put('/onboarding-templates/{template}', [OnboardingTemplateController::class, 'update']);
+    Route::delete('/onboarding-templates/{template}', [OnboardingTemplateController::class, 'destroy']);
+
+    // Onboarding Tasks
+    Route::get('/onboarding-tasks', [OnboardingTaskController::class, 'index']);
+    Route::put('/onboarding-tasks/{task}/complete', [OnboardingTaskController::class, 'complete']);
+    Route::put('/onboarding-tasks/{task}/uncomplete', [OnboardingTaskController::class, 'uncomplete']);
+    Route::put('/onboarding-tasks/{task}/verify', [OnboardingTaskController::class, 'verify']);
+    Route::put('/onboarding-tasks/{task}/unverify', [OnboardingTaskController::class, 'unverify']);
+    Route::get('/applications/{application}/onboarding-progress', [OnboardingTaskController::class, 'applicationProgress']);
 
     // Affiliation Agreements
     Route::get('/agreements', [UniversityController::class, 'agreements']);

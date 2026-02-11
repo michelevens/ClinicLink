@@ -6,9 +6,11 @@ use App\Models\Certificate;
 use App\Models\HourLog;
 use App\Models\Evaluation;
 use App\Models\Application;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class CertificateController extends Controller
 {
@@ -142,6 +144,76 @@ class CertificateController extends Controller
             'pending_hours' => (float) $pendingHours,
             'has_evaluation' => $hasEvaluation,
             'has_certificate' => $hasCertificate,
+        ]);
+    }
+
+    public function downloadPdf(Request $request, Certificate $certificate)
+    {
+        // Authenticate via query token (for window.open() browser downloads)
+        $user = $request->user();
+        if (!$user && $request->filled('token')) {
+            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->input('token'));
+            if (!$token) {
+                return response()->json(['message' => 'Unauthorized.'], 401);
+            }
+        }
+
+        $certificate->load([
+            'student.studentProfile.university',
+            'student.studentProfile.program',
+            'slot.site.manager',
+            'slot.preceptor',
+            'issuer',
+        ]);
+
+        $frontendUrl = config('app.frontend_url', 'https://michelevens.github.io/ClinicLink');
+        $verifyUrl = $frontendUrl . '/verify/' . $certificate->certificate_number;
+
+        // Generate QR code as base64 PNG
+        $qrPng = QrCode::format('png')->size(200)->margin(1)->generate($verifyUrl);
+        $qrCode = 'data:image/png;base64,' . base64_encode($qrPng);
+
+        $university = $certificate->student->studentProfile?->university;
+        $program = $certificate->student->studentProfile?->program;
+
+        $pdf = Pdf::loadView('certificates.template', [
+            'certificate' => $certificate,
+            'qrCode' => $qrCode,
+            'verifyUrl' => $verifyUrl,
+            'university' => $university,
+            'program' => $program,
+        ])->setPaper('letter', 'landscape');
+
+        $filename = 'ClinicLink-Certificate-' . $certificate->certificate_number . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function publicVerify(string $certificateNumber): JsonResponse
+    {
+        $certificate = Certificate::where('certificate_number', $certificateNumber)
+            ->with(['student', 'slot.site', 'slot.preceptor', 'issuer'])
+            ->first();
+
+        if (!$certificate) {
+            return response()->json(['message' => 'Certificate not found.', 'valid' => false], 404);
+        }
+
+        return response()->json([
+            'valid' => $certificate->status === 'issued',
+            'status' => $certificate->status,
+            'certificate_number' => $certificate->certificate_number,
+            'title' => $certificate->title,
+            'student_name' => $certificate->student->first_name . ' ' . $certificate->student->last_name,
+            'specialty' => $certificate->slot->specialty,
+            'site_name' => $certificate->slot->site->name,
+            'preceptor_name' => $certificate->slot->preceptor ? $certificate->slot->preceptor->first_name . ' ' . $certificate->slot->preceptor->last_name : null,
+            'total_hours' => $certificate->total_hours,
+            'overall_score' => $certificate->overall_score,
+            'issued_date' => $certificate->issued_date->format('Y-m-d'),
+            'issued_by' => $certificate->issuer->first_name . ' ' . $certificate->issuer->last_name,
+            'revoked_date' => $certificate->revoked_date?->format('Y-m-d'),
+            'revocation_reason' => $certificate->revocation_reason,
         ]);
     }
 

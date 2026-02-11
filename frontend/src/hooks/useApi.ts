@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
+  onboardingTemplatesApi, onboardingTasksApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -393,5 +394,97 @@ export function useMarkAllAsRead() {
       qc.invalidateQueries({ queryKey: ['notifications'] })
       qc.invalidateQueries({ queryKey: ['unread-count'] })
     },
+  })
+}
+
+// --- Onboarding Templates ---
+export function useOnboardingTemplates(params?: { site_id?: string }) {
+  return useQuery({
+    queryKey: ['onboarding-templates', params],
+    queryFn: () => onboardingTemplatesApi.list(params),
+  })
+}
+
+export function useCreateOnboardingTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: onboardingTemplatesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['onboarding-templates'] }) },
+  })
+}
+
+export function useUpdateOnboardingTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof onboardingTemplatesApi.update>[1] }) => onboardingTemplatesApi.update(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['onboarding-templates'] }) },
+  })
+}
+
+export function useDeleteOnboardingTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: onboardingTemplatesApi.delete,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['onboarding-templates'] }) },
+  })
+}
+
+// --- Onboarding Tasks ---
+export function useOnboardingTasks(params?: { application_id?: string }) {
+  return useQuery({
+    queryKey: ['onboarding-tasks', params],
+    queryFn: () => onboardingTasksApi.list(params),
+  })
+}
+
+export function useCompleteTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: onboardingTasksApi.complete,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding-tasks'] })
+      qc.invalidateQueries({ queryKey: ['onboarding-progress'] })
+    },
+  })
+}
+
+export function useUncompleteTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: onboardingTasksApi.uncomplete,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding-tasks'] })
+      qc.invalidateQueries({ queryKey: ['onboarding-progress'] })
+    },
+  })
+}
+
+export function useVerifyTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data?: { verification_notes?: string } }) => onboardingTasksApi.verify(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding-tasks'] })
+      qc.invalidateQueries({ queryKey: ['onboarding-progress'] })
+    },
+  })
+}
+
+export function useUnverifyTask() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: onboardingTasksApi.unverify,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['onboarding-tasks'] })
+      qc.invalidateQueries({ queryKey: ['onboarding-progress'] })
+    },
+  })
+}
+
+export function useOnboardingProgress(applicationId: string | null) {
+  return useQuery({
+    queryKey: ['onboarding-progress', applicationId],
+    queryFn: () => onboardingTasksApi.applicationProgress(applicationId!),
+    enabled: !!applicationId,
   })
 }

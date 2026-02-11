@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Award, Search, Plus, Eye, XCircle, CheckCircle, Clock, User, MapPin, Calendar, Hash, Star, AlertTriangle } from 'lucide-react'
+import { Award, Search, Plus, Eye, XCircle, CheckCircle, Clock, User, MapPin, Calendar, Hash, Star, AlertTriangle, Download } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useCertificates, useCreateCertificate, useApplications, useCertificateEligibility, useRevokeCertificate } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import type { ApiCertificate, ApiApplication } from '../services/api.ts'
+import { certificatesApi } from '../services/api.ts'
 
 export function Certificates() {
   const { user } = useAuth()
@@ -332,7 +333,15 @@ function CertificateDetailModal({ certificate: cert, onClose }: { certificate: A
           </div>
         )}
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-3">
+          {cert.status === 'issued' && (
+            <Button
+              onClick={() => window.open(certificatesApi.getPdfUrl(cert.id), '_blank')}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+          )}
           <Button variant="outline" onClick={onClose}>Close</Button>
         </div>
       </div>
