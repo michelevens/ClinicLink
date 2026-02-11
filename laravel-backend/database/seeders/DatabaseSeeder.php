@@ -633,8 +633,8 @@ class DatabaseSeeder extends Seeder
             'description' => 'Scrub in on surgeries, pre-op assessments, post-op rounding, wound management. Work directly with attending surgeons.',
             'start_date' => '2026-03-15',
             'end_date' => '2026-06-15',
-            'capacity' => 2,
-            'filled' => 1,
+            'capacity' => 4,
+            'filled' => 3,
             'requirements' => ['BLS/CPR', 'ACLS', 'Background Check', 'Drug Screen', 'Liability Insurance', 'Surgical Clearance'],
             'cost' => 0,
             'cost_type' => 'free',
@@ -703,8 +703,8 @@ class DatabaseSeeder extends Seeder
             'description' => 'Inpatient and outpatient psychiatry. Medication management, psychotherapy observation, crisis intervention.',
             'start_date' => '2026-05-01',
             'end_date' => '2026-07-31',
-            'capacity' => 2,
-            'filled' => 0,
+            'capacity' => 4,
+            'filled' => 2,
             'requirements' => ['BLS/CPR', 'Background Check', 'Drug Screen', 'Liability Insurance', 'HIPAA Training'],
             'cost' => 1200,
             'cost_type' => 'paid',
@@ -1053,6 +1053,86 @@ class DatabaseSeeder extends Seeder
             'notes' => 'All psych slots reserved for PMHNP students this cycle.',
         ]);
 
+        // --- Additional students for Patricia (preceptor4) to test varied statuses ---
+
+        // David Kim: accepted at Surgery (current rotation under Patricia)
+        $appDavidSurgery = Application::create([
+            'student_id' => $student2->id,
+            'slot_id' => $slotSurgery->id,
+            'status' => 'accepted',
+            'cover_letter' => 'Although I am a BSN student, I have extensive CNA experience in surgical units and want to broaden my perioperative skills.',
+            'submitted_at' => '2026-02-10 09:00:00',
+            'reviewed_at' => '2026-02-12 14:00:00',
+            'reviewed_by' => $siteManager2->id,
+            'notes' => 'Strong surgical background from CNA work. Accepted for observation-focused role.',
+        ]);
+
+        // Sarah Chen: pending at Surgery (awaiting review)
+        Application::create([
+            'student_id' => $demoStudent->id,
+            'slot_id' => $slotSurgery->id,
+            'status' => 'pending',
+            'cover_letter' => 'I am an FNP student seeking surgical exposure to complement my primary care training. My bilingual skills could benefit the diverse patient population.',
+            'submitted_at' => '2026-02-14 11:00:00',
+        ]);
+
+        // Marcus Johnson: accepted at Psychiatry (current rotation under Patricia)
+        $appMarcusPsych = Application::create([
+            'student_id' => $student4->id,
+            'slot_id' => $slotPsych->id,
+            'status' => 'accepted',
+            'cover_letter' => 'My pediatric NP background gives me unique insight into child and adolescent psychiatry. I am excited about the medication management component.',
+            'submitted_at' => '2026-02-08 10:00:00',
+            'reviewed_at' => '2026-02-10 16:00:00',
+            'reviewed_by' => $siteManager2->id,
+            'notes' => 'Good fit for child/adolescent psych caseload.',
+        ]);
+
+        // Aisha Patel: pending at Psychiatry
+        Application::create([
+            'student_id' => $student3->id,
+            'slot_id' => $slotPsych->id,
+            'status' => 'pending',
+            'cover_letter' => 'My MSW clinical background in behavioral health has prepared me well for psychiatric settings. I am interested in the crisis intervention component.',
+            'submitted_at' => '2026-02-15 14:00:00',
+        ]);
+
+        // Emily Torres: waitlisted at Psychiatry
+        Application::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotPsych->id,
+            'status' => 'waitlisted',
+            'cover_letter' => 'I am a senior BSN student interested in psychiatric nursing. My ICU experience has exposed me to delirium management and acute behavioral emergencies.',
+            'submitted_at' => '2026-02-09 15:00:00',
+            'reviewed_at' => '2026-02-11 10:00:00',
+            'reviewed_by' => $siteManager2->id,
+            'notes' => 'Qualified candidate but slots currently full. Waitlisted for next opening.',
+        ]);
+
+        // Emily Torres: accepted at Internal Medicine (past rotation, completed)
+        $appEmilyIM = Application::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotInternalMed->id,
+            'status' => 'completed',
+            'cover_letter' => 'My BSN training and strong assessment skills make me a good fit for internal medicine.',
+            'submitted_at' => '2025-12-05 10:00:00',
+            'reviewed_at' => '2025-12-08 14:00:00',
+            'reviewed_by' => $siteManager2->id,
+            'notes' => 'Completed rotation satisfactorily.',
+        ]);
+
+        // Kenji Tanaka: declined at Surgery (email not verified - can't start)
+        Application::create([
+            'student_id' => $student8->id,
+            'slot_id' => $slotSurgery->id,
+            'status' => 'declined',
+            'cover_letter' => 'I am a DPT student seeking surgical observation to understand post-operative rehabilitation better.',
+            'submitted_at' => '2026-02-06 08:00:00',
+            'reviewed_at' => '2026-02-07 11:00:00',
+            'reviewed_by' => $siteManager2->id,
+            'notes' => 'Student email not verified. DPT program not eligible for this surgical rotation.',
+        ]);
+
         // =====================================================================
         // 9. HOUR LOGS — pending, approved, rejected across categories
         // =====================================================================
@@ -1295,6 +1375,125 @@ class DatabaseSeeder extends Seeder
             'approved_at' => '2026-01-11 09:00:00',
         ]);
 
+        // --- Hour logs for additional students at Patricia's slots ---
+
+        // David Kim at Surgery (accepted) — approved + pending hours
+        HourLog::create([
+            'student_id' => $student2->id,
+            'slot_id' => $slotSurgery->id,
+            'date' => '2026-02-17',
+            'hours_worked' => 10,
+            'category' => 'direct_care',
+            'description' => 'Surgical orientation day. Observed 2 laparoscopic cholecystectomies, assisted with wound dressing changes on 4 post-op patients.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-02-18 08:00:00',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student2->id,
+            'slot_id' => $slotSurgery->id,
+            'date' => '2026-02-18',
+            'hours_worked' => 10,
+            'category' => 'direct_care',
+            'description' => 'Pre-op assessments (3 patients), scrubbed in on appendectomy, post-op rounding on 6 patients.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-02-19 08:00:00',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student2->id,
+            'slot_id' => $slotSurgery->id,
+            'date' => '2026-02-19',
+            'hours_worked' => 10,
+            'category' => 'direct_care',
+            'description' => 'Assisted in hernia repair, managed 2 wound vacs, discharged 3 patients.',
+            'status' => 'pending',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student2->id,
+            'slot_id' => $slotSurgery->id,
+            'date' => '2026-02-20',
+            'hours_worked' => 4,
+            'category' => 'indirect_care',
+            'description' => 'Surgical case review, documentation, preceptor teaching session on surgical instruments.',
+            'status' => 'pending',
+        ]);
+
+        // Marcus Johnson at Psychiatry (accepted) — just started, one pending log
+        HourLog::create([
+            'student_id' => $student4->id,
+            'slot_id' => $slotPsych->id,
+            'date' => '2026-02-17',
+            'hours_worked' => 8,
+            'category' => 'direct_care',
+            'description' => 'Psychiatry orientation. Observed medication management sessions (3 patients). Reviewed safety protocols.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-02-18 09:00:00',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student4->id,
+            'slot_id' => $slotPsych->id,
+            'date' => '2026-02-18',
+            'hours_worked' => 8,
+            'category' => 'direct_care',
+            'description' => 'Co-facilitated group therapy session. Individual patient assessments (2). Attended interdisciplinary team meeting.',
+            'status' => 'pending',
+        ]);
+
+        // Emily Torres at Internal Medicine (completed rotation) — all approved
+        HourLog::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotInternalMed->id,
+            'date' => '2026-01-06',
+            'hours_worked' => 8,
+            'category' => 'direct_care',
+            'description' => 'IM orientation. History & physical on 3 patients. Morning rounds with attending.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-01-07 10:00:00',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotInternalMed->id,
+            'date' => '2026-01-07',
+            'hours_worked' => 8,
+            'category' => 'direct_care',
+            'description' => 'Rounding on 5 patients. Admission workup for COPD exacerbation. Attended grand rounds.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-01-08 10:00:00',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotInternalMed->id,
+            'date' => '2026-01-08',
+            'hours_worked' => 8,
+            'category' => 'direct_care',
+            'description' => 'Managed 6-patient panel. Discharge planning for 2 patients. Presented at noon conference.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-01-09 10:00:00',
+        ]);
+
+        HourLog::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotInternalMed->id,
+            'date' => '2026-01-09',
+            'hours_worked' => 4,
+            'category' => 'indirect_care',
+            'description' => 'Documentation, case presentation preparation, quality improvement project work.',
+            'status' => 'approved',
+            'approved_by' => $preceptor4->id,
+            'approved_at' => '2026-01-10 10:00:00',
+        ]);
+
         // =====================================================================
         // 10. EVALUATIONS — mid_rotation, final, student_feedback
         // =====================================================================
@@ -1451,6 +1650,52 @@ class DatabaseSeeder extends Seeder
             'is_submitted' => false,
         ]);
 
+        // --- Evaluations for additional students at Patricia's slots ---
+
+        // Final evaluation: Emily at Internal Medicine (completed, by Patricia)
+        Evaluation::create([
+            'type' => 'final',
+            'student_id' => $student5->id,
+            'preceptor_id' => $preceptor4->id,
+            'slot_id' => $slotInternalMed->id,
+            'ratings' => [
+                'clinical_knowledge' => 4,
+                'assessment_skills' => 4,
+                'communication' => 4,
+                'professionalism' => 5,
+                'critical_thinking' => 3,
+                'documentation' => 4,
+                'time_management' => 4,
+            ],
+            'comments' => 'Emily performed well in her internal medicine rotation. Strong assessment skills and excellent professionalism. Her ICU interest was evident.',
+            'overall_score' => 4.0,
+            'strengths' => 'Reliable, strong patient rapport, thorough documentation, punctual',
+            'areas_for_improvement' => 'Could improve differential diagnosis depth. Would benefit from more independent clinical decision-making.',
+            'is_submitted' => true,
+        ]);
+
+        // Mid-rotation: David at Surgery (by Patricia)
+        Evaluation::create([
+            'type' => 'mid_rotation',
+            'student_id' => $student2->id,
+            'preceptor_id' => $preceptor4->id,
+            'slot_id' => $slotSurgery->id,
+            'ratings' => [
+                'clinical_knowledge' => 3,
+                'assessment_skills' => 4,
+                'communication' => 4,
+                'professionalism' => 5,
+                'critical_thinking' => 3,
+                'documentation' => 4,
+                'time_management' => 4,
+            ],
+            'comments' => 'David is adjusting well to the surgical environment. His CNA background provides a strong foundation for patient care.',
+            'overall_score' => 3.9,
+            'strengths' => 'Excellent work ethic, strong hands-on skills, very reliable',
+            'areas_for_improvement' => 'Needs to develop surgical knowledge base. Should study anatomy and common surgical procedures more.',
+            'is_submitted' => true,
+        ]);
+
         // =====================================================================
         // 11. CERTIFICATES — issued and revoked
         // =====================================================================
@@ -1488,6 +1733,19 @@ class DatabaseSeeder extends Seeder
             'title' => 'Internal Medicine PA Rotation - Completed with Distinction',
             'total_hours' => 30.0,
             'overall_score' => 4.7,
+            'status' => 'issued',
+            'issued_date' => '2026-02-28',
+        ]);
+
+        // Emily's completed IM rotation certificate (issued by Patricia)
+        Certificate::create([
+            'student_id' => $student5->id,
+            'slot_id' => $slotInternalMed->id,
+            'issued_by' => $preceptor4->id,
+            'certificate_number' => 'CL-QRST-2026-0005',
+            'title' => 'Internal Medicine BSN Rotation - Completion',
+            'total_hours' => 28.0,
+            'overall_score' => 4.0,
             'status' => 'issued',
             'issued_date' => '2026-02-28',
         ]);
@@ -2055,6 +2313,29 @@ class DatabaseSeeder extends Seeder
             'contact_hours' => 15.00,
             'status' => 'rejected',
             'rejection_reason' => 'Student is from FIU, not UMiami. CE certificate must be issued under the student\'s own university CE policy.',
+            'verification_uuid' => Str::uuid(),
+        ]);
+
+        // --- Additional CE certificates for Patricia ---
+
+        // Issued CE for supervising Emily's completed IM rotation (USF — no CE policy, so using FIU policy as nearest match)
+        CeCertificate::create([
+            'university_id' => $fiu->id,
+            'preceptor_id' => $preceptor4->id,
+            'application_id' => $appEmilyIM->id,
+            'contact_hours' => 20.00,
+            'status' => 'issued',
+            'issued_at' => '2026-02-28 16:00:00',
+            'verification_uuid' => Str::uuid(),
+        ]);
+
+        // Pending CE for supervising David at Surgery (FIU — auto-issue expected)
+        CeCertificate::create([
+            'university_id' => $fiu->id,
+            'preceptor_id' => $preceptor4->id,
+            'application_id' => $appDavidSurgery->id,
+            'contact_hours' => 20.00,
+            'status' => 'pending',
             'verification_uuid' => Str::uuid(),
         ]);
     }
