@@ -74,8 +74,10 @@ class StudentController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        // Enrich with hour summaries and latest evaluation for each student
-        $result = $students->map(function ($student) {
+        // Enrich with hour summaries; restrict sensitive fields based on role
+        $canSeeSensitive = $user->isCoordinator() || $user->role === 'professor' || $user->isAdmin();
+
+        $result = $students->map(function ($student) use ($canSeeSensitive) {
             $profile = $student->studentProfile;
             $approvedHours = HourLog::where('student_id', $student->id)
                 ->where('status', 'approved')
@@ -84,7 +86,7 @@ class StudentController extends Controller
                 ->where('status', 'pending')
                 ->sum('hours_worked');
 
-            return [
+            $data = [
                 'id' => $student->id,
                 'first_name' => $student->first_name,
                 'last_name' => $student->last_name,
@@ -92,14 +94,20 @@ class StudentController extends Controller
                 'university' => $profile?->university?->name,
                 'program' => $profile?->program?->name,
                 'degree_type' => $profile?->program?->degree_type,
-                'graduation_date' => $profile?->graduation_date,
-                'gpa' => $profile?->gpa,
                 'hours_completed' => (float) $approvedHours,
                 'hours_required' => $profile?->hours_required ?? 0,
                 'pending_hours' => (float) $pendingHours,
-                'bio' => $profile?->bio,
-                'clinical_interests' => $profile?->clinical_interests ?? [],
             ];
+
+            // Only coordinators, professors, and admins can see sensitive academic data
+            if ($canSeeSensitive) {
+                $data['graduation_date'] = $profile?->graduation_date;
+                $data['gpa'] = $profile?->gpa;
+                $data['bio'] = $profile?->bio;
+                $data['clinical_interests'] = $profile?->clinical_interests ?? [];
+            }
+
+            return $data;
         });
 
         return response()->json(['students' => $result]);

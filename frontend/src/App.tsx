@@ -34,10 +34,11 @@ import { ResetPassword } from './pages/ResetPassword.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
-function ProtectedRoute({ children }: { children: ReactNode }) {
+function ProtectedRoute({ children, roles }: { children: ReactNode; roles?: string[] }) {
   const { isAuthenticated, user } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (user && !user.onboardingCompleted) return <Navigate to="/onboarding" replace />
+  if (roles && user && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />
   return <MainLayout>{children}</MainLayout>
 }
 
@@ -88,27 +89,27 @@ export default function App() {
       {/* Onboarding (full-screen, no sidebar) */}
       <Route path="/onboarding" element={<OnboardingRoute />} />
 
-      {/* Protected */}
+      {/* Protected — role guards match sidebar visibility */}
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/applications" element={<ProtectedRoute><Applications /></ProtectedRoute>} />
-      <Route path="/hours" element={<ProtectedRoute><HourLog /></ProtectedRoute>} />
-      <Route path="/evaluations" element={<ProtectedRoute><Evaluations /></ProtectedRoute>} />
-      <Route path="/slots" element={<ProtectedRoute><SlotManagement /></ProtectedRoute>} />
-      <Route path="/preceptors" element={<ProtectedRoute><SitePreceptors /></ProtectedRoute>} />
-      <Route path="/site-applications" element={<ProtectedRoute><SiteApplications /></ProtectedRoute>} />
-      <Route path="/certificates" element={<ProtectedRoute><Certificates /></ProtectedRoute>} />
+      <Route path="/applications" element={<ProtectedRoute roles={['student']}><Applications /></ProtectedRoute>} />
+      <Route path="/hours" element={<ProtectedRoute roles={['student', 'preceptor']}><HourLog /></ProtectedRoute>} />
+      <Route path="/evaluations" element={<ProtectedRoute roles={['student', 'preceptor']}><Evaluations /></ProtectedRoute>} />
+      <Route path="/slots" element={<ProtectedRoute roles={['site_manager', 'admin']}><SlotManagement /></ProtectedRoute>} />
+      <Route path="/preceptors" element={<ProtectedRoute roles={['site_manager']}><SitePreceptors /></ProtectedRoute>} />
+      <Route path="/site-applications" element={<ProtectedRoute roles={['site_manager', 'admin']}><SiteApplications /></ProtectedRoute>} />
+      <Route path="/certificates" element={<ProtectedRoute roles={['student', 'preceptor', 'coordinator', 'admin']}><Certificates /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/site" element={<ProtectedRoute><MySite /></ProtectedRoute>} />
-      <Route path="/students" element={<ProtectedRoute><MyStudents /></ProtectedRoute>} />
-      <Route path="/programs" element={<ProtectedRoute><Programs /></ProtectedRoute>} />
-      <Route path="/placements" element={<ProtectedRoute><Placements /></ProtectedRoute>} />
-      <Route path="/sites" element={<ProtectedRoute><SitesDirectory /></ProtectedRoute>} />
-      <Route path="/universities" element={<ProtectedRoute><UniversityDirectory /></ProtectedRoute>} />
-      <Route path="/onboarding-checklists" element={<ProtectedRoute><OnboardingChecklists /></ProtectedRoute>} />
-      <Route path="/agreements" element={<ProtectedRoute><Agreements /></ProtectedRoute>} />
-      <Route path="/compliance" element={<ProtectedRoute><ComplianceDashboard /></ProtectedRoute>} />
-      <Route path="/ce-credits" element={<ProtectedRoute><CeCredits /></ProtectedRoute>} />
-      <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+      <Route path="/site" element={<ProtectedRoute roles={['site_manager', 'preceptor']}><MySite /></ProtectedRoute>} />
+      <Route path="/students" element={<ProtectedRoute roles={['preceptor', 'site_manager', 'coordinator', 'professor', 'admin']}><MyStudents /></ProtectedRoute>} />
+      <Route path="/programs" element={<ProtectedRoute roles={['coordinator', 'admin']}><Programs /></ProtectedRoute>} />
+      <Route path="/placements" element={<ProtectedRoute roles={['coordinator', 'professor', 'admin']}><Placements /></ProtectedRoute>} />
+      <Route path="/sites" element={<ProtectedRoute roles={['coordinator', 'admin']}><SitesDirectory /></ProtectedRoute>} />
+      <Route path="/universities" element={<ProtectedRoute roles={['coordinator', 'admin']}><UniversityDirectory /></ProtectedRoute>} />
+      <Route path="/onboarding-checklists" element={<ProtectedRoute roles={['student', 'site_manager']}><OnboardingChecklists /></ProtectedRoute>} />
+      <Route path="/agreements" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Agreements /></ProtectedRoute>} />
+      <Route path="/compliance" element={<ProtectedRoute roles={['student', 'site_manager', 'coordinator', 'professor', 'admin']}><ComplianceDashboard /></ProtectedRoute>} />
+      <Route path="/ce-credits" element={<ProtectedRoute roles={['preceptor', 'coordinator', 'admin']}><CeCredits /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
