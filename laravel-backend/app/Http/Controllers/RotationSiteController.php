@@ -112,6 +112,6 @@ class RotationSiteController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json($sites);
+        return response()->json(['sites' => $sites]);
     }
 }
