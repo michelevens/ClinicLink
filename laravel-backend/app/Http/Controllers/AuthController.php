@@ -176,7 +176,15 @@ class AuthController extends Controller
 
             case 'coordinator':
             case 'professor':
-                // University association handled separately
+                if ($request->filled('university_id')) {
+                    StudentProfile::updateOrCreate(
+                        ['user_id' => $user->id],
+                        array_filter([
+                            'university_id' => $request->input('university_id'),
+                            'program_id' => $request->input('program_id'),
+                        ], fn ($v) => !is_null($v))
+                    );
+                }
                 break;
         }
 
