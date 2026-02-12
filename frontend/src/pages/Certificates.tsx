@@ -44,7 +44,7 @@ export function Certificates() {
     total: certificates.length,
     issued: certificates.filter(c => c.status === 'issued').length,
     revoked: certificates.filter(c => c.status === 'revoked').length,
-    totalHours: certificates.filter(c => c.status === 'issued').reduce((sum, c) => sum + c.total_hours, 0),
+    totalHours: certificates.filter(c => c.status === 'issued').reduce((sum, c) => sum + (parseFloat(String(c.total_hours)) || 0), 0),
   }), [certificates])
 
   return (
@@ -97,7 +97,7 @@ export function Certificates() {
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-900">{stats.totalHours}</p>
+              <p className="text-2xl font-bold text-stone-900">{Math.round(stats.totalHours * 10) / 10}</p>
               <p className="text-xs text-stone-500">Total Hours</p>
             </div>
           </div>

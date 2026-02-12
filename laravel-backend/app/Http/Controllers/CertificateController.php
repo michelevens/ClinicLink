@@ -200,9 +200,9 @@ class CertificateController extends Controller
         $frontendUrl = config('app.frontend_url', 'https://michelevens.github.io/ClinicLink');
         $verifyUrl = $frontendUrl . '/verify/' . $certificate->certificate_number;
 
-        // Generate QR code as base64 PNG
-        $qrPng = QrCode::format('png')->size(200)->margin(1)->generate($verifyUrl);
-        $qrCode = 'data:image/png;base64,' . base64_encode($qrPng);
+        // Generate QR code as SVG (no imagick extension required)
+        $qrSvg = QrCode::size(200)->margin(1)->generate($verifyUrl);
+        $qrCode = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
 
         $university = $certificate->student->studentProfile?->university;
         $program = $certificate->student->studentProfile?->program;
