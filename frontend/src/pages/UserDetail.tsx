@@ -252,7 +252,7 @@ function StudentSections({ user }: { user: ApiUser }) {
             </div>
             <div className="bg-stone-50 rounded-xl p-3">
               <p className="text-xs text-stone-500 mb-1">Hours Progress</p>
-              <p className="text-sm font-medium text-stone-900">{profile.hours_completed || 0} / {profile.hours_required || '?'}h</p>
+              <p className="text-sm font-medium text-stone-900">{(profile.prior_hours || 0) + (profile.hours_completed || 0)} / {profile.program?.required_hours || '?'}h</p>
             </div>
           </div>
           {profile.clinical_interests?.length > 0 && (
