@@ -38,7 +38,11 @@ class PasswordResetController extends Controller
             $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
                 . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
-            Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+            try {
+                Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send password reset email to ' . $user->email . ': ' . $e->getMessage());
+            }
         }
 
         // Always return success to prevent email enumeration
