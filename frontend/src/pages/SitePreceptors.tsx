@@ -1,31 +1,70 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
-import { useSitePreceptors, useSiteInvites, useCreateInvite, useRevokeInvite, useMySites } from '../hooks/useApi.ts'
+import { useSitePreceptors, useSiteInvites, useCreateInvite, useBulkCreateInvites, useRevokeInvite, useMySites } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import {
   User, Mail, Phone, Calendar, Stethoscope, Loader2, UserX,
   Link2, Copy, Plus, Trash2, CheckCircle, Clock,
-  Building2, Send
+  Building2, Send, Upload, X, Users, AlertCircle
 } from 'lucide-react'
+
+const MESSAGE_TEMPLATES = [
+  {
+    label: 'Preceptor Welcome',
+    message: `We'd like to invite you to join our clinical rotation site on ClinicLink — a platform that simplifies rotation management, student matching, hour tracking, and evaluations.
+
+Click the link below to create your account and get started. We look forward to working with you!`,
+  },
+  {
+    label: 'School / Coordinator Outreach',
+    message: `We're excited to introduce you to ClinicLink — a clinical rotation matching platform that connects nursing schools, clinical sites, and preceptors.
+
+As a coordinator, you can manage student placements, track compliance, and streamline the rotation process. Click below to join and explore the platform!`,
+  },
+  {
+    label: 'Site Manager Invitation',
+    message: `You're invited to manage your clinical site on ClinicLink. Our platform helps you coordinate rotation slots, manage preceptors, track student hours, and ensure compliance — all in one place.
+
+Click the link below to set up your account and start managing your site.`,
+  },
+  {
+    label: 'General Platform Invite',
+    message: `You're invited to try ClinicLink — a modern platform for managing clinical rotations, connecting students with preceptors, and streamlining the entire placement process.
+
+Join us and see how ClinicLink can simplify your workflow. Click the link below to get started!`,
+  },
+]
 
 export function SitePreceptors() {
   const { data, isLoading } = useSitePreceptors()
   const { data: invitesData } = useSiteInvites()
   const { data: sitesData } = useMySites()
   const createInvite = useCreateInvite()
+  const bulkCreateInvites = useBulkCreateInvites()
   const revokeInvite = useRevokeInvite()
 
   const preceptors = data?.preceptors || []
   const invites = invitesData?.invites || []
   const sites = sitesData?.sites || []
 
+  // Single invite state
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteSiteId, setInviteSiteId] = useState('')
+  const [inviteMessage, setInviteMessage] = useState('')
   const [copiedToken, setCopiedToken] = useState<string | null>(null)
+
+  // Bulk invite state
+  const [showBulkForm, setShowBulkForm] = useState(false)
+  const [bulkEmails, setBulkEmails] = useState<string[]>([])
+  const [bulkEmailInput, setBulkEmailInput] = useState('')
+  const [bulkSiteId, setBulkSiteId] = useState('')
+  const [bulkMessage, setBulkMessage] = useState('')
+  const [bulkResults, setBulkResults] = useState<{ email: string; status: string; reason?: string }[] | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const pendingInvites = invites.filter(i => i.status === 'pending')
   const acceptedInvites = invites.filter(i => i.status === 'accepted')
@@ -40,12 +79,14 @@ export function SitePreceptors() {
       const res = await createInvite.mutateAsync({
         site_id: siteId,
         email: inviteEmail || undefined,
+        message: inviteMessage || undefined,
         expires_in_days: 30,
       })
       const url = res.invite.url
       await navigator.clipboard.writeText(url).catch(() => {})
       toast.success('Invite link created and copied to clipboard!')
       setInviteEmail('')
+      setInviteMessage('')
       setShowInviteForm(false)
     } catch {
       toast.error('Failed to create invite')
@@ -74,6 +115,72 @@ export function SitePreceptors() {
     }
   }
 
+  // CSV / bulk helpers
+  const parseEmails = (text: string): string[] => {
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+    const matches = text.match(emailRegex) || []
+    return [...new Set(matches.map(e => e.toLowerCase()))]
+  }
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const text = event.target?.result as string
+      const emails = parseEmails(text)
+      if (emails.length === 0) {
+        toast.error('No valid email addresses found in file')
+        return
+      }
+      setBulkEmails(prev => [...new Set([...prev, ...emails])])
+      toast.success(`Found ${emails.length} email address${emails.length !== 1 ? 'es' : ''}`)
+    }
+    reader.readAsText(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleAddEmails = () => {
+    const emails = parseEmails(bulkEmailInput)
+    if (emails.length === 0) {
+      toast.error('No valid email addresses found')
+      return
+    }
+    setBulkEmails(prev => [...new Set([...prev, ...emails])])
+    setBulkEmailInput('')
+    toast.success(`Added ${emails.length} email${emails.length !== 1 ? 's' : ''}`)
+  }
+
+  const handleRemoveEmail = (email: string) => {
+    setBulkEmails(prev => prev.filter(e => e !== email))
+  }
+
+  const handleBulkSend = async () => {
+    const siteId = bulkSiteId || sites[0]?.id
+    if (!siteId) {
+      toast.error('No site available — create a site first')
+      return
+    }
+    if (bulkEmails.length === 0) {
+      toast.error('Add at least one email address')
+      return
+    }
+    try {
+      const res = await bulkCreateInvites.mutateAsync({
+        site_id: siteId,
+        emails: bulkEmails,
+        message: bulkMessage || undefined,
+        expires_in_days: 30,
+      })
+      setBulkResults(res.results)
+      toast.success(res.message)
+      setBulkEmails([])
+    } catch {
+      toast.error('Failed to send bulk invites')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -84,17 +191,22 @@ export function SitePreceptors() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-stone-900">Preceptors</h1>
           <p className="text-stone-500">Manage preceptors affiliated with your sites</p>
         </div>
-        <Button onClick={() => setShowInviteForm(!showInviteForm)}>
-          <Plus className="w-4 h-4" /> Invite Preceptor
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => { setShowBulkForm(!showBulkForm); setShowInviteForm(false) }}>
+            <Users className="w-4 h-4" /> Bulk Invite
+          </Button>
+          <Button onClick={() => { setShowInviteForm(!showInviteForm); setShowBulkForm(false) }}>
+            <Plus className="w-4 h-4" /> Invite Preceptor
+          </Button>
+        </div>
       </div>
 
-      {/* Invite Form */}
+      {/* Single Invite Form */}
       {showInviteForm && (
         <Card className="border-2 border-primary-200 bg-primary-50/30">
           <div className="space-y-4">
@@ -127,8 +239,30 @@ export function SitePreceptors() {
               onChange={e => setInviteEmail(e.target.value)}
               icon={<Mail className="w-4 h-4" />}
             />
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-stone-700">Personal Message (optional)</label>
+                <select
+                  onChange={e => { if (e.target.value) setInviteMessage(e.target.value); e.target.value = '' }}
+                  className="text-xs border border-stone-200 rounded-lg px-2 py-1 text-stone-500 bg-white"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Use template...</option>
+                  {MESSAGE_TEMPLATES.map(t => (
+                    <option key={t.label} value={t.message}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                value={inviteMessage}
+                onChange={e => setInviteMessage(e.target.value)}
+                placeholder="Add a personal message to include in the invite email..."
+                rows={4}
+                className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none"
+              />
+            </div>
             <p className="text-xs text-stone-400">
-              Leave blank to create an open link anyone can use, or enter an email to restrict it.
+              Leave email blank to create an open link anyone can use, or enter an email to restrict it.
             </p>
             <div className="flex gap-3">
               <Button onClick={handleCreateInvite} isLoading={createInvite.isPending}>
@@ -136,6 +270,170 @@ export function SitePreceptors() {
               </Button>
               <Button variant="ghost" onClick={() => setShowInviteForm(false)}>Cancel</Button>
             </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Bulk Invite Form */}
+      {showBulkForm && (
+        <Card className="border-2 border-violet-200 bg-violet-50/30">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-violet-700">
+                <Users className="w-5 h-5" />
+                <h3 className="font-semibold">Bulk Invite</h3>
+              </div>
+              <button onClick={() => { setShowBulkForm(false); setBulkResults(null) }} className="text-stone-400 hover:text-stone-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-stone-600">
+              Import a list of email addresses via CSV file or paste them directly. Each person will receive a unique invite link.
+            </p>
+
+            {/* Site selector */}
+            {sites.length > 1 && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-stone-700">Site</label>
+                <select
+                  value={bulkSiteId || sites[0]?.id || ''}
+                  onChange={e => setBulkSiteId(e.target.value)}
+                  className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                >
+                  {sites.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* CSV Upload + Manual Entry */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1.5">Upload CSV File</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-stone-300 rounded-xl text-sm text-stone-500 hover:border-violet-400 hover:text-violet-600 hover:bg-violet-50/50 transition-colors"
+                >
+                  <Upload className="w-5 h-5" />
+                  <span>Click to upload CSV or text file</span>
+                </button>
+                <p className="text-xs text-stone-400 mt-1">Emails will be extracted automatically from any column</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1.5">Or paste emails</label>
+                <textarea
+                  value={bulkEmailInput}
+                  onChange={e => setBulkEmailInput(e.target.value)}
+                  placeholder={"john@hospital.com\njane@university.edu\ndr.smith@clinic.org"}
+                  rows={4}
+                  className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none"
+                />
+                <div className="flex justify-end mt-1">
+                  <button
+                    onClick={handleAddEmails}
+                    className="text-xs font-medium text-violet-600 hover:text-violet-800"
+                  >
+                    + Add to list
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Email list */}
+            {bulkEmails.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-stone-700">
+                    {bulkEmails.length} recipient{bulkEmails.length !== 1 ? 's' : ''}
+                  </label>
+                  <button
+                    onClick={() => setBulkEmails([])}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-stone-200 bg-white divide-y divide-stone-100">
+                  {bulkEmails.map(email => (
+                    <div key={email} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <span className="text-stone-700 flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5 text-stone-400" />
+                        {email}
+                      </span>
+                      <button onClick={() => handleRemoveEmail(email)} className="text-stone-400 hover:text-red-500">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Message editor with templates */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-stone-700">Email Message (optional)</label>
+                <select
+                  onChange={e => { if (e.target.value) setBulkMessage(e.target.value); e.target.value = '' }}
+                  className="text-xs border border-stone-200 rounded-lg px-2 py-1 text-stone-500 bg-white"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Use template...</option>
+                  {MESSAGE_TEMPLATES.map(t => (
+                    <option key={t.label} value={t.message}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+              <textarea
+                value={bulkMessage}
+                onChange={e => setBulkMessage(e.target.value)}
+                placeholder="Add a personal message to include in all invite emails..."
+                rows={5}
+                className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Send button */}
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={handleBulkSend}
+                isLoading={bulkCreateInvites.isPending}
+                disabled={bulkEmails.length === 0}
+              >
+                <Send className="w-4 h-4" /> Send {bulkEmails.length} Invite{bulkEmails.length !== 1 ? 's' : ''}
+              </Button>
+              <Button variant="ghost" onClick={() => { setShowBulkForm(false); setBulkResults(null) }}>Cancel</Button>
+            </div>
+
+            {/* Bulk results */}
+            {bulkResults && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-stone-700">Results</h4>
+                <div className="max-h-48 overflow-y-auto rounded-xl border border-stone-200 bg-white divide-y divide-stone-100">
+                  {bulkResults.map((r, i) => (
+                    <div key={i} className="flex items-center justify-between px-3 py-2 text-sm">
+                      <span className="text-stone-700">{r.email}</span>
+                      <span className={`flex items-center gap-1 text-xs font-medium ${
+                        r.status === 'sent' ? 'text-green-600' :
+                        r.status === 'skipped' ? 'text-amber-600' : 'text-stone-500'
+                      }`}>
+                        {r.status === 'sent' && <CheckCircle className="w-3.5 h-3.5" />}
+                        {r.status === 'skipped' && <AlertCircle className="w-3.5 h-3.5" />}
+                        {r.status === 'sent' ? 'Sent' : r.status === 'skipped' ? `Skipped: ${r.reason}` : `Created (${r.reason})`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Card>
       )}
@@ -159,7 +457,7 @@ export function SitePreceptors() {
                     </p>
                     <p className="text-xs text-stone-500 flex items-center gap-1">
                       <Building2 className="w-3 h-3" /> {invite.site_name}
-                      <span className="mx-1">·</span>
+                      <span className="mx-1">&middot;</span>
                       Expires {new Date(invite.expires_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -203,7 +501,7 @@ export function SitePreceptors() {
                     {invite.accepted_by?.name || 'Unknown'}
                   </p>
                   <p className="text-xs text-stone-500">
-                    {invite.accepted_by?.email} · Joined {invite.accepted_at ? new Date(invite.accepted_at).toLocaleDateString() : ''}
+                    {invite.accepted_by?.email} &middot; Joined {invite.accepted_at ? new Date(invite.accepted_at).toLocaleDateString() : ''}
                   </p>
                 </div>
                 <span className="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Joined</span>

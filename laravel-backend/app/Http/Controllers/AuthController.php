@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\NewUserRegistrationMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
 use App\Models\RotationSite;
@@ -44,6 +45,17 @@ class AuthController extends Controller
             Mail::to($user->email)->send(new RegistrationReceivedMail($user));
         } catch (\Throwable $e) {
             Log::error('Failed to send registration email to ' . $user->email . ': ' . $e->getMessage());
+        }
+
+        // Notify all admin users about the new registration
+        try {
+            $admins = User::where('role', 'admin')->where('is_active', true)->get();
+            $reviewUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') . '/admin/users/' . $user->id;
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new NewUserRegistrationMail($user, $reviewUrl));
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed to send admin notification for new user ' . $user->email . ': ' . $e->getMessage());
         }
 
         return response()->json([

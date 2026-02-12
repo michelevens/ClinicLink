@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Seeders;
+bnamespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\University;

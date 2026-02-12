@@ -23,6 +23,12 @@
                             <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
                                 <strong>{{ $inviterName }}</strong> has invited you to join <strong>{{ $siteName }}</strong> as a preceptor on ClinicLink.
                             </p>
+                            @if($customMessage)
+                            <div style="margin:0 0 20px;padding:16px;background-color:#faf5ff;border-radius:12px;border-left:4px solid #8b5cf6;">
+                                <p style="margin:0 0 4px;color:#6b21a8;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Message from {{ $inviterName }}</p>
+                                <p style="margin:0;color:#57534e;font-size:14px;line-height:1.6;white-space:pre-line;">{{ $customMessage }}</p>
+                            </div>
+                            @endif
                             <p style="margin:0 0 24px;color:#57534e;font-size:15px;line-height:1.6;">
                                 Click the button below to accept the invitation. If you don't have a ClinicLink account yet, you'll be able to create one.
                             </p>

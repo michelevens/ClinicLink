@@ -7,7 +7,9 @@ cmds = ["composer install --no-dev --optimize-autoloader --ignore-platform-reqs"
 [phases.build]
 cmds = [
     "composer dump-autoload --optimize",
-    "php artisan key:generate --force || true"
+    "php artisan key:generate --force || true",
+    "mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/logs bootstrap/cache",
+    "chmod -R 775 storage bootstrap/cache"
 ]
 
 [start]

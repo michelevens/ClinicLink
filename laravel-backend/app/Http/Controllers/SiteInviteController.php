@@ -7,6 +7,7 @@ use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -60,6 +61,7 @@ class SiteInviteController extends Controller
             'site_id' => ['required', 'uuid', 'exists:rotation_sites,id'],
             'email' => ['nullable', 'email', 'max:255'],
             'expires_in_days' => ['sometimes', 'integer', 'min:1', 'max:90'],
+            'message' => ['nullable', 'string', 'max:2000'],
         ]);
 
         // Verify the user manages this site
@@ -86,10 +88,11 @@ class SiteInviteController extends Controller
         if ($invite->email) {
             try {
                 $inviterName = $user->first_name . ' ' . $user->last_name;
-                Mail::to($invite->email)->send(new SiteInviteMail($site->name, $inviterName, $inviteUrl));
+                $customMessage = $validated['message'] ?? null;
+                Mail::to($invite->email)->send(new SiteInviteMail($site->name, $inviterName, $inviteUrl, $customMessage));
                 $emailSent = true;
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send site invite email to ' . $invite->email . ': ' . $e->getMessage());
+                Log::error('Failed to send site invite email to ' . $invite->email . ': ' . $e->getMessage());
             }
         }
 
@@ -103,6 +106,82 @@ class SiteInviteController extends Controller
                 'expires_at' => $invite->expires_at,
                 'email_sent' => $emailSent,
             ],
+        ], 201);
+    }
+
+    /**
+     * Bulk create invites from a list of emails.
+     */
+    public function bulkStore(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'site_id' => ['required', 'uuid', 'exists:rotation_sites,id'],
+            'emails' => ['required', 'array', 'min:1', 'max:200'],
+            'emails.*' => ['required', 'email', 'max:255'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'expires_in_days' => ['sometimes', 'integer', 'min:1', 'max:90'],
+        ]);
+
+        $site = RotationSite::where('id', $validated['site_id'])
+            ->where('manager_id', $user->id)
+            ->firstOrFail();
+
+        $expiresInDays = $validated['expires_in_days'] ?? 30;
+        $inviterName = $user->first_name . ' ' . $user->last_name;
+        $customMessage = $validated['message'] ?? null;
+        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+
+        $results = [];
+        $sent = 0;
+        $failed = 0;
+        $skipped = 0;
+
+        // Deduplicate emails
+        $emails = collect($validated['emails'])->map(fn ($e) => strtolower(trim($e)))->unique()->values();
+
+        // Get existing pending/accepted invites for this site to skip duplicates
+        $existingEmails = SiteInvite::where('site_id', $site->id)
+            ->whereIn('status', ['pending', 'accepted'])
+            ->whereIn('email', $emails)
+            ->pluck('email')
+            ->map(fn ($e) => strtolower($e))
+            ->toArray();
+
+        foreach ($emails as $email) {
+            if (in_array($email, $existingEmails)) {
+                $results[] = ['email' => $email, 'status' => 'skipped', 'reason' => 'Invite already exists'];
+                $skipped++;
+                continue;
+            }
+
+            $invite = SiteInvite::create([
+                'site_id' => $site->id,
+                'invited_by' => $user->id,
+                'token' => Str::random(48),
+                'email' => $email,
+                'status' => 'pending',
+                'expires_at' => now()->addDays($expiresInDays),
+            ]);
+
+            $inviteUrl = $frontendUrl . '/invite/' . $invite->token;
+
+            try {
+                Mail::to($email)->send(new SiteInviteMail($site->name, $inviterName, $inviteUrl, $customMessage));
+                $results[] = ['email' => $email, 'status' => 'sent'];
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::error('Bulk invite email failed for ' . $email . ': ' . $e->getMessage());
+                $results[] = ['email' => $email, 'status' => 'created', 'reason' => 'Email failed to send'];
+                $failed++;
+            }
+        }
+
+        return response()->json([
+            'message' => "Bulk invite complete: {$sent} sent, {$skipped} skipped, {$failed} email failures.",
+            'summary' => ['sent' => $sent, 'skipped' => $skipped, 'failed' => $failed, 'total' => $emails->count()],
+            'results' => $results,
         ], 201);
     }
 

@@ -609,6 +609,14 @@ export function useCreateInvite() {
   })
 }
 
+export function useBulkCreateInvites() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: siteInvitesApi.bulkCreate,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['site-invites'] }) },
+  })
+}
+
 export function useAcceptInvite() {
   return useMutation({
     mutationFn: siteInvitesApi.accept,

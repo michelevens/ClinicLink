@@ -196,6 +196,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:site_manager,admin')->group(function () {
         Route::get('/site-invites', [SiteInviteController::class, 'index']);
         Route::post('/site-invites', [SiteInviteController::class, 'store']);
+        Route::post('/site-invites/bulk', [SiteInviteController::class, 'bulkStore']);
         Route::delete('/site-invites/{invite}', [SiteInviteController::class, 'destroy']);
     });
     Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);

@@ -2,34 +2,33 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class SiteInviteMail extends Mailable
+class NewUserRegistrationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public string $siteName,
-        public string $inviterName,
-        public string $inviteUrl,
-        public ?string $customMessage = null,
+        public User $newUser,
+        public string $reviewUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You're Invited to Join {$this->siteName} on ClinicLink",
+            subject: 'New User Registration - ' . $this->newUser->first_name . ' ' . $this->newUser->last_name,
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.site-invite',
+            view: 'emails.new-user-registration',
         );
     }
 }

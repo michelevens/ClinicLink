@@ -228,10 +228,18 @@ export interface ApiInviteDetail {
   expires_at: string
 }
 
+export interface BulkInviteResult {
+  email: string
+  status: 'sent' | 'skipped' | 'created'
+  reason?: string
+}
+
 export const siteInvitesApi = {
   list: () => api.get<{ invites: ApiSiteInvite[] }>('/site-invites'),
-  create: (data: { site_id: string; email?: string; expires_in_days?: number }) =>
-    api.post<{ invite: { id: string; token: string; url: string; email: string | null; site_name: string; expires_at: string } }>('/site-invites', data),
+  create: (data: { site_id: string; email?: string; expires_in_days?: number; message?: string }) =>
+    api.post<{ invite: { id: string; token: string; url: string; email: string | null; site_name: string; expires_at: string; email_sent: boolean } }>('/site-invites', data),
+  bulkCreate: (data: { site_id: string; emails: string[]; message?: string; expires_in_days?: number }) =>
+    api.post<{ message: string; summary: { sent: number; skipped: number; failed: number; total: number }; results: BulkInviteResult[] }>('/site-invites/bulk', data),
   validate: (token: string) => api.get<{ invite: ApiInviteDetail }>(`/invite/${token}`),
   accept: (token: string) => api.post<{ message: string; site: { id: string; name: string } }>(`/invite/${token}/accept`),
   revoke: (id: string) => api.delete(`/site-invites/${id}`),
