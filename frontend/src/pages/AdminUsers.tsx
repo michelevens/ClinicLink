@@ -2,9 +2,9 @@ import { useState } from 'react'
 import {
   Users, Search, Shield, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight,
   Trash2, Mail, Phone, Calendar, Clock, FileText, ClipboardCheck, Building2,
-  GraduationCap, Award, MapPin, Star, Loader2, Eye
+  GraduationCap, Award, MapPin, Star, Loader2, Eye, UserPlus
 } from 'lucide-react'
-import { useAdminUsers, useAdminUser, useUpdateUser, useDeleteUser } from '../hooks/useApi.ts'
+import { useAdminUsers, useAdminUser, useUpdateUser, useDeleteUser, useCreateUser, useUniversities, useSites } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
@@ -29,6 +29,7 @@ export function AdminUsers() {
   const [editRole, setEditRole] = useState<ApiUser | null>(null)
   const [newRole, setNewRole] = useState('')
   const [viewUserId, setViewUserId] = useState<string | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   const { data, isLoading } = useAdminUsers({
     search: search || undefined,
@@ -62,9 +63,14 @@ export function AdminUsers() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900">User Management</h1>
-        <p className="text-stone-500 mt-1">Manage all platform users ({total} total)</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">User Management</h1>
+          <p className="text-stone-500 mt-1">Manage all platform users ({total} total)</p>
+        </div>
+        <Button onClick={() => setShowCreateModal(true)}>
+          <UserPlus className="w-4 h-4 mr-2" /> Add User
+        </Button>
       </div>
 
       {/* Filters */}
@@ -249,6 +255,11 @@ export function AdminUsers() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <CreateUserModal onClose={() => setShowCreateModal(false)} />
       )}
     </div>
   )
@@ -609,5 +620,172 @@ function SiteManagerDetails({ user }: { user: ApiUser }) {
         </div>
       )}
     </div>
+  )
+}
+
+// ─── Create User Modal ──────────────────────────────────────────
+function CreateUserModal({ onClose }: { onClose: () => void }) {
+  const [form, setForm] = useState({
+    first_name: '', last_name: '', email: '', username: '', phone: '',
+    role: 'student' as string,
+    university_id: '', program_id: '', site_ids: [] as string[],
+  })
+  const [error, setError] = useState('')
+
+  const createUser = useCreateUser()
+  const { data: uniData } = useUniversities()
+  const { data: sitesData } = useSites()
+  const universities = uniData?.data || []
+  const sites = (sitesData as { data?: { id: string; name: string; city: string; state: string }[] })?.data || []
+
+  const selectedUni = universities.find(u => u.id === form.university_id)
+  const programs = selectedUni?.programs || []
+
+  const showUniversity = ['student', 'coordinator', 'professor', 'preceptor'].includes(form.role)
+  const showProgram = form.role === 'student' && form.university_id
+  const showSites = ['site_manager', 'preceptor'].includes(form.role)
+
+  const handleSubmit = async () => {
+    setError('')
+    if (!form.first_name || !form.last_name || !form.email || !form.role) {
+      setError('First name, last name, email, and role are required.')
+      return
+    }
+    try {
+      await createUser.mutateAsync({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email: form.email,
+        role: form.role,
+        username: form.username || undefined,
+        phone: form.phone || undefined,
+        university_id: showUniversity && form.university_id ? form.university_id : undefined,
+        program_id: showProgram && form.program_id ? form.program_id : undefined,
+        site_ids: showSites && form.site_ids.length > 0 ? form.site_ids : undefined,
+      })
+      onClose()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create user.'
+      setError(msg)
+    }
+  }
+
+  const toggleSite = (siteId: string) => {
+    setForm(f => ({
+      ...f,
+      site_ids: f.site_ids.includes(siteId)
+        ? f.site_ids.filter(id => id !== siteId)
+        : [...f.site_ids, siteId],
+    }))
+  }
+
+  const inputClass = "w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+
+  return (
+    <Modal isOpen onClose={onClose} title="Add New User" size="lg">
+      <div className="space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">First Name *</label>
+            <input className={inputClass} value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Last Name *</label>
+            <input className={inputClass} value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Email *</label>
+          <input type="email" className={inputClass} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Username</label>
+            <input className={inputClass} placeholder="lowercase, no spaces" value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') }))} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Phone</label>
+            <input className={inputClass} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Role *</label>
+          <select className={inputClass} value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value, university_id: '', program_id: '', site_ids: [] }))}>
+            {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+          </select>
+        </div>
+
+        {showUniversity && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              <Building2 className="w-3.5 h-3.5 inline mr-1" />
+              University
+            </label>
+            <select className={inputClass} value={form.university_id} onChange={e => setForm(f => ({ ...f, university_id: e.target.value, program_id: '' }))}>
+              <option value="">Select university...</option>
+              {universities.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
+        )}
+
+        {showProgram && programs.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              <GraduationCap className="w-3.5 h-3.5 inline mr-1" />
+              Program
+            </label>
+            <select className={inputClass} value={form.program_id} onChange={e => setForm(f => ({ ...f, program_id: e.target.value }))}>
+              <option value="">Select program...</option>
+              {programs.map(p => <option key={p.id} value={p.id}>{p.name} ({p.degree_type})</option>)}
+            </select>
+          </div>
+        )}
+
+        {showSites && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              <MapPin className="w-3.5 h-3.5 inline mr-1" />
+              {form.role === 'site_manager' ? 'Sites to Manage' : 'Associated Sites'}
+            </label>
+            <div className="max-h-40 overflow-y-auto border border-stone-200 rounded-xl divide-y divide-stone-100">
+              {sites.map(site => (
+                <label key={site.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.site_ids.includes(site.id)}
+                    onChange={() => toggleSite(site.id)}
+                    className="rounded border-stone-300 text-primary-500 focus:ring-primary-500"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-stone-900">{site.name}</p>
+                    <p className="text-xs text-stone-500">{site.city}, {site.state}</p>
+                  </div>
+                </label>
+              ))}
+              {sites.length === 0 && <p className="px-4 py-3 text-sm text-stone-400">No sites available</p>}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-stone-50 rounded-xl p-3 text-xs text-stone-500">
+          <Mail className="w-3.5 h-3.5 inline mr-1" />
+          A welcome email with a password setup link will be sent to the user.
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={createUser.isPending}>
+            <UserPlus className="w-4 h-4 mr-2" /> Create User
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

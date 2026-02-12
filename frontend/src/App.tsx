@@ -21,6 +21,8 @@ import { Programs } from './pages/Programs.tsx'
 import { Placements } from './pages/Placements.tsx'
 import { AdminUsers } from './pages/AdminUsers.tsx'
 import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
+import { SiteDetail } from './pages/SiteDetail.tsx'
+import { UniversityDetail } from './pages/UniversityDetail.tsx'
 import { OnboardingChecklists } from './pages/OnboardingChecklists.tsx'
 import { VerifyCertificate } from './pages/VerifyCertificate.tsx'
 import { SitePreceptors } from './pages/SitePreceptors.tsx'
@@ -104,7 +106,9 @@ export default function App() {
       <Route path="/programs" element={<ProtectedRoute roles={['coordinator', 'admin']}><Programs /></ProtectedRoute>} />
       <Route path="/placements" element={<ProtectedRoute roles={['coordinator', 'professor', 'admin']}><Placements /></ProtectedRoute>} />
       <Route path="/sites" element={<ProtectedRoute roles={['coordinator', 'admin']}><SitesDirectory /></ProtectedRoute>} />
+      <Route path="/sites/:id" element={<ProtectedRoute roles={['coordinator', 'admin']}><SiteDetail /></ProtectedRoute>} />
       <Route path="/universities" element={<ProtectedRoute roles={['coordinator', 'admin']}><UniversityDirectory /></ProtectedRoute>} />
+      <Route path="/universities/:id" element={<ProtectedRoute roles={['coordinator', 'admin']}><UniversityDetail /></ProtectedRoute>} />
       <Route path="/onboarding-checklists" element={<ProtectedRoute roles={['student', 'site_manager']}><OnboardingChecklists /></ProtectedRoute>} />
       <Route path="/agreements" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Agreements /></ProtectedRoute>} />
       <Route path="/compliance" element={<ProtectedRoute roles={['student', 'site_manager', 'coordinator', 'professor', 'admin']}><ComplianceDashboard /></ProtectedRoute>} />

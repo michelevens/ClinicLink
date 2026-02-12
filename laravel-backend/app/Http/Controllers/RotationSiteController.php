@@ -44,11 +44,12 @@ class RotationSiteController extends Controller
     public function show(RotationSite $site): JsonResponse
     {
         $site->load([
-            'manager' => function ($q) {
-                $q->select('id', 'first_name', 'last_name');
-            },
+            'manager',
             'slots.preceptor',
+            'slots.applications.student',
             'affiliationAgreements.university',
+            'onboardingTemplates',
+            'invites',
         ]);
 
         return response()->json($site);

@@ -69,6 +69,14 @@ export function useSites(params?: { search?: string; specialty?: string; state?:
   })
 }
 
+export function useSite(id: string) {
+  return useQuery({
+    queryKey: ['site', id],
+    queryFn: () => sitesApi.get(id),
+    enabled: !!id,
+  })
+}
+
 export function useMySites() {
   return useQuery({
     queryKey: ['my-sites'],
@@ -323,6 +331,14 @@ export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof adminApi.updateUser>[1] }) => adminApi.updateUser(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
+  })
+}
+
+export function useCreateUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.createUser,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
   })
 }

@@ -145,7 +145,7 @@ export const sitesApi = {
     if (params?.page) qs.set('page', String(params.page))
     return api.get<PaginatedResponse<ApiSite>>(`/sites?${qs}`)
   },
-  get: (id: string) => api.get<{ site: ApiSite }>(`/sites/${id}`),
+  get: (id: string) => api.get<ApiSite>(`/sites/${id}`),
   create: (data: Partial<ApiSite>) => api.post<{ site: ApiSite }>('/sites', data),
   update: (id: string, data: Partial<ApiSite>) => api.put<{ site: ApiSite }>(`/sites/${id}`, data),
   delete: (id: string) => api.delete(`/sites/${id}`),
@@ -393,6 +393,11 @@ export const adminApi = {
   updateUser: (id: string, data: { role?: string; is_active?: boolean }) =>
     api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  createUser: (data: {
+    first_name: string; last_name: string; email: string; role: string;
+    username?: string; phone?: string;
+    university_id?: string; program_id?: string; site_ids?: string[];
+  }) => api.post<{ user: ApiUser; message: string }>('/admin/users', data),
   createUniversity: (data: Partial<ApiUniversity>) =>
     api.post<ApiUniversity>('/admin/universities', data),
   updateUniversity: (id: string, data: Partial<ApiUniversity>) =>
@@ -508,6 +513,9 @@ export interface ApiSite {
   created_at: string
   manager?: ApiUser
   slots?: ApiSlot[]
+  affiliation_agreements?: { id: string; university_id: string; site_id: string; status: string; start_date: string | null; end_date: string | null; university?: ApiUniversity }[]
+  onboarding_templates?: { id: string; name: string; description: string | null; is_active: boolean }[]
+  invites?: { id: string; email: string; role: string; status: string; created_at: string }[]
 }
 
 export interface ApiSlot {
@@ -529,6 +537,7 @@ export interface ApiSlot {
   created_at: string
   site?: ApiSite
   preceptor?: ApiUser
+  applications?: ApiApplication[]
 }
 
 export interface ApiApplication {
@@ -606,6 +615,11 @@ export interface ApiUniversity {
   website: string | null
   is_verified: boolean
   programs?: ApiProgram[]
+  student_profiles_count?: number
+  affiliation_agreements?: { id: string; university_id: string; site_id: string; status: string; start_date: string | null; end_date: string | null; site?: ApiSite }[]
+  student_profiles?: { id: string; user_id: string; university_id: string; program_id: string | null; hours_completed?: number; hours_required?: number; user?: ApiUser; program?: ApiProgram }[]
+  ce_policy?: { offers_ce: boolean; accrediting_body: string | null; contact_hours_per_rotation: number; approval_required: boolean; signer_name: string | null; signer_credentials: string | null }
+  ce_certificates?: { id: string; status: string; contact_hours: string; preceptor?: ApiUser }[]
 }
 
 export interface ApiProgram {

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Building2, MapPin, Phone, Globe, Star, Search, Stethoscope, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
 import { useSites, useCreateSite, useUpdateSite } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
@@ -20,6 +21,7 @@ export function SitesDirectory() {
   const isAdmin = user?.role === 'admin'
   const isSiteManager = user?.role === 'site_manager'
   const canCreate = isAdmin || isSiteManager
+  const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
   const [specialty, setSpecialty] = useState('')
@@ -286,7 +288,7 @@ export function SitesDirectory() {
                         <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(site)}><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => setViewSite(site)}>Details</Button>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/sites/${site.id}`)}>Details</Button>
                   </div>
                 </div>
               </div>
@@ -339,7 +341,7 @@ export function SitesDirectory() {
                           <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(site)}><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>
                         </>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => setViewSite(site)}>Details</Button>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/sites/${site.id}`)}>Details</Button>
                     </div>
                   </td>
                 </tr>

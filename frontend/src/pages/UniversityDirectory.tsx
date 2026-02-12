@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { BookOpen, MapPin, Phone, Globe, Search, ChevronLeft, ChevronRight, GraduationCap, CheckCircle2, Clock, Plus, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
 import { useUniversities, useCreateUniversity, useUpdateUniversity, useDeleteUniversity } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
@@ -57,6 +58,7 @@ const emptyForm = { name: '', address: '', city: '', state: '', zip: '', phone: 
 export function UniversityDirectory() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
+  const navigate = useNavigate()
 
   const [search, setSearch] = useState('')
   const [state, setState] = useState('')
@@ -274,7 +276,7 @@ export function UniversityDirectory() {
                         <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(uni)}><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="sm" onClick={() => setViewUniversity(uni)}>Details</Button>
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/universities/${uni.id}`)}>Details</Button>
                   </div>
                 </div>
               </div>
@@ -329,7 +331,7 @@ export function UniversityDirectory() {
                           <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(uni)}><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>
                         </>
                       )}
-                      <Button variant="ghost" size="sm" onClick={() => setViewUniversity(uni)}>Details</Button>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/universities/${uni.id}`)}>Details</Button>
                     </div>
                   </td>
                 </tr>

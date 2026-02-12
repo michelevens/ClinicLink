@@ -95,8 +95,14 @@ class UniversityController extends Controller
 
     public function show(University $university): JsonResponse
     {
-        $university->load(['programs', 'affiliationAgreements.site'])
-            ->loadCount('studentProfiles');
+        $university->load([
+            'programs',
+            'affiliationAgreements.site',
+            'studentProfiles.user',
+            'studentProfiles.program',
+            'cePolicy',
+            'ceCertificates.preceptor',
+        ])->loadCount('studentProfiles');
 
         return response()->json($university);
     }
