@@ -23,24 +23,10 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('affiliation_agreements', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('university_id')->constrained()->cascadeOnDelete();
-            $table->foreignUuid('site_id')->constrained('rotation_sites')->cascadeOnDelete();
-            $table->enum('status', ['draft', 'pending_review', 'active', 'expired', 'terminated'])->default('draft');
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->string('document_url')->nullable();
-            $table->text('notes')->nullable();
-            $table->timestamps();
-
-            $table->unique(['university_id', 'site_id']);
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('affiliation_agreements');
         Schema::dropIfExists('evaluations');
     }
 };
