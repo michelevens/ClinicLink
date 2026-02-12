@@ -1055,24 +1055,24 @@ class DatabaseSeeder extends Seeder
 
         // --- Additional students for Patricia (preceptor4) to test varied statuses ---
 
-        // David Kim: accepted at Surgery (current rotation under Patricia)
-        $appDavidSurgery = Application::create([
-            'student_id' => $student2->id,
+        // Sarah Chen: accepted at Surgery (current rotation under Patricia)
+        $appSarahSurgery = Application::create([
+            'student_id' => $demoStudent->id,
             'slot_id' => $slotSurgery->id,
             'status' => 'accepted',
-            'cover_letter' => 'Although I am a BSN student, I have extensive CNA experience in surgical units and want to broaden my perioperative skills.',
+            'cover_letter' => 'I am an FNP student seeking surgical exposure to complement my primary care training. My bilingual skills could benefit the diverse patient population at St. Petersburg Medical Center.',
             'submitted_at' => '2026-02-10 09:00:00',
             'reviewed_at' => '2026-02-12 14:00:00',
             'reviewed_by' => $siteManager2->id,
-            'notes' => 'Strong surgical background from CNA work. Accepted for observation-focused role.',
+            'notes' => 'Bilingual FNP student. Accepted for surgical observation and perioperative care.',
         ]);
 
-        // Sarah Chen: pending at Surgery (awaiting review)
+        // Aisha Patel: pending at Surgery (awaiting review)
         Application::create([
-            'student_id' => $demoStudent->id,
+            'student_id' => $student3->id,
             'slot_id' => $slotSurgery->id,
             'status' => 'pending',
-            'cover_letter' => 'I am an FNP student seeking surgical exposure to complement my primary care training. My bilingual skills could benefit the diverse patient population.',
+            'cover_letter' => 'My MSW background has given me strong communication skills for pre-op counseling and post-op patient support.',
             'submitted_at' => '2026-02-14 11:00:00',
         ]);
 
@@ -1088,12 +1088,12 @@ class DatabaseSeeder extends Seeder
             'notes' => 'Good fit for child/adolescent psych caseload.',
         ]);
 
-        // Aisha Patel: pending at Psychiatry
+        // David Kim: pending at Psychiatry
         Application::create([
-            'student_id' => $student3->id,
+            'student_id' => $student2->id,
             'slot_id' => $slotPsych->id,
             'status' => 'pending',
-            'cover_letter' => 'My MSW clinical background in behavioral health has prepared me well for psychiatric settings. I am interested in the crisis intervention component.',
+            'cover_letter' => 'My ICU experience has exposed me to delirium and acute behavioral crises. I want to deepen my psychiatric nursing knowledge.',
             'submitted_at' => '2026-02-15 14:00:00',
         ]);
 
@@ -1109,7 +1109,7 @@ class DatabaseSeeder extends Seeder
             'notes' => 'Qualified candidate but slots currently full. Waitlisted for next opening.',
         ]);
 
-        // Emily Torres: accepted at Internal Medicine (past rotation, completed)
+        // Emily Torres: completed at Internal Medicine (past rotation)
         $appEmilyIM = Application::create([
             'student_id' => $student5->id,
             'slot_id' => $slotInternalMed->id,
@@ -1377,9 +1377,9 @@ class DatabaseSeeder extends Seeder
 
         // --- Hour logs for additional students at Patricia's slots ---
 
-        // David Kim at Surgery (accepted) — approved + pending hours
+        // Sarah Chen at Surgery (accepted) — approved + pending hours
         HourLog::create([
-            'student_id' => $student2->id,
+            'student_id' => $demoStudent->id,
             'slot_id' => $slotSurgery->id,
             'date' => '2026-02-17',
             'hours_worked' => 10,
@@ -1391,7 +1391,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         HourLog::create([
-            'student_id' => $student2->id,
+            'student_id' => $demoStudent->id,
             'slot_id' => $slotSurgery->id,
             'date' => '2026-02-18',
             'hours_worked' => 10,
@@ -1403,7 +1403,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         HourLog::create([
-            'student_id' => $student2->id,
+            'student_id' => $demoStudent->id,
             'slot_id' => $slotSurgery->id,
             'date' => '2026-02-19',
             'hours_worked' => 10,
@@ -1413,7 +1413,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         HourLog::create([
-            'student_id' => $student2->id,
+            'student_id' => $demoStudent->id,
             'slot_id' => $slotSurgery->id,
             'date' => '2026-02-20',
             'hours_worked' => 4,
@@ -1674,25 +1674,25 @@ class DatabaseSeeder extends Seeder
             'is_submitted' => true,
         ]);
 
-        // Mid-rotation: David at Surgery (by Patricia)
+        // Mid-rotation: Sarah at Surgery (by Patricia)
         Evaluation::create([
             'type' => 'mid_rotation',
-            'student_id' => $student2->id,
+            'student_id' => $demoStudent->id,
             'preceptor_id' => $preceptor4->id,
             'slot_id' => $slotSurgery->id,
             'ratings' => [
-                'clinical_knowledge' => 3,
+                'clinical_knowledge' => 4,
                 'assessment_skills' => 4,
-                'communication' => 4,
+                'communication' => 5,
                 'professionalism' => 5,
-                'critical_thinking' => 3,
+                'critical_thinking' => 4,
                 'documentation' => 4,
                 'time_management' => 4,
             ],
-            'comments' => 'David is adjusting well to the surgical environment. His CNA background provides a strong foundation for patient care.',
-            'overall_score' => 3.9,
-            'strengths' => 'Excellent work ethic, strong hands-on skills, very reliable',
-            'areas_for_improvement' => 'Needs to develop surgical knowledge base. Should study anatomy and common surgical procedures more.',
+            'comments' => 'Sarah is adapting well to the surgical environment. Her bilingual skills have been invaluable with our diverse patient population.',
+            'overall_score' => 4.3,
+            'strengths' => 'Excellent communication, bilingual asset, strong patient rapport, quick learner',
+            'areas_for_improvement' => 'Needs more confidence in the OR setting. Should study surgical anatomy and common procedures more.',
             'is_submitted' => true,
         ]);
 
@@ -2329,12 +2329,12 @@ class DatabaseSeeder extends Seeder
             'verification_uuid' => Str::uuid(),
         ]);
 
-        // Pending CE for supervising David at Surgery (FIU — auto-issue expected)
+        // Pending CE for supervising Sarah at Surgery (UMiami — requires approval)
         CeCertificate::create([
-            'university_id' => $fiu->id,
+            'university_id' => $umiami->id,
             'preceptor_id' => $preceptor4->id,
-            'application_id' => $appDavidSurgery->id,
-            'contact_hours' => 20.00,
+            'application_id' => $appSarahSurgery->id,
+            'contact_hours' => 15.00,
             'status' => 'pending',
             'verification_uuid' => Str::uuid(),
         ]);
