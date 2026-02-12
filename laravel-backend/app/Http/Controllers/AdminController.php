@@ -65,19 +65,29 @@ class AdminController extends Controller
         }
 
         // Send welcome email with password reset link
-        $resetToken = Str::random(64);
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $user->email],
-            ['token' => Hash::make($resetToken), 'created_at' => now()],
-        );
-        $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
-            . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
+        $emailSent = false;
+        try {
+            $resetToken = Str::random(64);
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $user->email],
+                ['token' => Hash::make($resetToken), 'created_at' => now()],
+            );
+            $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
+                . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
 
-        Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
+            Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $user->load('studentProfile');
 
-        return response()->json(['user' => $user, 'message' => 'User created and welcome email sent.'], 201);
+        $message = $emailSent
+            ? 'User created and welcome email sent.'
+            : 'User created successfully. Welcome email could not be sent — user can use forgot password to set up their account.';
+
+        return response()->json(['user' => $user, 'message' => $message], 201);
     }
 
     public function users(Request $request): JsonResponse

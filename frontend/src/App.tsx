@@ -23,6 +23,7 @@ import { AdminUsers } from './pages/AdminUsers.tsx'
 import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
 import { SiteDetail } from './pages/SiteDetail.tsx'
 import { UniversityDetail } from './pages/UniversityDetail.tsx'
+import { UserDetail } from './pages/UserDetail.tsx'
 import { OnboardingChecklists } from './pages/OnboardingChecklists.tsx'
 import { VerifyCertificate } from './pages/VerifyCertificate.tsx'
 import { SitePreceptors } from './pages/SitePreceptors.tsx'
@@ -114,6 +115,7 @@ export default function App() {
       <Route path="/compliance" element={<ProtectedRoute roles={['student', 'site_manager', 'coordinator', 'professor', 'admin']}><ComplianceDashboard /></ProtectedRoute>} />
       <Route path="/ce-credits" element={<ProtectedRoute roles={['preceptor', 'coordinator', 'admin']}><CeCredits /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
+      <Route path="/admin/users/:id" element={<ProtectedRoute roles={['admin']}><UserDetail /></ProtectedRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
