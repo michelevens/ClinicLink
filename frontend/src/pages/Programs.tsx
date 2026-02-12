@@ -30,23 +30,31 @@ function useUniversityPrograms(id: string) {
 
 export function Programs() {
   const { user } = useAuth()
+  const isCoordinator = user?.role === 'coordinator'
   const [search, setSearch] = useState('')
   const { data, isLoading } = useUniversities({ search: search || undefined })
-  const universities = data?.data || []
+  const allUniversities = data?.data || []
   const { data: profileData } = useStudentProfile()
   const coordUniversityId = (profileData as any)?.university_id || null
+
+  // Coordinators only see their associated university; admins see all
+  const universities = isCoordinator && coordUniversityId
+    ? allUniversities.filter(u => u.id === coordUniversityId)
+    : allUniversities
 
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showAddProgram, setShowAddProgram] = useState(false)
 
-  const canAddProgram = (user?.role === 'coordinator' || user?.role === 'admin') && coordUniversityId
+  const canAddProgram = (isCoordinator || user?.role === 'admin') && coordUniversityId
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-stone-900">Programs</h1>
-          <p className="text-stone-500 mt-1">Universities and their clinical programs</p>
+          <p className="text-stone-500 mt-1">
+            {isCoordinator ? 'Your university and clinical programs' : 'Universities and their clinical programs'}
+          </p>
         </div>
         {canAddProgram && (
           <Button onClick={() => setShowAddProgram(true)}>
@@ -63,17 +71,19 @@ export function Programs() {
         />
       )}
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-        <input
-          type="text"
-          placeholder="Search universities..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-        />
-      </div>
+      {/* Search - only show for admins who see multiple universities */}
+      {!isCoordinator && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <input
+            type="text"
+            placeholder="Search universities..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+          />
+        </div>
+      )}
 
       {/* University List */}
       {isLoading ? (
@@ -85,7 +95,11 @@ export function Programs() {
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-stone-300 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-stone-900 mb-1">No universities found</h3>
-            <p className="text-stone-500 text-sm">Try adjusting your search criteria.</p>
+            <p className="text-stone-500 text-sm">
+              {isCoordinator
+                ? 'You are not associated with any university. Contact an admin to link your account.'
+                : 'Try adjusting your search criteria.'}
+            </p>
           </div>
         </Card>
       ) : (

@@ -66,10 +66,11 @@ class CeCertificateController extends Controller
         } elseif ($user->isPreceptor()) {
             $query->where('preceptor_id', $user->id);
         } elseif ($user->isCoordinator()) {
-            // Filter by university_id param or coordinator's own university
-            $universityId = $request->input('university_id') ?? $user->studentProfile?->university_id;
+            $universityId = $user->studentProfile?->university_id;
             if ($universityId) {
                 $query->where('university_id', $universityId);
+            } else {
+                return response()->json(['ce_certificates' => []]);
             }
         }
         // Admin sees all

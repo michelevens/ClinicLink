@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\HourLog;
 use App\Models\RotationSite;
 use App\Models\RotationSlot;
+use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -82,12 +83,20 @@ class DashboardController extends Controller
 
     private function coordinatorStats(User $user): array
     {
+        $universityId = $user->studentProfile?->university_id;
+        $studentIds = $universityId
+            ? StudentProfile::where('university_id', $universityId)->pluck('user_id')
+            : collect();
+
         return [
-            'total_students' => User::students()->count(),
+            'total_students' => $studentIds->count(),
             'active_placements' => Application::accepted()
+                ->whereIn('student_id', $studentIds)
                 ->whereHas('slot', fn ($q) => $q->where('end_date', '>=', now()))
                 ->count(),
-            'pending_applications' => Application::pending()->count(),
+            'pending_applications' => Application::pending()
+                ->whereIn('student_id', $studentIds)
+                ->count(),
             'total_sites' => RotationSite::active()->count(),
             'available_slots' => RotationSlot::open()->count(),
         ];

@@ -242,6 +242,102 @@ class AdminController extends Controller
         ]);
     }
 
+    public function bulkInvite(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'emails' => ['required', 'array', 'min:1', 'max:200'],
+            'emails.*' => ['required', 'email', 'max:255'],
+            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
+            'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
+            'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
+            'site_ids' => ['sometimes', 'array'],
+            'site_ids.*' => ['exists:rotation_sites,id'],
+        ]);
+
+        $role = $validated['role'];
+        $universityId = $validated['university_id'] ?? null;
+        $programId = $validated['program_id'] ?? null;
+        $siteIds = $validated['site_ids'] ?? [];
+        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+
+        $results = [];
+        $sent = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        // Deduplicate emails
+        $emails = collect($validated['emails'])->map(fn ($e) => strtolower(trim($e)))->unique()->values();
+
+        // Find existing users to skip
+        $existingEmails = User::whereIn('email', $emails)->pluck('email')->map(fn ($e) => strtolower($e))->toArray();
+
+        foreach ($emails as $email) {
+            if (in_array($email, $existingEmails)) {
+                $results[] = ['email' => $email, 'status' => 'skipped', 'reason' => 'User already exists'];
+                $skipped++;
+                continue;
+            }
+
+            try {
+                $tempPassword = Str::random(16);
+                $nameParts = explode('@', $email);
+                $firstName = ucfirst($nameParts[0]);
+
+                $user = User::create([
+                    'first_name' => $firstName,
+                    'last_name' => '',
+                    'email' => $email,
+                    'password' => Hash::make($tempPassword),
+                    'role' => $role,
+                    'is_active' => true,
+                    'onboarding_completed_at' => now(),
+                ]);
+
+                // Role-specific associations
+                if (in_array($role, ['student', 'coordinator', 'professor']) && $universityId) {
+                    StudentProfile::create([
+                        'user_id' => $user->id,
+                        'university_id' => $universityId,
+                        'program_id' => $role === 'student' ? $programId : null,
+                    ]);
+                }
+
+                if ($role === 'preceptor' && $universityId) {
+                    StudentProfile::create([
+                        'user_id' => $user->id,
+                        'university_id' => $universityId,
+                    ]);
+                }
+
+                if ($role === 'site_manager' && !empty($siteIds)) {
+                    RotationSite::whereIn('id', $siteIds)->update(['manager_id' => $user->id]);
+                }
+
+                // Send welcome email
+                $resetToken = Str::random(64);
+                DB::table('password_reset_tokens')->updateOrInsert(
+                    ['email' => $user->email],
+                    ['token' => Hash::make($resetToken), 'created_at' => now()],
+                );
+                $resetUrl = $frontendUrl . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
+
+                Mail::to($email)->send(new WelcomeMail($user, $resetUrl));
+                $results[] = ['email' => $email, 'status' => 'sent'];
+                $sent++;
+            } catch (\Throwable $e) {
+                Log::error("Bulk invite failed for {$email}: " . $e->getMessage());
+                $results[] = ['email' => $email, 'status' => 'failed', 'reason' => 'Error creating user or sending email'];
+                $failed++;
+            }
+        }
+
+        return response()->json([
+            'message' => "Bulk invite complete: {$sent} sent, {$skipped} skipped, {$failed} failed.",
+            'summary' => ['sent' => $sent, 'skipped' => $skipped, 'failed' => $failed, 'total' => $emails->count()],
+            'results' => $results,
+        ], 201);
+    }
+
     public function seedUniversities(Request $request): JsonResponse
     {
         $exitCode = Artisan::call('scrape:universities', [

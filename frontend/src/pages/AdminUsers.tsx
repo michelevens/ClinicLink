@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, Search, Shield, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight,
-  Trash2, Mail, Building2, GraduationCap, MapPin, Loader2, Eye, UserPlus
+  Trash2, Mail, Building2, GraduationCap, MapPin, Eye, UserPlus,
+  Upload, X, Check, AlertTriangle
 } from 'lucide-react'
-import { useAdminUsers, useUpdateUser, useDeleteUser, useCreateUser, useUniversities, useSites } from '../hooks/useApi.ts'
+import { toast } from 'sonner'
+import { useAdminUsers, useUpdateUser, useDeleteUser, useCreateUser, useBulkInviteUsers, useUniversities, useSites } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
@@ -30,6 +32,7 @@ export function AdminUsers() {
   const [editRole, setEditRole] = useState<ApiUser | null>(null)
   const [newRole, setNewRole] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showBulkInviteModal, setShowBulkInviteModal] = useState(false)
 
   const { data, isLoading } = useAdminUsers({
     search: search || undefined,
@@ -67,9 +70,14 @@ export function AdminUsers() {
           <h1 className="text-2xl font-bold text-stone-900">User Management</h1>
           <p className="text-stone-500 mt-1">Manage all platform users ({total} total)</p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
-          <UserPlus className="w-4 h-4 mr-2" /> Add User
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowBulkInviteModal(true)}>
+            <Upload className="w-4 h-4 mr-2" /> Bulk Invite
+          </Button>
+          <Button onClick={() => setShowCreateModal(true)}>
+            <UserPlus className="w-4 h-4 mr-2" /> Add User
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -249,6 +257,11 @@ export function AdminUsers() {
       {showCreateModal && (
         <CreateUserModal onClose={() => setShowCreateModal(false)} />
       )}
+
+      {/* Bulk Invite Modal */}
+      {showBulkInviteModal && (
+        <BulkInviteModal onClose={() => setShowBulkInviteModal(false)} />
+      )}
     </div>
   )
 }
@@ -415,6 +428,263 @@ function CreateUserModal({ onClose }: { onClose: () => void }) {
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSubmit} isLoading={createUser.isPending}>
             <UserPlus className="w-4 h-4 mr-2" /> Create User
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+
+// ─── Bulk Invite Modal ──────────────────────────────────────────
+function BulkInviteModal({ onClose }: { onClose: () => void }) {
+  const [role, setRole] = useState<string>('student')
+  const [universityId, setUniversityId] = useState('')
+  const [programId, setProgramId] = useState('')
+  const [siteIds, setSiteIds] = useState<string[]>([])
+  const [emailText, setEmailText] = useState('')
+  const [emails, setEmails] = useState<string[]>([])
+  const [error, setError] = useState('')
+  const [results, setResults] = useState<{ email: string; status: string; reason?: string }[] | null>(null)
+  const [summary, setSummary] = useState<{ sent: number; skipped: number; failed: number; total: number } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const bulkInvite = useBulkInviteUsers()
+  const { data: uniData } = useUniversities()
+  const { data: sitesData } = useSites()
+  const universities = uniData?.data || []
+  const sites = (sitesData as { data?: { id: string; name: string; city: string; state: string }[] })?.data || []
+
+  const selectedUni = universities.find(u => u.id === universityId)
+  const programs = selectedUni?.programs || []
+
+  const showUniversity = ['student', 'coordinator', 'professor', 'preceptor'].includes(role)
+  const showProgram = role === 'student' && universityId
+  const showSites = ['site_manager', 'preceptor'].includes(role)
+
+  const inputClass = "w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+
+  const EMAIL_RE = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g
+
+  const parseEmails = (text: string) => {
+    const found = text.match(EMAIL_RE) || []
+    return [...new Set(found.map(e => e.toLowerCase()))]
+  }
+
+  const handleParseEmails = () => {
+    const parsed = parseEmails(emailText)
+    setEmails(prev => [...new Set([...prev, ...parsed])])
+    setEmailText('')
+  }
+
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      const parsed = parseEmails(text)
+      setEmails(prev => [...new Set([...prev, ...parsed])])
+    }
+    reader.readAsText(file)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeEmail = (email: string) => {
+    setEmails(prev => prev.filter(e => e !== email))
+  }
+
+  const handleSubmit = async () => {
+    setError('')
+    if (emails.length === 0) {
+      setError('Add at least one email address.')
+      return
+    }
+    if (emails.length > 200) {
+      setError('Maximum 200 emails per batch.')
+      return
+    }
+    try {
+      const res = await bulkInvite.mutateAsync({
+        emails,
+        role,
+        university_id: showUniversity && universityId ? universityId : undefined,
+        program_id: showProgram && programId ? programId : undefined,
+        site_ids: showSites && siteIds.length > 0 ? siteIds : undefined,
+      })
+      setResults(res.results)
+      setSummary(res.summary)
+      toast.success(res.message)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bulk invite failed.'
+      setError(msg)
+    }
+  }
+
+  const toggleSite = (siteId: string) => {
+    setSiteIds(prev => prev.includes(siteId) ? prev.filter(id => id !== siteId) : [...prev, siteId])
+  }
+
+  // Show results view after submission
+  if (results && summary) {
+    return (
+      <Modal isOpen onClose={onClose} title="Bulk Invite Results" size="lg">
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-green-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-green-700">{summary.sent}</p>
+              <p className="text-xs text-green-600">Sent</p>
+            </div>
+            <div className="bg-amber-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-amber-700">{summary.skipped}</p>
+              <p className="text-xs text-amber-600">Skipped</p>
+            </div>
+            <div className="bg-red-50 rounded-xl p-3 text-center">
+              <p className="text-2xl font-bold text-red-700">{summary.failed}</p>
+              <p className="text-xs text-red-600">Failed</p>
+            </div>
+          </div>
+
+          <div className="max-h-60 overflow-y-auto border border-stone-200 rounded-xl divide-y divide-stone-100">
+            {results.map((r, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-sm text-stone-700">{r.email}</span>
+                <div className="flex items-center gap-2">
+                  {r.status === 'sent' && <Check className="w-4 h-4 text-green-500" />}
+                  {r.status === 'skipped' && <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                  {r.status === 'failed' && <X className="w-4 h-4 text-red-500" />}
+                  <span className={`text-xs font-medium ${
+                    r.status === 'sent' ? 'text-green-600' : r.status === 'skipped' ? 'text-amber-600' : 'text-red-600'
+                  }`}>
+                    {r.status}{r.reason ? ` — ${r.reason}` : ''}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={onClose}>Done</Button>
+          </div>
+        </div>
+      </Modal>
+    )
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Bulk Invite Users" size="lg">
+      <div className="space-y-4">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">{error}</div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Role *</label>
+          <select className={inputClass} value={role} onChange={e => { setRole(e.target.value); setUniversityId(''); setProgramId(''); setSiteIds([]) }}>
+            {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+          </select>
+        </div>
+
+        {showUniversity && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              <Building2 className="w-3.5 h-3.5 inline mr-1" /> University
+            </label>
+            <select className={inputClass} value={universityId} onChange={e => { setUniversityId(e.target.value); setProgramId('') }}>
+              <option value="">Select university...</option>
+              {universities.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
+        )}
+
+        {showProgram && programs.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              <GraduationCap className="w-3.5 h-3.5 inline mr-1" /> Program
+            </label>
+            <select className={inputClass} value={programId} onChange={e => setProgramId(e.target.value)}>
+              <option value="">Select program...</option>
+              {programs.map((p: { id: string; name: string; degree_type: string }) => <option key={p.id} value={p.id}>{p.name} ({p.degree_type})</option>)}
+            </select>
+          </div>
+        )}
+
+        {showSites && (
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              <MapPin className="w-3.5 h-3.5 inline mr-1" />
+              {role === 'site_manager' ? 'Sites to Manage' : 'Associated Sites'}
+            </label>
+            <div className="max-h-32 overflow-y-auto border border-stone-200 rounded-xl divide-y divide-stone-100">
+              {sites.map(site => (
+                <label key={site.id} className="flex items-center gap-3 px-4 py-2 hover:bg-stone-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={siteIds.includes(site.id)}
+                    onChange={() => toggleSite(site.id)}
+                    className="rounded border-stone-300 text-primary-500 focus:ring-primary-500"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-stone-900">{site.name}</p>
+                    <p className="text-xs text-stone-500">{site.city}, {site.state}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Email Input */}
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Email Addresses</label>
+          <textarea
+            className={inputClass + ' min-h-[80px]'}
+            placeholder="Enter emails separated by commas, spaces, or new lines..."
+            value={emailText}
+            onChange={e => setEmailText(e.target.value)}
+            onBlur={handleParseEmails}
+          />
+          <div className="flex items-center gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={handleParseEmails} disabled={!emailText.trim()}>
+              Add Emails
+            </Button>
+            <span className="text-xs text-stone-400">or</span>
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="w-3.5 h-3.5 mr-1" /> Upload CSV
+            </Button>
+            <input ref={fileInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvUpload} />
+          </div>
+        </div>
+
+        {/* Email List */}
+        {emails.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm font-medium text-stone-700">{emails.length} email{emails.length !== 1 ? 's' : ''} ready</span>
+              <button onClick={() => setEmails([])} className="text-xs text-red-500 hover:text-red-700">Clear all</button>
+            </div>
+            <div className="max-h-32 overflow-y-auto border border-stone-200 rounded-xl p-2 flex flex-wrap gap-1.5">
+              {emails.map(email => (
+                <span key={email} className="inline-flex items-center gap-1 bg-primary-50 text-primary-700 rounded-lg px-2.5 py-1 text-xs">
+                  {email}
+                  <button onClick={() => removeEmail(email)} className="hover:text-red-500">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-stone-50 rounded-xl p-3 text-xs text-stone-500">
+          <Mail className="w-3.5 h-3.5 inline mr-1" />
+          Each user will receive a welcome email with a password setup link. Existing users will be skipped.
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={bulkInvite.isPending} disabled={emails.length === 0}>
+            <Mail className="w-4 h-4 mr-2" /> Send {emails.length} Invite{emails.length !== 1 ? 's' : ''}
           </Button>
         </div>
       </div>

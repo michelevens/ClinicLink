@@ -207,7 +207,12 @@ class HourLogController extends Controller
 
         if ($user->isPreceptor() && $slot->preceptor_id === $user->id) return true;
         if ($user->isSiteManager() && $slot->site->manager_id === $user->id) return true;
-        if ($user->isCoordinator()) return true;
+        if ($user->isCoordinator()) {
+            $hourLog->loadMissing('student.studentProfile');
+            $studentUni = $hourLog->student->studentProfile?->university_id;
+            $userUni = $user->studentProfile?->university_id;
+            return $studentUni && $userUni && $studentUni === $userUni;
+        }
 
         return false;
     }

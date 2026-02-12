@@ -28,8 +28,16 @@ class CertificateController extends Controller
         } elseif ($user->isSiteManager()) {
             $siteIds = $user->managedSites()->pluck('id');
             $query->whereHas('slot', fn($q) => $q->whereIn('site_id', $siteIds));
+        } elseif ($user->isCoordinator()) {
+            $universityId = $user->studentProfile?->university_id;
+            if ($universityId) {
+                $studentIds = StudentProfile::where('university_id', $universityId)->pluck('user_id');
+                $query->whereIn('student_id', $studentIds);
+            } else {
+                return response()->json(['certificates' => []]);
+            }
         }
-        // coordinator and admin see all
+        // admin sees all
 
         $certificates = $query->orderBy('issued_date', 'desc')->get();
 

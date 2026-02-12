@@ -76,6 +76,18 @@ class UniversityController extends Controller
     {
         $query = University::with('programs');
 
+        // Coordinators only see their associated university
+        $user = $request->user();
+        if ($user && $user->isCoordinator()) {
+            $coordUniversityId = $user->studentProfile?->university_id;
+            if ($coordUniversityId) {
+                $query->where('id', $coordUniversityId);
+            } else {
+                // Coordinator with no university association sees nothing
+                $query->whereRaw('1=0');
+            }
+        }
+
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {

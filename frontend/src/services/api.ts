@@ -242,6 +242,7 @@ export const siteInvitesApi = {
     api.post<{ message: string; summary: { sent: number; skipped: number; failed: number; total: number }; results: BulkInviteResult[] }>('/site-invites/bulk', data),
   validate: (token: string) => api.get<{ invite: ApiInviteDetail }>(`/invite/${token}`),
   accept: (token: string) => api.post<{ message: string; site: { id: string; name: string } }>(`/invite/${token}/accept`),
+  resend: (id: string) => api.post<{ message: string }>(`/site-invites/${id}/resend`, {}),
   revoke: (id: string) => api.delete(`/site-invites/${id}`),
   myPending: () => api.get<{ invites: { id: string; token: string; email: string; site: { id: string; name: string; city: string; state: string; specialties: string[] }; invited_by: string | null; expires_at: string; created_at: string }[] }>('/my-pending-invites'),
 }
@@ -426,6 +427,10 @@ export const adminApi = {
     username?: string; phone?: string;
     university_id?: string; program_id?: string; site_ids?: string[];
   }) => api.post<{ user: ApiUser; message: string }>('/admin/users', data),
+  bulkInvite: (data: {
+    emails: string[]; role: string;
+    university_id?: string; program_id?: string; site_ids?: string[];
+  }) => api.post<{ message: string; summary: { sent: number; skipped: number; failed: number; total: number }; results: { email: string; status: string; reason?: string }[] }>('/admin/users/bulk-invite', data),
   createUniversity: (data: Partial<ApiUniversity>) =>
     api.post<ApiUniversity>('/admin/universities', data),
   updateUniversity: (id: string, data: Partial<ApiUniversity>) =>

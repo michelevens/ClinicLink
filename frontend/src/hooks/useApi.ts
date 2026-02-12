@@ -360,6 +360,14 @@ export function useResetUserPassword() {
   })
 }
 
+export function useBulkInviteUsers() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.bulkInvite,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
+  })
+}
+
 // --- Universities ---
 export function useUniversities(params?: { search?: string; state?: string; page?: number }) {
   return useQuery({
@@ -633,6 +641,12 @@ export function useAcceptInvite() {
       qc.invalidateQueries({ queryKey: ['site-invites'] })
       qc.invalidateQueries({ queryKey: ['my-sites'] })
     },
+  })
+}
+
+export function useResendInvite() {
+  return useMutation({
+    mutationFn: siteInvitesApi.resend,
   })
 }
 

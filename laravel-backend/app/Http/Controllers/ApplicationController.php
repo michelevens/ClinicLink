@@ -256,7 +256,12 @@ class ApplicationController extends Controller
 
         if ($user->isSiteManager() && $slot->site->manager_id === $user->id) return true;
         if ($user->isPreceptor() && $slot->preceptor_id === $user->id) return true;
-        if ($user->isCoordinator()) return true;
+        if ($user->isCoordinator()) {
+            $application->loadMissing('student.studentProfile');
+            $studentUni = $application->student->studentProfile?->university_id;
+            $userUni = $user->studentProfile?->university_id;
+            return $studentUni && $userUni && $studentUni === $userUni;
+        }
 
         return false;
     }

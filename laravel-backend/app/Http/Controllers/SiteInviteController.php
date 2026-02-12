@@ -321,6 +321,43 @@ class SiteInviteController extends Controller
     }
 
     /**
+     * Resend an invite email.
+     */
+    public function resend(Request $request, SiteInvite $invite): JsonResponse
+    {
+        $user = $request->user();
+
+        $site = RotationSite::where('id', $invite->site_id)
+            ->where('manager_id', $user->id)
+            ->firstOrFail();
+
+        if ($invite->status !== 'pending') {
+            return response()->json(['message' => 'Can only resend pending invites.'], 422);
+        }
+
+        if (!$invite->email) {
+            return response()->json(['message' => 'Cannot resend an open invite — no email address.'], 422);
+        }
+
+        if ($invite->expires_at->isPast()) {
+            // Extend expiration by 30 days
+            $invite->update(['expires_at' => now()->addDays(30)]);
+        }
+
+        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+        $inviteUrl = $frontendUrl . '/invite/' . $invite->token;
+        $inviterName = $user->first_name . ' ' . $user->last_name;
+
+        try {
+            Mail::to($invite->email)->send(new SiteInviteMail($site->name, $inviterName, $inviteUrl, null));
+            return response()->json(['message' => 'Invite resent to ' . $invite->email]);
+        } catch (\Throwable $e) {
+            Log::error('Resend invite failed for ' . $invite->email . ': ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send email.'], 500);
+        }
+    }
+
+    /**
      * Revoke an invite.
      */
     public function destroy(Request $request, SiteInvite $invite): JsonResponse

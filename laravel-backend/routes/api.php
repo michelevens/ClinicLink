@@ -197,6 +197,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/site-invites', [SiteInviteController::class, 'index']);
         Route::post('/site-invites', [SiteInviteController::class, 'store']);
         Route::post('/site-invites/bulk', [SiteInviteController::class, 'bulkStore']);
+        Route::post('/site-invites/{invite}/resend', [SiteInviteController::class, 'resend']);
         Route::delete('/site-invites/{invite}', [SiteInviteController::class, 'destroy']);
     });
     Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);
@@ -227,6 +228,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'users']);
         Route::post('/users', [AdminController::class, 'createUser']);
+        Route::post('/users/bulk-invite', [AdminController::class, 'bulkInvite']);
         Route::get('/users/{user}', [AdminController::class, 'showUser']);
         Route::put('/users/{user}', [AdminController::class, 'updateUser']);
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
