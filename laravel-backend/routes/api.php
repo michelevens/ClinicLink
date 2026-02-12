@@ -40,6 +40,10 @@ Route::get('/verify-ce/{uuid}', [CeCertificateController::class, 'publicVerify']
 // Public invite validation
 Route::get('/invite/{token}', [SiteInviteController::class, 'show']);
 
+// PDF downloads (auth handled via query token in controller for window.open() browser tabs)
+Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
+Route::get('/ce-certificates/{ceCertificate}/download', [CeCertificateController::class, 'download']);
+
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
 Route::get('/sites/{site}', [RotationSiteController::class, 'show']);
@@ -135,7 +139,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:preceptor,site_manager,coordinator,admin')
         ->get('/certificates/eligibility/{slot}/{student}', [CertificateController::class, 'eligibility']);
     Route::get('/certificates/{certificate}', [CertificateController::class, 'show']);
-    Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
+    // PDF download moved to public routes (auth via query token for window.open)
     Route::middleware('role:preceptor,site_manager,admin')
         ->post('/certificates', [CertificateController::class, 'store']);
     Route::middleware('role:preceptor,site_manager,coordinator,admin')
@@ -185,11 +189,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);
 
-    // CE Certificates (preceptor, coordinator, admin)
+    // CE Certificates (preceptor, coordinator, admin) — download moved to public routes
     Route::middleware('role:preceptor,coordinator,admin')->group(function () {
         Route::get('/ce-certificates', [CeCertificateController::class, 'index']);
         Route::get('/ce-certificates/{ceCertificate}', [CeCertificateController::class, 'show']);
-        Route::get('/ce-certificates/{ceCertificate}/download', [CeCertificateController::class, 'download']);
     });
     Route::middleware('role:coordinator,admin')->group(function () {
         Route::put('/ce-certificates/{ceCertificate}/approve', [CeCertificateController::class, 'approve']);
