@@ -18,7 +18,7 @@ class StudentProfile extends Model
         'gpa',
         'clinical_interests',
         'hours_completed',
-        'hours_required',
+        'prior_hours',
         'bio',
         'resume_url',
     ];
@@ -47,14 +47,25 @@ class StudentProfile extends Model
         return $this->belongsTo(Program::class);
     }
 
+    public function getRequiredHoursAttribute(): int
+    {
+        return $this->program?->required_hours ?? 0;
+    }
+
+    public function getTotalHoursAttribute(): float
+    {
+        return $this->prior_hours + $this->hours_completed;
+    }
+
     public function getHoursProgressAttribute(): float
     {
-        if ($this->hours_required === 0) return 0;
-        return round(($this->hours_completed / $this->hours_required) * 100, 1);
+        $required = $this->required_hours;
+        if ($required === 0) return 0;
+        return round(($this->total_hours / $required) * 100, 1);
     }
 
     public function getRemainingHoursAttribute(): int
     {
-        return max(0, $this->hours_required - $this->hours_completed);
+        return max(0, $this->required_hours - $this->total_hours);
     }
 }

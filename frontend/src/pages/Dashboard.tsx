@@ -79,10 +79,13 @@ function StudentDashboard() {
   const evaluations = evalsData?.data || []
   const credentials = credsData?.credentials || []
 
-  const totalHours = hours.reduce((sum, h) => sum + h.hours_worked, 0)
+  const platformHours = hours.reduce((sum, h) => sum + h.hours_worked, 0)
   const approvedHours = hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + h.hours_worked, 0)
-  const requiredHours = stats?.hours_required || 500
+  const priorHours = stats?.prior_hours || 0
+  const totalHours = priorHours + approvedHours
+  const requiredHours = stats?.hours_required || 0
   const pendingCount = hours.filter(h => h.status === 'pending').length
+  const progressPct = requiredHours > 0 ? Math.min(Math.round((totalHours / requiredHours) * 100), 100) : 0
   const activeRotations = applications.filter(a => a.status === 'accepted')
 
   // Credential compliance
@@ -103,7 +106,7 @@ function StudentDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Clock className="w-5 h-5" />} label="Hours Completed" value={`${approvedHours}/${requiredHours}`} color="primary" />
+        <StatCard icon={<Clock className="w-5 h-5" />} label="Hours Completed" value={requiredHours > 0 ? `${totalHours}/${requiredHours}` : 'No program'} color="primary" />
         <StatCard icon={<FileText className="w-5 h-5" />} label="Applications" value={stats?.applications_count || applications.length} color="secondary" />
         <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Active Rotations" value={stats?.active_rotations || activeRotations.length} color="green" />
         <StatCard icon={<AlertCircle className="w-5 h-5" />} label="Pending Review" value={pendingCount} color="amber" />
@@ -113,18 +116,31 @@ function StudentDashboard() {
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-stone-900">Clinical Hours Progress</h3>
-          <span className="text-sm font-medium text-primary-600">{Math.round((approvedHours / requiredHours) * 100)}%</span>
+          <span className="text-sm font-medium text-primary-600">{requiredHours > 0 ? `${progressPct}%` : 'N/A'}</span>
         </div>
         <div className="w-full h-4 bg-stone-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full transition-all duration-500"
-            style={{ width: `${Math.min((approvedHours / requiredHours) * 100, 100)}%` }}
-          />
+          {requiredHours > 0 ? (
+            <div className="h-full flex">
+              {priorHours > 0 && (
+                <div
+                  className="h-full bg-stone-400 transition-all duration-500"
+                  style={{ width: `${Math.min((priorHours / requiredHours) * 100, 100)}%` }}
+                />
+              )}
+              <div
+                className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-500"
+                style={{ width: `${Math.min((approvedHours / requiredHours) * 100, 100 - (priorHours / requiredHours) * 100)}%` }}
+              />
+            </div>
+          ) : (
+            <div className="h-full bg-stone-200 rounded-full" />
+          )}
         </div>
         <div className="flex flex-col sm:flex-row justify-between mt-2 text-xs text-stone-500 gap-1">
-          <span>{approvedHours} approved</span>
-          <span>{totalHours - approvedHours} pending approval</span>
-          <span>{Math.max(requiredHours - totalHours, 0)} remaining</span>
+          {priorHours > 0 && <span>{priorHours} prior</span>}
+          <span>{approvedHours} approved{priorHours > 0 ? ' on platform' : ''}</span>
+          <span>{platformHours - approvedHours > 0 ? `${platformHours - approvedHours} pending` : ''}</span>
+          <span>{requiredHours > 0 ? `${Math.max(requiredHours - totalHours, 0)} remaining` : 'No program assigned'}</span>
         </div>
       </Card>
 

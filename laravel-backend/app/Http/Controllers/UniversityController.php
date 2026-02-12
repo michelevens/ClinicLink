@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AffiliationAgreement;
+use App\Models\Program;
 use App\Models\University;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -267,5 +268,31 @@ class UniversityController extends Controller
         return response($content, 200)
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'attachment; filename="' . ($agreement->file_name ?? 'document') . '"');
+    }
+
+    /**
+     * Update a program's required_hours (coordinator for own university, or admin).
+     */
+    public function updateProgram(Request $request, Program $program): JsonResponse
+    {
+        $user = $request->user();
+
+        // Coordinators can only update programs at their university
+        if ($user->isCoordinator()) {
+            $coordUniversityId = $user->studentProfile?->university_id;
+            if (!$coordUniversityId || $program->university_id !== $coordUniversityId) {
+                return response()->json(['message' => 'Program is not at your university.'], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'required_hours' => ['sometimes', 'integer', 'min:0'],
+            'name' => ['sometimes', 'string', 'max:255'],
+            'specialties' => ['sometimes', 'array'],
+        ]);
+
+        $program->update($validated);
+
+        return response()->json($program);
     }
 }

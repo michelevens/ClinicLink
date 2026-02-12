@@ -50,12 +50,14 @@ export function HourLog() {
   const hours = hoursData?.data || []
   const acceptedApps = (appsData?.data || []).filter(a => a.status === 'accepted')
 
-  const totalHours = summary?.total_hours || hours.reduce((sum, h) => sum + Number(h.hours_worked), 0)
+  const platformHours = summary?.platform_hours || hours.reduce((sum, h) => sum + Number(h.hours_worked), 0)
   const approvedHours = summary?.approved_hours || hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + Number(h.hours_worked), 0)
   const pendingHours = summary?.pending_hours || hours.filter(h => h.status === 'pending').reduce((sum, h) => sum + Number(h.hours_worked), 0)
   const rejectedHours = hours.filter(h => h.status === 'rejected').reduce((sum, h) => sum + Number(h.hours_worked), 0)
-  const hoursRequired = summary?.hours_required || 500
-  const progress = summary?.progress || Math.min(100, Math.round((approvedHours / hoursRequired) * 100))
+  const priorHours = summary?.prior_hours || 0
+  const totalHours = summary?.total_hours || (priorHours + approvedHours)
+  const hoursRequired = summary?.hours_required || 0
+  const progress = summary?.progress_percent || (hoursRequired > 0 ? Math.min(100, Math.round((totalHours / hoursRequired) * 100)) : 0)
 
   const categoryLabels: Record<string, string> = {
     direct_care: 'Direct Patient Care',
@@ -256,22 +258,40 @@ export function HourLog() {
                 <Target className="w-5 h-5 text-primary-600" />
                 <h3 className="font-semibold text-stone-900">Hours Progress</h3>
               </div>
-              <p className="text-sm text-stone-600 mb-3">{approvedHours} of {hoursRequired} required hours completed</p>
+              <p className="text-sm text-stone-600 mb-3">
+                {hoursRequired > 0
+                  ? `${totalHours} of ${hoursRequired} required hours completed`
+                  : 'No program assigned'}
+              </p>
               <div className="w-full bg-white/60 rounded-full h-3 mb-2">
-                <div
-                  className="h-3 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-3 flex rounded-full overflow-hidden">
+                  {priorHours > 0 && (
+                    <div
+                      className="h-full bg-stone-400 transition-all duration-500"
+                      style={{ width: `${hoursRequired > 0 ? Math.min((priorHours / hoursRequired) * 100, 100) : 0}%` }}
+                    />
+                  )}
+                  <div
+                    className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all duration-500"
+                    style={{ width: `${hoursRequired > 0 ? Math.min((approvedHours / hoursRequired) * 100, 100 - (priorHours / hoursRequired) * 100) : 0}%` }}
+                  />
+                </div>
               </div>
               <div className="flex justify-between text-xs text-stone-500">
                 <span>{progress}% complete</span>
-                <span>{hoursRequired - approvedHours > 0 ? `${hoursRequired - approvedHours} hours remaining` : 'Requirement met!'}</span>
+                <span>{hoursRequired - totalHours > 0 ? `${hoursRequired - totalHours} hours remaining` : hoursRequired > 0 ? 'Requirement met!' : ''}</span>
               </div>
             </div>
             <div className="flex gap-4 sm:gap-6">
+              {priorHours > 0 && (
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-stone-500">{priorHours}</p>
+                  <p className="text-xs text-stone-500">Prior</p>
+                </div>
+              )}
               <div className="text-center">
-                <p className="text-2xl font-bold text-stone-900">{totalHours}</p>
-                <p className="text-xs text-stone-500">Total</p>
+                <p className="text-2xl font-bold text-stone-900">{platformHours}</p>
+                <p className="text-xs text-stone-500">Platform</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">{approvedHours}</p>

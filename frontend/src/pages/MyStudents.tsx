@@ -44,7 +44,7 @@ export function MyStudents() {
 
   const stats = useMemo(() => ({
     total: students.length,
-    avgHours: students.length > 0 ? Math.round(students.reduce((sum, s) => sum + s.hours_completed, 0) / students.length) : 0,
+    avgHours: students.length > 0 ? Math.round(students.reduce((sum, s) => sum + (s.total_hours ?? (s.prior_hours + s.hours_completed)), 0) / students.length) : 0,
     pendingReviews: students.reduce((sum, s) => sum + s.pending_hours, 0),
   }), [students])
 
@@ -176,8 +176,9 @@ function StudentCard({ student, isPreceptor, onView, onReviewHours, onWriteEval 
   onReviewHours: () => void
   onWriteEval: () => void
 }) {
+  const totalHours = student.total_hours ?? (student.prior_hours + student.hours_completed)
   const progress = student.hours_required > 0
-    ? Math.min(100, Math.round((student.hours_completed / student.hours_required) * 100))
+    ? Math.min(100, Math.round((totalHours / student.hours_required) * 100))
     : 0
 
   return (
@@ -219,7 +220,7 @@ function StudentCard({ student, isPreceptor, onView, onReviewHours, onWriteEval 
         <div>
           <div className="flex items-center justify-between text-xs mb-1">
             <span className="text-stone-500">Clinical Hours</span>
-            <span className="font-semibold text-stone-700">{student.hours_completed} / {student.hours_required}h</span>
+            <span className="font-semibold text-stone-700">{totalHours} / {student.hours_required}h</span>
           </div>
           <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
             <div
@@ -258,8 +259,9 @@ function StudentDetailView({ student, isPreceptor, onClose, onReviewHours, onWri
   onReviewHours: () => void
   onWriteEval: () => void
 }) {
+  const totalHours = student.total_hours ?? (student.prior_hours + student.hours_completed)
   const progress = student.hours_required > 0
-    ? Math.min(100, Math.round((student.hours_completed / student.hours_required) * 100))
+    ? Math.min(100, Math.round((totalHours / student.hours_required) * 100))
     : 0
 
   return (
@@ -325,7 +327,7 @@ function StudentDetailView({ student, isPreceptor, onClose, onReviewHours, onWri
               />
             </div>
             <div className="flex justify-between mt-2 text-xs text-stone-500">
-              <span>{student.hours_completed}h completed</span>
+              <span>{totalHours}h completed{student.prior_hours > 0 ? ` (${student.prior_hours}h prior)` : ''}</span>
               <span>{student.hours_required}h required</span>
             </div>
             {student.pending_hours > 0 && (

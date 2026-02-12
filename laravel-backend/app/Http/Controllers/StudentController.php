@@ -95,7 +95,9 @@ class StudentController extends Controller
                 'program' => $profile?->program?->name,
                 'degree_type' => $profile?->program?->degree_type,
                 'hours_completed' => (float) $approvedHours,
-                'hours_required' => $profile?->hours_required ?? 0,
+                'prior_hours' => $profile?->prior_hours ?? 0,
+                'total_hours' => ($profile?->prior_hours ?? 0) + (float) $approvedHours,
+                'hours_required' => $profile?->program?->required_hours ?? 0,
                 'pending_hours' => (float) $pendingHours,
             ];
 
@@ -134,7 +136,6 @@ class StudentController extends Controller
             'graduation_date' => ['nullable', 'date'],
             'gpa' => ['nullable', 'numeric', 'min:0', 'max:4.00'],
             'clinical_interests' => ['nullable', 'array'],
-            'hours_required' => ['sometimes', 'integer', 'min:0'],
             'bio' => ['nullable', 'string', 'max:2000'],
             'resume_url' => ['nullable', 'url', 'max:500'],
         ]);
@@ -254,5 +255,103 @@ class StudentController extends Controller
         return response($content, 200)
             ->header('Content-Type', $mimeType)
             ->header('Content-Disposition', 'attachment; filename="' . ($credential->file_name ?? 'document') . '"');
+    }
+
+    /**
+     * Set prior hours for a student (coordinator/admin only).
+     * Prior hours represent clinical hours completed before the school adopted ClinicLink.
+     */
+    public function setPriorHours(Request $request, User $student): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$student->isStudent()) {
+            return response()->json(['message' => 'User is not a student.'], 422);
+        }
+
+        // Coordinators can only set prior hours for students at their university
+        if ($user->isCoordinator()) {
+            $coordUniversityId = $user->studentProfile?->university_id;
+            $studentUniversityId = $student->studentProfile?->university_id;
+            if (!$coordUniversityId || $coordUniversityId !== $studentUniversityId) {
+                return response()->json(['message' => 'Student is not at your university.'], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'prior_hours' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $profile = $student->studentProfile;
+        if (!$profile) {
+            return response()->json(['message' => 'Student has no profile.'], 404);
+        }
+
+        $profile->update(['prior_hours' => $validated['prior_hours']]);
+
+        return response()->json([
+            'message' => 'Prior hours updated successfully.',
+            'student_id' => $student->id,
+            'prior_hours' => $profile->prior_hours,
+            'total_hours' => $profile->total_hours,
+        ]);
+    }
+
+    /**
+     * Bulk set prior hours for multiple students (coordinator/admin only).
+     */
+    public function bulkSetPriorHours(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'students' => ['required', 'array', 'min:1'],
+            'students.*.student_id' => ['required', 'uuid', 'exists:users,id'],
+            'students.*.prior_hours' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $coordUniversityId = $user->isCoordinator()
+            ? $user->studentProfile?->university_id
+            : null;
+
+        $updated = [];
+        $errors = [];
+
+        foreach ($validated['students'] as $entry) {
+            $student = User::find($entry['student_id']);
+
+            if (!$student || !$student->isStudent()) {
+                $errors[] = ['student_id' => $entry['student_id'], 'error' => 'Not a valid student.'];
+                continue;
+            }
+
+            // Coordinators: verify same university
+            if ($coordUniversityId) {
+                $studentUniversityId = $student->studentProfile?->university_id;
+                if ($coordUniversityId !== $studentUniversityId) {
+                    $errors[] = ['student_id' => $entry['student_id'], 'error' => 'Student is not at your university.'];
+                    continue;
+                }
+            }
+
+            $profile = $student->studentProfile;
+            if (!$profile) {
+                $errors[] = ['student_id' => $entry['student_id'], 'error' => 'Student has no profile.'];
+                continue;
+            }
+
+            $profile->update(['prior_hours' => $entry['prior_hours']]);
+            $updated[] = [
+                'student_id' => $student->id,
+                'prior_hours' => $entry['prior_hours'],
+                'total_hours' => $profile->total_hours,
+            ];
+        }
+
+        return response()->json([
+            'message' => count($updated) . ' student(s) updated.',
+            'updated' => $updated,
+            'errors' => $errors,
+        ]);
     }
 }

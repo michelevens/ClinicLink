@@ -303,6 +303,8 @@ export interface ApiMyStudent {
   graduation_date: string | null
   gpa: number | null
   hours_completed: number
+  prior_hours: number
+  total_hours: number
   hours_required: number
   pending_hours: number
   bio: string | null
@@ -321,6 +323,20 @@ export interface AdminUserStats {
 
 export const myStudentsApi = {
   list: () => api.get<PaginatedResponse<ApiMyStudent>>('/my-students'),
+}
+
+// --- Coordinator ---
+export const coordinatorApi = {
+  setPriorHours: (studentId: string, prior_hours: number) =>
+    api.put<{ message: string; student_id: string; prior_hours: number; total_hours: number }>(
+      `/students/${studentId}/prior-hours`, { prior_hours }
+    ),
+  bulkSetPriorHours: (students: { student_id: string; prior_hours: number }[]) =>
+    api.post<{ message: string; updated: { student_id: string; prior_hours: number; total_hours: number }[]; errors: { student_id: string; error: string }[] }>(
+      '/students/bulk-prior-hours', { students }
+    ),
+  updateProgram: (programId: string, data: { required_hours?: number; name?: string; specialties?: string[] }) =>
+    api.put<ApiProgram>(`/programs/${programId}`, data),
 }
 
 // --- Dashboard ---
@@ -485,7 +501,7 @@ export interface ApiStudentProfile {
   gpa: number | null
   clinical_interests: string[]
   hours_completed: number
-  hours_required: number
+  prior_hours: number
   bio: string | null
   resume_url: string | null
   university?: ApiUniversity
@@ -702,6 +718,8 @@ export interface ApiDashboardStats {
   pending_applications?: number
   accepted_applications?: number
   hours_completed?: number
+  prior_hours?: number
+  total_hours?: number
   hours_required?: number
   hours_progress?: number
   pending_hours?: number
@@ -726,11 +744,14 @@ export interface ApiDashboardStats {
 
 export interface HourSummary {
   total_hours: number
+  platform_hours: number
+  prior_hours: number
   by_category: Record<string, number>
   pending_hours: number
   approved_hours: number
   hours_required: number
-  progress: number
+  hours_remaining: number
+  progress_percent: number
 }
 
 export interface ApiNotification {

@@ -122,6 +122,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:preceptor,site_manager,coordinator,professor,admin')
         ->get('/my-students', [StudentController::class, 'myStudents']);
 
+    // Prior Hours & Program Management (coordinator, admin)
+    Route::middleware('role:coordinator,admin')->group(function () {
+        Route::put('/students/{student}/prior-hours', [StudentController::class, 'setPriorHours']);
+        Route::post('/students/bulk-prior-hours', [StudentController::class, 'bulkSetPriorHours']);
+        Route::put('/programs/{program}', [UniversityController::class, 'updateProgram']);
+    });
+
     // Student Profile & Credentials (students only)
     Route::middleware('role:student')->group(function () {
         Route::get('/student/profile', [StudentController::class, 'profile']);

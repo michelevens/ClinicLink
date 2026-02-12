@@ -164,8 +164,11 @@ class HourLogController extends Controller
 
         $profile = $user->studentProfile;
         if ($profile) {
-            $summary['hours_required'] = $profile->hours_required;
-            $summary['hours_remaining'] = max(0, $profile->hours_required - $summary['total_hours']);
+            $summary['platform_hours'] = $summary['total_hours'];
+            $summary['prior_hours'] = $profile->prior_hours;
+            $summary['total_hours'] = $profile->prior_hours + $summary['platform_hours'];
+            $summary['hours_required'] = $profile->required_hours;
+            $summary['hours_remaining'] = max(0, $summary['hours_required'] - $summary['total_hours']);
             $summary['progress_percent'] = $profile->hours_progress;
         }
 

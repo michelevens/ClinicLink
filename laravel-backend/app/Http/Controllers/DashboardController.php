@@ -37,7 +37,9 @@ class DashboardController extends Controller
             'pending_applications' => $user->applications()->pending()->count(),
             'accepted_applications' => $user->applications()->accepted()->count(),
             'hours_completed' => $profile?->hours_completed ?? 0,
-            'hours_required' => $profile?->hours_required ?? 0,
+            'prior_hours' => $profile?->prior_hours ?? 0,
+            'total_hours' => $profile?->total_hours ?? 0,
+            'hours_required' => $profile?->required_hours ?? 0,
             'hours_progress' => $profile?->hours_progress ?? 0,
             'pending_hours' => $user->hourLogs()->pending()->sum('hours_worked'),
             'active_rotations' => $user->applications()->accepted()
