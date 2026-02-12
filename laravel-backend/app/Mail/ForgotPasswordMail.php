@@ -9,26 +9,26 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PasswordResetMail extends Mailable
+class ForgotPasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
         public User $user,
-        public string $temporaryPassword,
+        public string $resetUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Password Has Been Reset - ClinicLink',
+            subject: 'Reset Your Password - ClinicLink',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.password-reset',
+            view: 'emails.forgot-password',
         );
     }
 }

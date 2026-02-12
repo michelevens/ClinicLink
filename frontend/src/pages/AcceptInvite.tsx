@@ -165,7 +165,7 @@ export function AcceptInvite() {
                   <LogIn className="w-4 h-4" /> Log In
                 </Button>
               </Link>
-              <Link to={`/register?redirect=/invite/${token}`} className="block">
+              <Link to={`/register?redirect=/invite/${token}&role=preceptor${invite?.email ? `&email=${encodeURIComponent(invite.email)}` : ''}`} className="block">
                 <Button variant="outline" className="w-full">
                   <UserPlus className="w-4 h-4" /> Create Account
                 </Button>

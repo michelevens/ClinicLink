@@ -2,33 +2,33 @@
 
 namespace App\Mail;
 
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class PasswordResetMail extends Mailable
+class SiteInviteMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public User $user,
-        public string $temporaryPassword,
+        public string $siteName,
+        public string $inviterName,
+        public string $inviteUrl,
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Password Has Been Reset - ClinicLink',
+            subject: "You're Invited to Join {$this->siteName} on ClinicLink",
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.password-reset',
+            view: 'emails.site-invite',
         );
     }
 }

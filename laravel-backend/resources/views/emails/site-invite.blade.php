@@ -19,21 +19,25 @@
                     <!-- Body -->
                     <tr>
                         <td style="padding:40px;">
-                            <h2 style="margin:0 0 16px;color:#1c1917;font-size:20px;font-weight:600;">Your Password Has Been Reset</h2>
+                            <h2 style="margin:0 0 16px;color:#1c1917;font-size:20px;font-weight:600;">You're Invited!</h2>
                             <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
-                                Hi {{ $user->first_name }}, an administrator has reset your password. Your new temporary password is:
+                                <strong>{{ $inviterName }}</strong> has invited you to join <strong>{{ $siteName }}</strong> as a preceptor on ClinicLink.
                             </p>
-                            <div style="margin:24px 0;padding:16px 24px;background-color:#f5f3ff;border:2px solid #8b5cf6;border-radius:12px;text-align:center;">
-                                <p style="margin:0;font-size:20px;font-weight:700;font-family:monospace;color:#1c1917;letter-spacing:1px;">{{ $temporaryPassword }}</p>
-                            </div>
-                            <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
-                                Please log in with this temporary password and change it immediately from your profile settings.
+                            <p style="margin:0 0 24px;color:#57534e;font-size:15px;line-height:1.6;">
+                                Click the button below to accept the invitation. If you don't have a ClinicLink account yet, you'll be able to create one.
                             </p>
-                            <div style="margin-top:24px;padding:16px;background-color:#fafaf9;border-radius:12px;border-left:4px solid #f59e0b;">
-                                <p style="margin:0;color:#78716c;font-size:13px;line-height:1.5;">
-                                    <strong style="color:#92400e;">Security tip:</strong> Change your password as soon as possible after logging in. Do not share this email with anyone.
-                                </p>
-                            </div>
+                            <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                                <tr>
+                                    <td style="background-color:#8b5cf6;border-radius:12px;">
+                                        <a href="{{ $inviteUrl }}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
+                                            View Invitation
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin:24px 0 0;color:#a8a29e;font-size:13px;line-height:1.6;">
+                                This invitation will expire in 30 days. If you didn't expect this invite, you can safely ignore this email.
+                            </p>
                         </td>
                     </tr>
                     <!-- Footer -->

@@ -21,6 +21,7 @@ class User extends Authenticatable
         'role',
         'phone',
         'avatar_url',
+        'is_active',
         'onboarding_completed_at',
     ];
 

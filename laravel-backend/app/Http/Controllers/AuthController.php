@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
 use App\Models\RotationSite;
 use App\Models\StudentProfile;
@@ -10,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -30,38 +32,23 @@ class AuthController extends Controller
         $user = User::create([
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
-            'email' => $validated['email'],
+            'email' => trim($validated['email']),
             'username' => $validated['username'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'is_active' => false,
         ]);
 
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        // Generate a password reset token so the welcome email includes a "Change Password" link
-        $resetToken = Str::random(64);
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $user->email],
-            ['token' => Hash::make($resetToken), 'created_at' => now()],
-        );
-        $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
-            . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
-
-        // Send welcome email with password change link
-        $emailSent = false;
+        // Send registration received email (account pending approval)
         try {
-            Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
-            $emailSent = true;
+            Mail::to($user->email)->send(new RegistrationReceivedMail($user));
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send welcome email to ' . $user->email . ': ' . $e->getMessage());
+            Log::error('Failed to send registration email to ' . $user->email . ': ' . $e->getMessage());
         }
 
-        $userData = $user->toArray();
-        $userData['onboarding_completed'] = false;
-
         return response()->json([
-            'user' => $userData,
-            'token' => $token,
+            'message' => 'Registration submitted successfully. Your account is pending admin approval.',
+            'pending_approval' => true,
         ], 201);
     }
 
@@ -84,6 +71,13 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Invalid credentials.',
             ], 401);
+        }
+
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account is pending approval. You will receive an email once your account has been activated.',
+                'pending_approval' => true,
+            ], 403);
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;

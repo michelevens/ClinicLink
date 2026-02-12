@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SiteInviteMail;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class SiteInviteController extends Controller
@@ -79,6 +81,18 @@ class SiteInviteController extends Controller
         $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
         $inviteUrl = $frontendUrl . '/invite/' . $invite->token;
 
+        // Send invite email if an email address was provided
+        $emailSent = false;
+        if ($invite->email) {
+            try {
+                $inviterName = $user->first_name . ' ' . $user->last_name;
+                Mail::to($invite->email)->send(new SiteInviteMail($site->name, $inviterName, $inviteUrl));
+                $emailSent = true;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send site invite email to ' . $invite->email . ': ' . $e->getMessage());
+            }
+        }
+
         return response()->json([
             'invite' => [
                 'id' => $invite->id,
@@ -87,6 +101,7 @@ class SiteInviteController extends Controller
                 'email' => $invite->email,
                 'site_name' => $site->name,
                 'expires_at' => $invite->expires_at,
+                'email_sent' => $emailSent,
             ],
         ], 201);
     }

@@ -11,7 +11,7 @@
                 <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                     <!-- Header -->
                     <tr>
-                        <td style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);padding:32px 40px;text-align:center;">
+                        <td style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:32px 40px;text-align:center;">
                             <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">ClinicLink</h1>
                             <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Clinical Rotation Matching Platform</p>
                         </td>
@@ -19,21 +19,28 @@
                     <!-- Body -->
                     <tr>
                         <td style="padding:40px;">
-                            <h2 style="margin:0 0 16px;color:#1c1917;font-size:20px;font-weight:600;">Your Password Has Been Reset</h2>
+                            <h2 style="margin:0 0 16px;color:#1c1917;font-size:20px;font-weight:600;">Account Approved!</h2>
                             <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
-                                Hi {{ $user->first_name }}, an administrator has reset your password. Your new temporary password is:
+                                Great news, {{ $user->first_name }}! Your ClinicLink account has been approved and activated.
                             </p>
-                            <div style="margin:24px 0;padding:16px 24px;background-color:#f5f3ff;border:2px solid #8b5cf6;border-radius:12px;text-align:center;">
-                                <p style="margin:0;font-size:20px;font-weight:700;font-family:monospace;color:#1c1917;letter-spacing:1px;">{{ $temporaryPassword }}</p>
-                            </div>
-                            <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
-                                Please log in with this temporary password and change it immediately from your profile settings.
+                            <p style="margin:0 0 24px;color:#57534e;font-size:15px;line-height:1.6;">
+                                You can now log in and start using the platform.
                             </p>
-                            <div style="margin-top:24px;padding:16px;background-color:#fafaf9;border-radius:12px;border-left:4px solid #f59e0b;">
-                                <p style="margin:0;color:#78716c;font-size:13px;line-height:1.5;">
-                                    <strong style="color:#92400e;">Security tip:</strong> Change your password as soon as possible after logging in. Do not share this email with anyone.
+                            <div style="margin:0 0 24px;padding:16px;background-color:#f0fdf4;border-radius:12px;border:1px solid #bbf7d0;">
+                                <p style="margin:0;color:#57534e;font-size:14px;line-height:1.6;">
+                                    <strong>Role:</strong> {{ ucfirst(str_replace('_', ' ', $user->role)) }}<br>
+                                    <strong>Email:</strong> {{ $user->email }}
                                 </p>
                             </div>
+                            <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                                <tr>
+                                    <td style="background-color:#22c55e;border-radius:12px;">
+                                        <a href="{{ $loginUrl }}" style="display:inline-block;padding:14px 32px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;">
+                                            Log In Now
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     <!-- Footer -->

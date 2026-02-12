@@ -19,21 +19,27 @@
                     <!-- Body -->
                     <tr>
                         <td style="padding:40px;">
-                            <h2 style="margin:0 0 16px;color:#1c1917;font-size:20px;font-weight:600;">Your Password Has Been Reset</h2>
+                            <h2 style="margin:0 0 16px;color:#1c1917;font-size:20px;font-weight:600;">Registration Received</h2>
                             <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
-                                Hi {{ $user->first_name }}, an administrator has reset your password. Your new temporary password is:
+                                Hi {{ $user->first_name }}, thank you for registering with ClinicLink!
                             </p>
-                            <div style="margin:24px 0;padding:16px 24px;background-color:#f5f3ff;border:2px solid #8b5cf6;border-radius:12px;text-align:center;">
-                                <p style="margin:0;font-size:20px;font-weight:700;font-family:monospace;color:#1c1917;letter-spacing:1px;">{{ $temporaryPassword }}</p>
-                            </div>
-                            <p style="margin:0 0 16px;color:#57534e;font-size:15px;line-height:1.6;">
-                                Please log in with this temporary password and change it immediately from your profile settings.
-                            </p>
-                            <div style="margin-top:24px;padding:16px;background-color:#fafaf9;border-radius:12px;border-left:4px solid #f59e0b;">
-                                <p style="margin:0;color:#78716c;font-size:13px;line-height:1.5;">
-                                    <strong style="color:#92400e;">Security tip:</strong> Change your password as soon as possible after logging in. Do not share this email with anyone.
+                            <div style="margin:0 0 24px;padding:16px;background-color:#faf5ff;border-radius:12px;border:1px solid #e9d5ff;">
+                                <p style="margin:0 0 8px;color:#6b21a8;font-size:14px;font-weight:600;">Your Registration Details</p>
+                                <p style="margin:0;color:#57534e;font-size:14px;line-height:1.6;">
+                                    <strong>Name:</strong> {{ $user->first_name }} {{ $user->last_name }}<br>
+                                    <strong>Email:</strong> {{ $user->email }}<br>
+                                    <strong>Role:</strong> {{ ucfirst(str_replace('_', ' ', $user->role)) }}
                                 </p>
                             </div>
+                            <div style="margin:0 0 24px;padding:16px;background-color:#fffbeb;border-radius:12px;border:1px solid #fde68a;">
+                                <p style="margin:0 0 4px;color:#92400e;font-size:14px;font-weight:600;">Pending Approval</p>
+                                <p style="margin:0;color:#78716c;font-size:14px;line-height:1.6;">
+                                    Your account is currently under review. An administrator will review and approve your account shortly. You'll receive another email once your account is activated.
+                                </p>
+                            </div>
+                            <p style="margin:0;color:#a8a29e;font-size:13px;line-height:1.6;">
+                                If you have any questions, please contact the ClinicLink admin team.
+                            </p>
                         </td>
                     </tr>
                     <!-- Footer -->

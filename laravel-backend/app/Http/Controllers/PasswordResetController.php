@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\PasswordResetMail;
+use App\Mail\ForgotPasswordMail;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,7 +39,7 @@ class PasswordResetController extends Controller
                 . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
             try {
-                Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+                Mail::to($user->email)->send(new ForgotPasswordMail($user, $resetUrl));
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error('Failed to send password reset email to ' . $user->email . ': ' . $e->getMessage());
             }

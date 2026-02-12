@@ -113,7 +113,7 @@ export const api = new ApiClient(API_URL)
 // --- Auth ---
 export const authApi = {
   register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string }) =>
-    api.post<{ user: ApiUser; token: string }>('/auth/register', data),
+    api.post<{ message: string; pending_approval: boolean }>('/auth/register', data),
 
   login: (data: { login: string; password: string }) =>
     api.post<{ user: ApiUser; token: string }>('/auth/login', data),
@@ -411,7 +411,7 @@ export const adminApi = {
   updateUser: (id: string, data: { first_name?: string; last_name?: string; email?: string; phone?: string; username?: string; role?: string; is_active?: boolean }) =>
     api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
-  resetUserPassword: (id: string) => api.post<{ message: string }>(`/admin/users/${id}/reset-password`, {}),
+  resetUserPassword: (id: string) => api.post<{ message: string; temporary_password: string; email_sent: boolean }>(`/admin/users/${id}/reset-password`, {}),
   createUser: (data: {
     first_name: string; last_name: string; email: string; role: string;
     username?: string; phone?: string;

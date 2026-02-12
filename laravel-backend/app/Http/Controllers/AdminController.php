@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AccountApprovedMail;
 use App\Mail\PasswordResetMail;
 use App\Mail\WelcomeMail;
 use App\Models\RotationSite;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -42,6 +44,7 @@ class AdminController extends Controller
             'password' => Hash::make($tempPassword),
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
+            'is_active' => true, // Admin-created users are pre-approved
             'onboarding_completed_at' => now(),
         ]);
 
@@ -174,7 +177,21 @@ class AdminController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
+        // Detect activation: is_active changing from false to true
+        $wasInactive = !$user->is_active;
+        $beingActivated = isset($validated['is_active']) && $validated['is_active'] === true;
+
         $user->update($validated);
+
+        // Send approval email when user is activated
+        if ($wasInactive && $beingActivated) {
+            try {
+                $loginUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') . '/login';
+                Mail::to($user->email)->send(new AccountApprovedMail($user, $loginUrl));
+            } catch (\Throwable $e) {
+                Log::error('Failed to send approval email to ' . $user->email . ': ' . $e->getMessage());
+            }
+        }
 
         return response()->json(['user' => $user]);
     }
@@ -196,29 +213,33 @@ class AdminController extends Controller
             return response()->json(['message' => 'Cannot reset your own password from here. Use the profile settings instead.'], 422);
         }
 
-        $resetToken = Str::random(64);
+        // Generate a random temporary password
+        $temporaryPassword = Str::random(12);
 
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $user->email],
-            ['token' => Hash::make($resetToken), 'created_at' => now()],
-        );
+        $user->update([
+            'password' => Hash::make($temporaryPassword),
+        ]);
 
-        $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
-            . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
+        // Revoke all existing tokens so the user must log in with the new password
+        $user->tokens()->delete();
 
         $emailSent = false;
         try {
-            Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+            Mail::to($user->email)->send(new PasswordResetMail($user, $temporaryPassword));
             $emailSent = true;
         } catch (\Throwable $e) {
             report($e);
         }
 
         $message = $emailSent
-            ? 'Password reset email sent to ' . $user->email . '.'
-            : 'Reset token created but email could not be sent. The user can use forgot password instead.';
+            ? 'Password has been reset and emailed to ' . $user->email . '.'
+            : 'Password has been reset but email could not be sent. Please share the temporary password with the user directly.';
 
-        return response()->json(['message' => $message]);
+        return response()->json([
+            'message' => $message,
+            'temporary_password' => $temporaryPassword,
+            'email_sent' => $emailSent,
+        ]);
     }
 
     public function seedUniversities(Request $request): JsonResponse

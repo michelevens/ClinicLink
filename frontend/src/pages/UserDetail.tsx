@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Shield, Mail, Phone, Calendar, Clock, FileText, ClipboardCheck,
   Building2, GraduationCap, Award, MapPin, Star, Loader2, ToggleLeft, ToggleRight,
-  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil
+  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil, Copy, Check
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword } from '../hooks/useApi.ts'
@@ -35,6 +35,8 @@ export function UserDetail() {
   const [newRole, setNewRole] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [resetPwConfirm, setResetPwConfirm] = useState(false)
+  const [resetResult, setResetResult] = useState<{ temporary_password: string; email_sent: boolean } | null>(null)
+  const [copied, setCopied] = useState(false)
   const [editProfile, setEditProfile] = useState(false)
   const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '', email: '', phone: '', username: '' })
 
@@ -186,32 +188,71 @@ export function UserDetail() {
         </Modal>
       )}
 
-      {/* Reset Password Confirmation */}
+      {/* Reset Password Confirmation / Result */}
       {resetPwConfirm && (
-        <Modal isOpen onClose={() => setResetPwConfirm(false)} title="Reset User Password" size="sm">
-          <div className="space-y-4">
-            <p className="text-sm text-stone-600">
-              A password reset link will be sent to <strong>{user.email}</strong>.
-              The link expires in 60 minutes.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setResetPwConfirm(false)}>Cancel</Button>
-              <Button
-                onClick={async () => {
-                  try {
-                    const res = await resetPwMut.mutateAsync(user.id)
-                    setResetPwConfirm(false)
-                    toast.success(res.message)
-                  } catch (e: any) {
-                    toast.error(e.message || 'Failed to send reset email.')
-                  }
-                }}
-                isLoading={resetPwMut.isPending}
-              >
-                <KeyRound className="w-4 h-4 mr-2" /> Send Reset Link
-              </Button>
+        <Modal isOpen onClose={() => { setResetPwConfirm(false); setResetResult(null); setCopied(false) }} title="Reset User Password" size="sm">
+          {resetResult ? (
+            <div className="space-y-4">
+              <p className="text-sm text-stone-600">
+                Password has been reset for <strong>{user.first_name} {user.last_name}</strong>.
+                {!resetResult.email_sent && (
+                  <span className="block mt-1 text-amber-600 font-medium">Email could not be sent. Please share the password with the user directly.</span>
+                )}
+                {resetResult.email_sent && (
+                  <span className="block mt-1 text-green-600">Email sent to {user.email}.</span>
+                )}
+              </p>
+              <div>
+                <label className="block text-xs font-medium text-stone-500 mb-1">Temporary Password</label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-4 py-3 bg-stone-100 rounded-xl text-lg font-mono font-bold text-stone-900 tracking-wider text-center select-all">
+                    {resetResult.temporary_password}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(resetResult.temporary_password)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 2000)
+                    }}
+                  >
+                    {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-stone-400">
+                The user should change this password after logging in.
+              </p>
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => { setResetPwConfirm(false); setResetResult(null); setCopied(false) }}>Done</Button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-stone-600">
+                This will generate a new temporary password for <strong>{user.first_name} {user.last_name}</strong> and
+                attempt to email it to <strong>{user.email}</strong>. The password will also be shown here.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setResetPwConfirm(false)}>Cancel</Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      const res = await resetPwMut.mutateAsync(user.id)
+                      setResetResult({ temporary_password: res.temporary_password, email_sent: res.email_sent })
+                      toast.success(res.message)
+                    } catch (e: any) {
+                      toast.error(e.message || 'Failed to reset password.')
+                    }
+                  }}
+                  isLoading={resetPwMut.isPending}
+                >
+                  <KeyRound className="w-4 h-4 mr-2" /> Reset Password
+                </Button>
+              </div>
+            </div>
+          )}
         </Modal>
       )}
 
