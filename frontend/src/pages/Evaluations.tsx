@@ -57,8 +57,9 @@ export function Evaluations() {
 
   // Summary calculations
   const avgScore = useMemo(() => {
-    if (evaluations.length === 0) return 0
-    return Math.round((evaluations.reduce((sum, e) => sum + e.overall_score, 0) / evaluations.length) * 10) / 10
+    const scored = evaluations.filter(e => e.overall_score != null && !isNaN(Number(e.overall_score)))
+    if (scored.length === 0) return 0
+    return Math.round((scored.reduce((sum, e) => sum + Number(e.overall_score), 0) / scored.length) * 10) / 10
   }, [evaluations])
 
   const categoryAverages = useMemo(() => {
@@ -77,10 +78,11 @@ export function Evaluations() {
 
   const scoreTrend = useMemo(() => {
     return evaluations
+      .filter(e => e.overall_score != null)
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
       .map(e => ({
         date: new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        score: e.overall_score,
+        score: Number(e.overall_score),
         type: e.type,
       }))
   }, [evaluations])
@@ -320,8 +322,8 @@ export function Evaluations() {
                   >
                     <div className="flex items-start gap-4">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                        evalItem.overall_score >= 4 ? 'bg-green-50 text-green-600' :
-                        evalItem.overall_score >= 3 ? 'bg-amber-50 text-amber-600' :
+                        Number(evalItem.overall_score) >= 4 ? 'bg-green-50 text-green-600' :
+                        Number(evalItem.overall_score) >= 3 ? 'bg-amber-50 text-amber-600' :
                         'bg-red-50 text-red-600'
                       }`}>
                         <ClipboardCheck className="w-5 h-5" />
@@ -334,8 +336,8 @@ export function Evaluations() {
                           <Badge variant={getTypeVariant(evalItem.type)} size="sm">
                             {getTypeLabel(evalItem.type)}
                           </Badge>
-                          <Badge variant={evalItem.overall_score >= 4 ? 'success' : evalItem.overall_score >= 3 ? 'warning' : 'danger'}>
-                            {evalItem.overall_score}/5
+                          <Badge variant={Number(evalItem.overall_score) >= 4 ? 'success' : Number(evalItem.overall_score) >= 3 ? 'warning' : 'danger'}>
+                            {Number(evalItem.overall_score) || 0}/5
                           </Badge>
                         </div>
                         <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-stone-500">

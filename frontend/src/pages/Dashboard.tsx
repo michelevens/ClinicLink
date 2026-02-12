@@ -79,8 +79,8 @@ function StudentDashboard() {
   const evaluations = evalsData?.data || []
   const credentials = credsData?.credentials || []
 
-  const platformHours = hours.reduce((sum, h) => sum + h.hours_worked, 0)
-  const approvedHours = hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + h.hours_worked, 0)
+  const platformHours = hours.reduce((sum, h) => sum + (Number(h.hours_worked) || 0), 0)
+  const approvedHours = hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + (Number(h.hours_worked) || 0), 0)
   const priorHours = stats?.prior_hours || 0
   const totalHours = priorHours + approvedHours
   const requiredHours = stats?.hours_required || 0
@@ -415,7 +415,7 @@ function PreceptorDashboard() {
         <StatCard icon={<Users className="w-5 h-5" />} label="Current Students" value={stats?.active_students || 0} color="primary" />
         <StatCard icon={<Clock className="w-5 h-5" />} label="Hours to Review" value={stats?.pending_hour_reviews || pendingHours.length} color="amber" />
         <StatCard icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations Due" value={stats?.pending_evaluations || pendingEvals.length} color="secondary" />
-        <StatCard icon={<Award className="w-5 h-5" />} label="Total Hours Supervised" value={hours.filter(h => h.status === 'approved').reduce((s, h) => s + h.hours_worked, 0)} color="green" />
+        <StatCard icon={<Award className="w-5 h-5" />} label="Total Hours Supervised" value={hours.filter(h => h.status === 'approved').reduce((s, h) => s + (Number(h.hours_worked) || 0), 0)} color="green" />
       </div>
 
       {/* Site Affiliation */}

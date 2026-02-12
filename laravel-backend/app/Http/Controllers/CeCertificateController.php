@@ -172,7 +172,7 @@ class CeCertificateController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        if (!$ceCertificate->certificate_path || $ceCertificate->status !== 'issued') {
+        if (!$ceCertificate->certificate_path || !in_array($ceCertificate->status, ['approved', 'issued'])) {
             return response()->json(['message' => 'Certificate PDF not available.'], 404);
         }
 

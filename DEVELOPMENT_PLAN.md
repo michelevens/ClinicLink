@@ -5,86 +5,170 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
-## Phase 1: MVP (Weeks 1-8)
+## Phase 1: MVP ✅ COMPLETE
 **Goal:** Two-sided marketplace — students search and apply, sites list and accept
 
-### Week 1-2: Project Setup & Auth
-- Scaffold React 18 + TypeScript + Vite + Tailwind frontend
-- Scaffold Laravel 12 backend with PostgreSQL
-- Auth system with role-based access (Student, Preceptor, Site Manager, Coordinator, Professor, Admin)
-- Profile setup flows per role
-- University and facility verification
-
-### Week 3-4: Student Side
-- Student profile with credential uploads
+### What Was Built
+- React 18 + TypeScript + Vite + Tailwind frontend with premium UI
+- Laravel 12 backend with PostgreSQL on Railway
+- Auth system with Sanctum (register, login, forgot/reset password)
+- 6 user roles: Student, Preceptor, Site Manager, Coordinator, Professor, Admin
+- Full onboarding flow per role with profile setup
+- Student profile with credential management
 - Rotation search with filters (specialty, location, dates, cost)
-- Map-based search (Mapbox/Google Maps)
-- Rotation detail pages
-- Application submission workflow
-- Application status tracking
-- Saved searches and bookmarks
-
-### Week 5-6: Site/Clinic Side
+- Rotation detail and application submission workflow
+- Application status tracking (pending, accepted, declined, waitlisted, withdrawn)
 - Facility profiles with photos and description
-- Rotation slot creation (specialty, dates, capacity, requirements, cost)
+- Rotation slot creation (specialty, dates, capacity, requirements, cost, shift schedule)
 - Application review dashboard (accept, decline, waitlist)
-- Preceptor assignment
-- Requirements checklist per slot
-
-### Week 7-8: University Dashboard & Launch
-- University program setup
-- Student roster with placement status tracking
+- Preceptor assignment to slots
+- University and program management
+- Student roster with placement status
 - Placement overview dashboard
-- Email/SMS notifications (application updates, reminders)
-- Performance optimization
-- Deploy: Vercel + Railway
-
-**MVP Deliverable:** Students can search rotation sites, apply, and track status. Sites can list slots and manage applications. Universities can monitor placements.
-
----
-
-## Phase 2: Tracking & Compliance (Weeks 9-16)
-- Clinical hour logging with preceptor approval
-- Mid-rotation and final evaluations (standardized rubrics)
-- Compliance document management (credentials, expiration tracking)
-- Affiliation agreement management with e-signatures
-- In-app messaging between all parties
-- Hour summary reports and exports
+- Site directory and university directory
+- Site preceptor management with invite system
+- Role-based dashboards (Student, Preceptor, Site Manager, Coordinator, Professor, Admin)
+- Preceptor dashboard with site affiliation display
+- Landing page, public rotation search
+- Certificate verification system with QR codes
+- Deploy: GitHub Pages (frontend) + Railway (backend)
 
 ---
 
-## Phase 3: Payments & Intelligence (Weeks 17-24)
+## Phase 2: Tracking & Compliance ✅ COMPLETE
+**Goal:** Clinical hour logging, evaluations, compliance document management
+
+### What Was Built
+
+#### Hour Logging System
+- Student hour log submission (date, hours, category, notes)
+- Preceptor approval workflow (approve/reject with notes)
+- Hour summary with category breakdown
+- Export-ready hour reports
+
+#### Evaluation System
+- Standardized evaluation rubrics (mid-rotation, final, feedback)
+- Preceptor-to-student evaluations with scoring (1-5 scale)
+- Evaluation draft/submit workflow
+- Evaluation history and tracking
+
+#### Credential & Document Management
+- File upload infrastructure (FormData + multipart upload)
+- Reusable FileUpload component (drag-drop, progress, file type filtering)
+- Student credential file uploads (CPR cards, background checks, immunizations)
+- Upload/download with authorization checks
+- File metadata tracking (name, size, path)
+
+#### Onboarding Task System
+- Site-specific onboarding checklists (templates with required/optional items)
+- Student task completion with file attachments
+- Site manager verification workflow
+- Progress tracking per application
+
+#### Affiliation Agreement Management
+- Full CRUD for university-site affiliation agreements
+- Document upload/download for agreement files
+- Status workflow: Draft → Pending Review → Active (+ Expire/Terminate/Reactivate)
+- Role-based access (coordinators see university's, site managers see site's, admin sees all)
+- Search and filter by status
+
+#### Compliance Dashboard
+- **Site Manager view:** Table of students with traffic-light compliance status (green/amber/red), expandable detail showing every credential, task, and agreement status
+- **Coordinator view:** Aggregate cards per site showing % of students compliant, drill-down to individual students
+- **Student view:** Personal compliance checklist with alerts for expired/expiring items, progress indicators and category grouping
+
+#### File Storage Infrastructure
+- Cloudflare R2 (S3-compatible) for persistent file storage in production
+- Environment-based disk switching (local for dev, R2 for production)
+- No egress fees, 10GB free tier
+
+---
+
+## Phase 3: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system
 - Smart matching algorithm (student prefs × site requirements)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)
 - Accreditation-ready report generation
+- Email notifications (application updates, credential expirations, agreement reminders)
 
 ---
 
-## Phase 4: Scale (Weeks 25+)
+## Phase 4: Scale
 - Multi-discipline expansion (nursing, PA, NP, PT, OT, social work, pharmacy, MD)
 - Post-graduation job board ("rotation to hire" pipeline)
 - React Native mobile app
 - LMS integration (Canvas, Blackboard)
 - Background check provider integration
+- In-app messaging between all parties
 
 ---
 
 ## Tech Stack
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React 18 + TypeScript + Vite + Tailwind |
-| Backend | Laravel 12 + PHP 8.4 |
-| Database | PostgreSQL |
-| Search | Algolia / Meilisearch |
-| Maps | Google Maps / Mapbox |
-| Payments | Stripe Connect |
-| E-Signatures | HelloSign / DocuSign API |
-| Notifications | Twilio (SMS) + SendGrid (Email) |
-| Calendar | FullCalendar |
-| Hosting | Vercel + Railway |
-| Mobile | React Native (Phase 4) |
+| Layer | Technology | Status |
+|-------|-----------|--------|
+| Frontend | React 18 + TypeScript + Vite + Tailwind | ✅ |
+| Backend | Laravel 12 + PHP 8.4 | ✅ |
+| Database | PostgreSQL (Railway) | ✅ |
+| Auth | Laravel Sanctum | ✅ |
+| File Storage | Cloudflare R2 (S3-compatible) | ✅ |
+| PDF Generation | DomPDF | ✅ |
+| QR Codes | Simple QRCode | ✅ |
+| Email | Resend | ✅ |
+| Hosting | GitHub Pages + Railway | ✅ |
+| Search | Algolia / Meilisearch | Planned |
+| Maps | Google Maps / Mapbox | Planned |
+| Payments | Stripe Connect | Planned |
+| Calendar | FullCalendar | Planned |
+| Mobile | React Native | Planned |
+
+---
+
+## Architecture
+
+### Frontend Pages (19+ routes)
+| Page | Route | Roles |
+|------|-------|-------|
+| Landing | `/` | Public |
+| Login / Register | `/login`, `/register` | Public |
+| Forgot / Reset Password | `/forgot-password`, `/reset-password` | Public |
+| Rotation Search | `/rotations` | Semi-protected |
+| Verify Certificate | `/verify/:id` | Public |
+| Accept Invite | `/invite/:token` | Public |
+| Onboarding | `/onboarding` | Auth (pre-onboarding) |
+| Dashboard | `/dashboard` | All roles |
+| Applications | `/applications` | Student |
+| Hour Log | `/hours` | Student, Preceptor |
+| Evaluations | `/evaluations` | Student, Preceptor |
+| Certificates | `/certificates` | Student |
+| Settings | `/settings` | All roles |
+| Slot Management | `/slots` | Site Manager |
+| Site Applications | `/site-applications` | Site Manager |
+| Site Preceptors | `/preceptors` | Site Manager |
+| My Site | `/site` | Site Manager |
+| My Students | `/students` | Preceptor, Coordinator |
+| Programs | `/programs` | Coordinator |
+| Placements | `/placements` | Coordinator |
+| Sites Directory | `/sites` | Coordinator, Admin |
+| University Directory | `/universities` | Admin |
+| Onboarding Checklists | `/onboarding-checklists` | Site Manager |
+| Agreements | `/agreements` | Coordinator, Site Manager, Admin |
+| Compliance Dashboard | `/compliance` | Student, Site Manager, Coordinator, Professor, Admin |
+| Admin Users | `/admin/users` | Admin |
+
+### Backend API Endpoints (50+)
+- **Auth:** register, login, logout, me, forgot-password, reset-password
+- **Students:** profile, credentials (CRUD + file upload/download), hour logs, evaluations
+- **Slots:** CRUD with search/filter, preceptor assignment
+- **Sites:** CRUD, my-sites (manager + preceptor), directory
+- **Applications:** submit, review, status tracking
+- **Evaluations:** CRUD with scoring rubrics
+- **Onboarding:** templates, tasks (CRUD + file upload/download), progress
+- **Agreements:** CRUD + document upload/download + status workflow
+- **Compliance:** site aggregation, student checklist, coordinator overview
+- **Universities:** CRUD, programs
+- **Admin:** user management, dashboard stats
+- **Certificates:** generation with QR, public verification
 
 ---
 

@@ -351,7 +351,7 @@ function CeCertRow({ cert }: { cert: ApiCeCertificate }) {
           <p className="text-xs text-red-500 mt-1">Reason: {cert.rejection_reason}</p>
         )}
       </div>
-      {cert.status === 'issued' && cert.certificate_path && (
+      {(cert.status === 'issued' || cert.status === 'approved') && cert.certificate_path && (
         <a
           href={ceCertificatesApi.downloadUrl(cert.id)}
           target="_blank"

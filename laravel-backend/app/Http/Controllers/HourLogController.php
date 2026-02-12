@@ -137,13 +137,20 @@ class HourLogController extends Controller
 
         $hourLog->load('student');
 
-        // Email the student about the review
-        Mail::to($hourLog->student->email)->send(
-            new HourLogReviewedMail($hourLog, $validated['status'])
-        );
+        // Email + in-app notification (non-blocking: don't fail the review if mail is down)
+        try {
+            Mail::to($hourLog->student->email)->send(
+                new HourLogReviewedMail($hourLog, $validated['status'])
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to send hour-log review email: ' . $e->getMessage());
+        }
 
-        // In-app notification for the student
-        $hourLog->student->notify(new HourLogReviewedNotification($hourLog, $validated['status']));
+        try {
+            $hourLog->student->notify(new HourLogReviewedNotification($hourLog, $validated['status']));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to send hour-log review notification: ' . $e->getMessage());
+        }
 
         return response()->json($hourLog);
     }
