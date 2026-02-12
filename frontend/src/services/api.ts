@@ -322,7 +322,7 @@ export interface AdminUserStats {
 }
 
 export const myStudentsApi = {
-  list: () => api.get<PaginatedResponse<ApiMyStudent>>('/my-students'),
+  list: () => api.get<{ students: ApiMyStudent[] }>('/my-students'),
 }
 
 // --- Coordinator ---
@@ -409,6 +409,7 @@ export const adminApi = {
   updateUser: (id: string, data: { role?: string; is_active?: boolean }) =>
     api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
+  resetUserPassword: (id: string) => api.post<{ message: string }>(`/admin/users/${id}/reset-password`, {}),
   createUser: (data: {
     first_name: string; last_name: string; email: string; role: string;
     username?: string; phone?: string;

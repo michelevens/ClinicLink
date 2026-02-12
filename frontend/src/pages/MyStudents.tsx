@@ -14,7 +14,7 @@ export function MyStudents() {
   const isPreceptor = user?.role === 'preceptor' || user?.role === 'site_manager'
 
   const { data, isLoading } = useMyStudents()
-  const students = data?.data || []
+  const students = data?.students || []
 
   const [search, setSearch] = useState('')
   const [programFilter, setProgramFilter] = useState<string>('all')
@@ -336,7 +336,7 @@ function StudentDetailView({ student, isPreceptor, onClose, onReviewHours, onWri
           </div>
 
           {/* Clinical Interests */}
-          {student.clinical_interests.length > 0 && (
+          {student.clinical_interests && student.clinical_interests.length > 0 && (
             <div>
               <p className="text-xs text-stone-500 mb-2">Clinical Interests</p>
               <div className="flex flex-wrap gap-1.5">

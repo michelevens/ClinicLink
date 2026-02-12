@@ -351,6 +351,12 @@ export function useDeleteUser() {
   })
 }
 
+export function useResetUserPassword() {
+  return useMutation({
+    mutationFn: adminApi.resetUserPassword,
+  })
+}
+
 // --- Universities ---
 export function useUniversities(params?: { search?: string; state?: string; page?: number }) {
   return useQuery({

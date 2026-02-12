@@ -224,6 +224,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users/{user}', [AdminController::class, 'showUser']);
         Route::put('/users/{user}', [AdminController::class, 'updateUser']);
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
+        Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword']);
         Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
 
         Route::post('/universities', [UniversityController::class, 'store']);

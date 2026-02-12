@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordResetMail;
 use App\Mail\WelcomeMail;
 use App\Models\RotationSite;
 use App\Models\StudentProfile;
@@ -182,6 +183,37 @@ class AdminController extends Controller
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully.']);
+    }
+
+    public function resetUserPassword(Request $request, User $user): JsonResponse
+    {
+        if ($user->id === $request->user()->id) {
+            return response()->json(['message' => 'Cannot reset your own password from here. Use the profile settings instead.'], 422);
+        }
+
+        $resetToken = Str::random(64);
+
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $user->email],
+            ['token' => Hash::make($resetToken), 'created_at' => now()],
+        );
+
+        $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
+            . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
+
+        $emailSent = false;
+        try {
+            Mail::to($user->email)->send(new PasswordResetMail($user, $resetUrl));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        $message = $emailSent
+            ? 'Password reset email sent to ' . $user->email . '.'
+            : 'Reset token created but email could not be sent. The user can use forgot password instead.';
+
+        return response()->json(['message' => $message]);
     }
 
     public function seedUniversities(Request $request): JsonResponse

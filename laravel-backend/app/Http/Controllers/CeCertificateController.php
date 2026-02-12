@@ -115,11 +115,15 @@ class CeCertificateController extends Controller
             'issued_at' => now(),
         ]);
 
-        // Generate PDF
-        $generator = new CECertificateGenerator();
-        $generator->generatePdf($ceCertificate);
-
-        $ceCertificate->update(['status' => 'issued']);
+        // Generate PDF (non-blocking: download endpoint will retry if this fails)
+        try {
+            $generator = new CECertificateGenerator();
+            $generator->generatePdf($ceCertificate);
+            $ceCertificate->update(['status' => 'issued']);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to generate CE PDF during approval: ' . $e->getMessage());
+            // Certificate stays as 'approved'; PDF will be generated on-demand at download time
+        }
 
         $ceCertificate->load(['university', 'preceptor', 'application.slot.site', 'approvedByUser']);
 
@@ -172,7 +176,23 @@ class CeCertificateController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        if (!$ceCertificate->certificate_path || !in_array($ceCertificate->status, ['approved', 'issued'])) {
+        if (!in_array($ceCertificate->status, ['approved', 'issued'])) {
+            return response()->json(['message' => 'Certificate PDF not available.'], 404);
+        }
+
+        // Generate PDF on-demand if it hasn't been generated yet
+        if (!$ceCertificate->certificate_path) {
+            try {
+                $generator = new CECertificateGenerator();
+                $generator->generatePdf($ceCertificate);
+                $ceCertificate->refresh();
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to generate CE certificate PDF: ' . $e->getMessage());
+                return response()->json(['message' => 'Failed to generate certificate PDF. Please try again later.'], 500);
+            }
+        }
+
+        if (!$ceCertificate->certificate_path) {
             return response()->json(['message' => 'Certificate PDF not available.'], 404);
         }
 

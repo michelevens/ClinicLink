@@ -3,9 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Shield, Mail, Phone, Calendar, Clock, FileText, ClipboardCheck,
   Building2, GraduationCap, Award, MapPin, Star, Loader2, ToggleLeft, ToggleRight,
-  Trash2, Users, Stethoscope, CheckCircle2
+  Trash2, Users, Stethoscope, CheckCircle2, KeyRound
 } from 'lucide-react'
-import { useAdminUser, useUpdateUser, useDeleteUser } from '../hooks/useApi.ts'
+import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
@@ -28,10 +28,12 @@ export function UserDetail() {
   const { data, isLoading } = useAdminUser(id!)
   const updateUser = useUpdateUser()
   const deleteUserMut = useDeleteUser()
+  const resetPwMut = useResetUserPassword()
 
   const [editRole, setEditRole] = useState(false)
   const [newRole, setNewRole] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [resetPwConfirm, setResetPwConfirm] = useState(false)
 
   const user = data?.user
   const stats = data?.stats
@@ -109,6 +111,9 @@ export function UserDetail() {
               {user.is_active ? <ToggleRight className="w-4 h-4 mr-1" /> : <ToggleLeft className="w-4 h-4 mr-1" />}
               {user.is_active ? 'Deactivate' : 'Activate'}
             </Button>
+            <Button variant="outline" size="sm" onClick={() => setResetPwConfirm(true)}>
+              <KeyRound className="w-4 h-4 mr-1" /> Reset Password
+            </Button>
             <Button variant="danger" size="sm" onClick={() => setDeleteConfirm(true)}>
               <Trash2 className="w-4 h-4 mr-1" /> Delete User
             </Button>
@@ -163,6 +168,35 @@ export function UserDetail() {
               <Button variant="outline" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
               <Button variant="danger" onClick={handleDelete} isLoading={deleteUserMut.isPending}>
                 <Trash2 className="w-4 h-4 mr-2" /> Delete
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Reset Password Confirmation */}
+      {resetPwConfirm && (
+        <Modal isOpen onClose={() => setResetPwConfirm(false)} title="Reset User Password" size="sm">
+          <div className="space-y-4">
+            <p className="text-sm text-stone-600">
+              A password reset link will be sent to <strong>{user.email}</strong>.
+              The link expires in 60 minutes.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setResetPwConfirm(false)}>Cancel</Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    const res = await resetPwMut.mutateAsync(user.id)
+                    setResetPwConfirm(false)
+                    alert(res.message)
+                  } catch (e: any) {
+                    alert(e.message || 'Failed to send reset email.')
+                  }
+                }}
+                isLoading={resetPwMut.isPending}
+              >
+                <KeyRound className="w-4 h-4 mr-2" /> Send Reset Link
               </Button>
             </div>
           </div>
