@@ -50,10 +50,10 @@ export function HourLog() {
   const hours = hoursData?.data || []
   const acceptedApps = (appsData?.data || []).filter(a => a.status === 'accepted')
 
-  const totalHours = summary?.total_hours || hours.reduce((sum, h) => sum + h.hours_worked, 0)
-  const approvedHours = summary?.approved_hours || hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + h.hours_worked, 0)
-  const pendingHours = summary?.pending_hours || hours.filter(h => h.status === 'pending').reduce((sum, h) => sum + h.hours_worked, 0)
-  const rejectedHours = hours.filter(h => h.status === 'rejected').reduce((sum, h) => sum + h.hours_worked, 0)
+  const totalHours = summary?.total_hours || hours.reduce((sum, h) => sum + Number(h.hours_worked), 0)
+  const approvedHours = summary?.approved_hours || hours.filter(h => h.status === 'approved').reduce((sum, h) => sum + Number(h.hours_worked), 0)
+  const pendingHours = summary?.pending_hours || hours.filter(h => h.status === 'pending').reduce((sum, h) => sum + Number(h.hours_worked), 0)
+  const rejectedHours = hours.filter(h => h.status === 'rejected').reduce((sum, h) => sum + Number(h.hours_worked), 0)
   const hoursRequired = summary?.hours_required || 500
   const progress = summary?.progress || Math.min(100, Math.round((approvedHours / hoursRequired) * 100))
 
@@ -93,9 +93,9 @@ export function HourLog() {
       }
       const group = map.get(key)!
       group.hours.push(h)
-      group.total += h.hours_worked
-      if (h.status === 'approved') group.approved += h.hours_worked
-      if (h.status === 'pending') group.pending += h.hours_worked
+      group.total += Number(h.hours_worked)
+      if (h.status === 'approved') group.approved += Number(h.hours_worked)
+      if (h.status === 'pending') group.pending += Number(h.hours_worked)
     }
     return Array.from(map.entries())
   }, [hours])
@@ -117,9 +117,9 @@ export function HourLog() {
       }
       const group = map.get(key)!
       group.hours.push(h)
-      group.total += h.hours_worked
-      if (h.status === 'approved') group.approved += h.hours_worked
-      if (h.status === 'pending') group.pending += h.hours_worked
+      group.total += Number(h.hours_worked)
+      if (h.status === 'approved') group.approved += Number(h.hours_worked)
+      if (h.status === 'pending') group.pending += Number(h.hours_worked)
     }
     return Array.from(map.entries())
   }, [hours, isPreceptor])
@@ -128,7 +128,7 @@ export function HourLog() {
   const categoryBreakdown = useMemo(() => {
     const totals: Record<string, number> = {}
     for (const h of hours) {
-      totals[h.category] = (totals[h.category] || 0) + h.hours_worked
+      totals[h.category] = (totals[h.category] || 0) + Number(h.hours_worked)
     }
     return Object.entries(totals).sort((a, b) => b[1] - a[1])
   }, [hours])
@@ -141,7 +141,7 @@ export function HourLog() {
       const weekStart = new Date(d)
       weekStart.setDate(d.getDate() - d.getDay())
       const key = weekStart.toISOString().split('T')[0]
-      weeks.set(key, (weeks.get(key) || 0) + h.hours_worked)
+      weeks.set(key, (weeks.get(key) || 0) + Number(h.hours_worked))
     }
     return Array.from(weeks.entries()).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 8)
   }, [hours])
