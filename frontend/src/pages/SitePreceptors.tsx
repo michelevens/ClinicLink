@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
-import { useSitePreceptors, useSiteInvites, useCreateInvite, useBulkCreateInvites, useRevokeInvite, useMySites } from '../hooks/useApi.ts'
+import { useSitePreceptors, useSiteInvites, useCreateInvite, useBulkCreateInvites, useResendInvite, useRevokeInvite, useMySites } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import {
   User, Mail, Phone, Calendar, Stethoscope, Loader2, UserX,
@@ -44,6 +44,7 @@ export function SitePreceptors() {
   const { data: sitesData } = useMySites()
   const createInvite = useCreateInvite()
   const bulkCreateInvites = useBulkCreateInvites()
+  const resendInvite = useResendInvite()
   const revokeInvite = useRevokeInvite()
 
   const preceptors = data?.preceptors || []
@@ -103,6 +104,15 @@ export function SitePreceptors() {
       setTimeout(() => setCopiedToken(null), 2000)
     } catch {
       toast.error('Failed to copy')
+    }
+  }
+
+  const handleResend = async (id: string) => {
+    try {
+      const res = await resendInvite.mutateAsync(id)
+      toast.success(res.message || 'Invite resent')
+    } catch {
+      toast.error('Failed to resend invite')
     }
   }
 
@@ -479,6 +489,16 @@ export function SitePreceptors() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {invite.email && (
+                    <button
+                      onClick={() => handleResend(invite.id)}
+                      disabled={resendInvite.isPending}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-primary-50 hover:bg-primary-100 text-primary-700 rounded-lg transition-colors disabled:opacity-50"
+                      title="Resend invite email"
+                    >
+                      <Send className="w-3.5 h-3.5" /> Resend
+                    </button>
+                  )}
                   <button
                     onClick={() => handleCopyLink(invite.token)}
                     className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg transition-colors"

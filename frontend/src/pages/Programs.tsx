@@ -35,7 +35,7 @@ export function Programs() {
   const { data, isLoading } = useUniversities({ search: search || undefined })
   const allUniversities = data?.data || []
   const { data: profileData } = useStudentProfile()
-  const coordUniversityId = (profileData as any)?.university_id || null
+  const coordUniversityId = profileData?.profile?.university_id || null
 
   // Coordinators only see their associated university; admins see all
   const universities = isCoordinator && coordUniversityId

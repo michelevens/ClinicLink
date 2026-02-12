@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, MapPin, Phone, Globe, Search, ChevronLeft, ChevronRight, GraduationCap, CheckCircle2, Clock, Plus, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
-import { useUniversities, useCreateUniversity, useUpdateUniversity, useDeleteUniversity } from '../hooks/useApi.ts'
+import { useUniversities, useCreateUniversity, useUpdateUniversity, useDeleteUniversity, useStudentProfile, useCreateProgram } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -55,16 +55,24 @@ const DEGREE_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'danger'
 
 const emptyForm = { name: '', address: '', city: '', state: '', zip: '', phone: '', website: '', is_verified: false }
 
+const DEGREE_TYPES = ['BSN', 'MSN', 'DNP', 'PA', 'NP', 'DPT', 'OTD', 'MSW', 'PharmD', 'other'] as const
+
 export function UniversityDirectory() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
+  const isCoordinator = user?.role === 'coordinator'
   const navigate = useNavigate()
+
+  // Coordinator scoping
+  const { data: profileData } = useStudentProfile()
+  const coordUniversityId = isCoordinator ? (profileData?.profile?.university_id || null) : null
 
   const [search, setSearch] = useState('')
   const [state, setState] = useState('')
   const [page, setPage] = useState(1)
   const [viewUniversity, setViewUniversity] = useState<ApiUniversity | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+  const [showAddProgram, setShowAddProgram] = useState(false)
 
   // CRUD state
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -77,7 +85,11 @@ export function UniversityDirectory() {
   const updateMutation = useUpdateUniversity()
   const deleteMutation = useDeleteUniversity()
 
-  const universities = data?.data || []
+  const allUniversities = data?.data || []
+  // Coordinators only see their own university
+  const universities = isCoordinator && coordUniversityId
+    ? allUniversities.filter(u => u.id === coordUniversityId)
+    : allUniversities
   const totalPages = data?.last_page || 1
   const total = data?.total || 0
 
@@ -169,51 +181,74 @@ export function UniversityDirectory() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">University Directory</h1>
-          <p className="text-stone-500 mt-1">Browse {total > 0 ? `${total} ` : ''}universities and their healthcare programs</p>
+          <h1 className="text-2xl font-bold text-stone-900">
+            {isCoordinator ? 'My University' : 'University Directory'}
+          </h1>
+          <p className="text-stone-500 mt-1">
+            {isCoordinator
+              ? 'Your university and healthcare programs'
+              : `Browse ${total > 0 ? `${total} ` : ''}universities and their healthcare programs`}
+          </p>
         </div>
-        {isAdmin && (
-          <Button onClick={openCreate}>
-            <Plus className="w-4 h-4 mr-1.5" /> Add University
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {isCoordinator && coordUniversityId && (
+            <Button onClick={() => setShowAddProgram(true)}>
+              <Plus className="w-4 h-4 mr-1.5" /> Add Program
+            </Button>
+          )}
+          {isAdmin && (
+            <Button onClick={openCreate}>
+              <Plus className="w-4 h-4 mr-1.5" /> Add University
+            </Button>
+          )}
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-          <input
-            type="text"
-            placeholder="Search by university name..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-          />
-        </div>
-        <select
-          value={state}
-          onChange={e => { setState(e.target.value); setPage(1) }}
-          className="px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-        >
-          <option value="">All States</option>
-          {STATES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
-        <div className="flex gap-1">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2.5 rounded-xl border transition-colors ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600 border-primary-200' : 'text-stone-400 hover:text-stone-600 border-stone-300'}`}
+      {/* Add Program Modal for Coordinators */}
+      {showAddProgram && coordUniversityId && (
+        <AddProgramModal
+          universityId={coordUniversityId}
+          onClose={() => setShowAddProgram(false)}
+        />
+      )}
+
+      {/* Filters - hidden for coordinators who see only their university */}
+      {!isCoordinator && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Search by university name..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+            />
+          </div>
+          <select
+            value={state}
+            onChange={e => { setState(e.target.value); setPage(1) }}
+            className="px-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
           >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`p-2.5 rounded-xl border transition-colors ${viewMode === 'table' ? 'bg-primary-50 text-primary-600 border-primary-200' : 'text-stone-400 hover:text-stone-600 border-stone-300'}`}
-          >
-            <List className="w-4 h-4" />
-          </button>
+            <option value="">All States</option>
+            {STATES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2.5 rounded-xl border transition-colors ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600 border-primary-200' : 'text-stone-400 hover:text-stone-600 border-stone-300'}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2.5 rounded-xl border transition-colors ${viewMode === 'table' ? 'bg-primary-50 text-primary-600 border-primary-200' : 'text-stone-400 hover:text-stone-600 border-stone-300'}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* University Content */}
       {isLoading ? (
@@ -341,8 +376,8 @@ export function UniversityDirectory() {
         </div>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Pagination - hidden for coordinators */}
+      {!isCoordinator && totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
             <ChevronLeft className="w-4 h-4" />
@@ -489,5 +524,100 @@ export function UniversityDirectory() {
         </Modal>
       )}
     </div>
+  )
+}
+
+function AddProgramModal({ universityId, onClose }: { universityId: string; onClose: () => void }) {
+  const createProgram = useCreateProgram()
+  const [form, setForm] = useState({
+    name: '',
+    degree_type: 'MSN' as string,
+    required_hours: 500,
+    specialties: '' as string,
+  })
+
+  const handleSubmit = () => {
+    if (!form.name.trim()) {
+      toast.error('Program name is required.')
+      return
+    }
+    const specialtiesArr = form.specialties
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+
+    createProgram.mutate({
+      universityId,
+      data: {
+        name: form.name.trim(),
+        degree_type: form.degree_type,
+        required_hours: form.required_hours,
+        specialties: specialtiesArr.length > 0 ? specialtiesArr : undefined,
+      },
+    }, {
+      onSuccess: () => {
+        toast.success('Program created successfully.')
+        onClose()
+      },
+      onError: (err) => toast.error(err.message || 'Failed to create program.'),
+    })
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Add New Program" size="md">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Program Name</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            placeholder="e.g. Family Nurse Practitioner"
+            className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Degree Type</label>
+            <select
+              value={form.degree_type}
+              onChange={e => setForm({ ...form, degree_type: e.target.value })}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              {DEGREE_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Required Clinical Hours</label>
+            <input
+              type="number"
+              min="0"
+              value={form.required_hours}
+              onChange={e => setForm({ ...form, required_hours: Number(e.target.value) })}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Specialties (comma-separated)</label>
+          <input
+            type="text"
+            value={form.specialties}
+            onChange={e => setForm({ ...form, specialties: e.target.value })}
+            placeholder="e.g. Family Practice, Pediatrics, Women's Health"
+            className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={createProgram.isPending}>
+            <Plus className="w-4 h-4 mr-1" /> Create Program
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

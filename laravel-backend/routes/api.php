@@ -229,10 +229,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [AdminController::class, 'users']);
         Route::post('/users', [AdminController::class, 'createUser']);
         Route::post('/users/bulk-invite', [AdminController::class, 'bulkInvite']);
-        Route::get('/users/{user}', [AdminController::class, 'showUser']);
-        Route::put('/users/{user}', [AdminController::class, 'updateUser']);
-        Route::delete('/users/{user}', [AdminController::class, 'deleteUser']);
-        Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword']);
+        Route::get('/users/{user}', [AdminController::class, 'showUser'])->whereUuid('user');
+        Route::put('/users/{user}', [AdminController::class, 'updateUser'])->whereUuid('user');
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->whereUuid('user');
+        Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->whereUuid('user');
         Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
 
         Route::post('/universities', [UniversityController::class, 'store']);

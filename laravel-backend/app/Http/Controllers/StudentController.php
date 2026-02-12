@@ -125,7 +125,7 @@ class StudentController extends Controller
 
         $profile->load(['university', 'program']);
 
-        return response()->json($profile);
+        return response()->json(['profile' => $profile]);
     }
 
     public function updateProfile(Request $request): JsonResponse
