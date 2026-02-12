@@ -186,6 +186,40 @@ class SiteInviteController extends Controller
     }
 
     /**
+     * Get pending invites for the currently authenticated user (by email match).
+     */
+    public function myPendingInvites(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $invites = SiteInvite::where('email', strtolower($user->email))
+            ->where('status', 'pending')
+            ->where('expires_at', '>', now())
+            ->with(['site:id,name,address,city,state,specialties,description', 'inviter:id,first_name,last_name'])
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($invite) => [
+                'id' => $invite->id,
+                'token' => $invite->token,
+                'email' => $invite->email,
+                'site' => [
+                    'id' => $invite->site->id,
+                    'name' => $invite->site->name,
+                    'city' => $invite->site->city,
+                    'state' => $invite->site->state,
+                    'specialties' => $invite->site->specialties ?? [],
+                ],
+                'invited_by' => $invite->inviter
+                    ? $invite->inviter->first_name . ' ' . $invite->inviter->last_name
+                    : null,
+                'expires_at' => $invite->expires_at,
+                'created_at' => $invite->created_at,
+            ]);
+
+        return response()->json(['invites' => $invites]);
+    }
+
+    /**
      * Public: validate an invite token and return site info.
      */
     public function show(string $token): JsonResponse

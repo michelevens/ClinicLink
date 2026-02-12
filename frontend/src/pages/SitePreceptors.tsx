@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import {
   User, Mail, Phone, Calendar, Stethoscope, Loader2, UserX,
   Link2, Copy, Plus, Trash2, CheckCircle, Clock,
-  Building2, Send, Upload, X, Users, AlertCircle
+  Building2, Send, Upload, X, Users, AlertCircle, Download
 } from 'lucide-react'
 
 const MESSAGE_TEMPLATES = [
@@ -113,6 +113,17 @@ export function SitePreceptors() {
     } catch {
       toast.error('Failed to revoke invite')
     }
+  }
+
+  const handleDownloadTemplate = () => {
+    const csv = 'email\njohn.doe@hospital.com\njane.smith@university.edu\ndr.preceptor@clinic.org\n'
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'invite_template.csv'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   // CSV / bulk helpers
@@ -325,7 +336,12 @@ export function SitePreceptors() {
                   <Upload className="w-5 h-5" />
                   <span>Click to upload CSV or text file</span>
                 </button>
-                <p className="text-xs text-stone-400 mt-1">Emails will be extracted automatically from any column</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-stone-400">Emails will be extracted automatically from any column</p>
+                  <button onClick={handleDownloadTemplate} className="flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 font-medium">
+                    <Download className="w-3 h-3" /> Template
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1.5">Or paste emails</label>

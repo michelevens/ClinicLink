@@ -6,7 +6,9 @@ import { useNavigate } from 'react-router-dom'
 import {
   useDashboardStats, useApplications, useHourLogs,
   useEvaluations, useCredentials, useSlots, useMySites,
+  useMyPendingInvites, useAcceptInvite,
 } from '../hooks/useApi.ts'
+import { toast } from 'sonner'
 import {
   Search, Clock, FileText, CheckCircle, AlertCircle,
   Building2, Users, CalendarDays, TrendingUp, Star,
@@ -394,12 +396,24 @@ function PreceptorDashboard() {
   const { data: hoursData } = useHourLogs()
   const { data: evalsData } = useEvaluations()
   const { data: sitesData } = useMySites()
+  const { data: pendingInvitesData } = useMyPendingInvites()
+  const acceptInvite = useAcceptInvite()
 
   const hours = hoursData?.data || []
   const evaluations = evalsData?.data || []
   const pendingHours = hours.filter(h => h.status === 'pending')
   const pendingEvals = evaluations.filter(e => !e.is_submitted)
   const sites = sitesData?.sites || []
+  const pendingInvites = pendingInvitesData?.invites || []
+
+  const handleAcceptInvite = async (token: string, siteName: string) => {
+    try {
+      await acceptInvite.mutateAsync(token)
+      toast.success(`You have joined ${siteName}!`)
+    } catch {
+      toast.error('Failed to accept invite')
+    }
+  }
 
   if (isLoading) return <LoadingSpinner />
 
@@ -417,6 +431,44 @@ function PreceptorDashboard() {
         <StatCard icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations Due" value={stats?.pending_evaluations || pendingEvals.length} color="secondary" />
         <StatCard icon={<Award className="w-5 h-5" />} label="Total Hours Supervised" value={hours.filter(h => h.status === 'approved').reduce((s, h) => s + (Number(h.hours_worked) || 0), 0)} color="green" />
       </div>
+
+      {/* Pending Site Invites */}
+      {pendingInvites.length > 0 && (
+        <div className="space-y-3">
+          {pendingInvites.map(invite => (
+            <Card key={invite.id} className="border-2 border-violet-200 bg-gradient-to-r from-violet-50 to-purple-50">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
+                  <Building2 className="w-6 h-6 text-violet-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-violet-600 uppercase tracking-wider mb-0.5">Site Invitation</p>
+                  <p className="font-semibold text-stone-900 text-lg">{invite.site.name}</p>
+                  <p className="text-sm text-stone-500">
+                    {invite.site.city}, {invite.site.state}
+                    {invite.invited_by && <span> &middot; Invited by {invite.invited_by}</span>}
+                  </p>
+                  {invite.site.specialties?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {invite.site.specialties.slice(0, 4).map(s => (
+                        <Badge key={s} variant="secondary">{s}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-shrink-0">
+                  <Button
+                    onClick={() => handleAcceptInvite(invite.token, invite.site.name)}
+                    isLoading={acceptInvite.isPending}
+                  >
+                    <CheckCircle className="w-4 h-4" /> Accept & Join
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Site Affiliation */}
       {sites.length > 0 && (

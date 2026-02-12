@@ -617,9 +617,22 @@ export function useBulkCreateInvites() {
   })
 }
 
+export function useMyPendingInvites() {
+  return useQuery({
+    queryKey: ['my-pending-invites'],
+    queryFn: () => siteInvitesApi.myPending(),
+  })
+}
+
 export function useAcceptInvite() {
+  const qc = useQueryClient()
   return useMutation({
     mutationFn: siteInvitesApi.accept,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-pending-invites'] })
+      qc.invalidateQueries({ queryKey: ['site-invites'] })
+      qc.invalidateQueries({ queryKey: ['my-sites'] })
+    },
   })
 }
 

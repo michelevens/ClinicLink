@@ -112,7 +112,7 @@ export const api = new ApiClient(API_URL)
 
 // --- Auth ---
 export const authApi = {
-  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string }) =>
+  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string; university_id?: string }) =>
     api.post<{ message: string; pending_approval: boolean }>('/auth/register', data),
 
   login: (data: { login: string; password: string }) =>
@@ -243,6 +243,7 @@ export const siteInvitesApi = {
   validate: (token: string) => api.get<{ invite: ApiInviteDetail }>(`/invite/${token}`),
   accept: (token: string) => api.post<{ message: string; site: { id: string; name: string } }>(`/invite/${token}/accept`),
   revoke: (id: string) => api.delete(`/site-invites/${id}`),
+  myPending: () => api.get<{ invites: { id: string; token: string; email: string; site: { id: string; name: string; city: string; state: string; specialties: string[] }; invited_by: string | null; expires_at: string; created_at: string }[] }>('/my-pending-invites'),
 }
 
 // --- Applications ---

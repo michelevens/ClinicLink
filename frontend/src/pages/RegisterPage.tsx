@@ -1,12 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, CheckCircle } from 'lucide-react'
+import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, CheckCircle, Building2, Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
+import { universitiesApi } from '../services/api.ts'
 
 const ROLE_OPTIONS: { value: UserRole; label: string; desc: string }[] = [
   { value: 'student', label: 'Student', desc: 'I need clinical rotation hours' },
@@ -58,10 +59,49 @@ export function RegisterPage() {
   const prefillEmail = searchParams.get('email') || ''
   const prefillRole = (searchParams.get('role') as UserRole) || 'student'
 
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole })
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [pendingApproval, setPendingApproval] = useState(false)
   const { register, isLoading } = useAuth()
+
+  // University search
+  const [uniSearch, setUniSearch] = useState('')
+  const [uniResults, setUniResults] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([])
+  const [uniLoading, setUniLoading] = useState(false)
+  const [selectedUni, setSelectedUni] = useState<{ id: string; name: string } | null>(null)
+  const [showUniDropdown, setShowUniDropdown] = useState(false)
+  const uniRef = useRef<HTMLDivElement>(null)
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(null)
+
+  const needsOrg = ['student', 'preceptor', 'coordinator', 'professor'].includes(form.role)
+
+  useEffect(() => {
+    if (!uniSearch.trim() || uniSearch.length < 2) {
+      setUniResults([])
+      return
+    }
+    setUniLoading(true)
+    if (searchTimer.current) clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await universitiesApi.list({ search: uniSearch })
+        setUniResults((res.data || []).map(u => ({ id: u.id, name: u.name, city: u.city, state: u.state })))
+      } catch {
+        setUniResults([])
+      } finally {
+        setUniLoading(false)
+      }
+    }, 300)
+  }, [uniSearch])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (uniRef.current && !uniRef.current.contains(e.target as Node)) setShowUniDropdown(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const strength = useMemo(() => getPasswordStrength(form.password), [form.password])
 
@@ -87,7 +127,7 @@ export function RegisterPage() {
       return
     }
     try {
-      await register(form)
+      await register({ ...form, universityId: form.universityId || undefined })
       setPendingApproval(true)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
@@ -246,6 +286,77 @@ export function RegisterPage() {
                 ))}
               </div>
             </div>
+
+            {/* Organization Search */}
+            {needsOrg && (
+              <div className="space-y-1.5" ref={uniRef}>
+                <label className="block text-sm font-medium text-stone-700">
+                  {form.role === 'student' ? 'Your School / University' : 'Affiliated Organization'}
+                </label>
+                {selectedUni ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-primary-300 bg-primary-50">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-primary-600" />
+                      <span className="text-sm font-medium text-stone-900">{selectedUni.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedUni(null); setForm(f => ({ ...f, universityId: '' })); setUniSearch('') }}
+                      className="text-stone-400 hover:text-red-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                      {uniLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    </div>
+                    <input
+                      type="text"
+                      value={uniSearch}
+                      onChange={e => { setUniSearch(e.target.value); setShowUniDropdown(true) }}
+                      onFocus={() => uniResults.length > 0 && setShowUniDropdown(true)}
+                      placeholder="Search for your school or organization..."
+                      className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                    />
+                    {showUniDropdown && uniResults.length > 0 && (
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {uniResults.map(u => (
+                          <button
+                            key={u.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedUni({ id: u.id, name: u.name })
+                              setForm(f => ({ ...f, universityId: u.id }))
+                              setShowUniDropdown(false)
+                              setUniSearch('')
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0"
+                          >
+                            <p className="text-sm font-medium text-stone-900">{u.name}</p>
+                            {(u.city || u.state) && (
+                              <p className="text-xs text-stone-500">{[u.city, u.state].filter(Boolean).join(', ')}</p>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showUniDropdown && uniSearch.length >= 2 && !uniLoading && uniResults.length === 0 && (
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg p-4 text-center">
+                        <p className="text-sm text-stone-500">No organizations found for "{uniSearch}"</p>
+                        <p className="text-xs text-stone-400 mt-1">You can add your organization after registration</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-stone-400">
+                  {form.role === 'student'
+                    ? 'Select the school you are enrolled in'
+                    : 'Select the school or organization you are affiliated with'}
+                </p>
+              </div>
+            )}
 
             <Button type="submit" isLoading={isLoading} className="w-full">
               Create Account

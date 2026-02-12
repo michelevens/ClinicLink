@@ -200,6 +200,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/site-invites/{invite}', [SiteInviteController::class, 'destroy']);
     });
     Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);
+    Route::get('/my-pending-invites', [SiteInviteController::class, 'myPendingInvites']);
 
     // CE Certificates (preceptor, coordinator, admin) — download moved to public routes
     Route::middleware('role:preceptor,coordinator,admin')->group(function () {
