@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (data: RegisterData) => {
     setState(s => ({ ...s, isLoading: true }))
     try {
-      const res = await authApi.register({
+      await authApi.register({
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
@@ -108,10 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password_confirmation: data.password,
         role: data.role,
       })
-      const user = mapApiUser(res.user)
-      localStorage.setItem('cliniclink_token', res.token)
-      localStorage.setItem('cliniclink_user', JSON.stringify(user))
-      setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
+      // Registration no longer returns a token — account is pending approval
+      setState(s => ({ ...s, isLoading: false }))
     } catch (err) {
       setState(s => ({ ...s, isLoading: false }))
       throw err
