@@ -3,7 +3,7 @@ import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
   onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
-  cePolicyApi, ceCertificatesApi, applicationsExtApi,
+  cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -331,7 +331,10 @@ export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof adminApi.updateUser>[1] }) => adminApi.updateUser(id, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }) },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+      qc.invalidateQueries({ queryKey: ['admin-user'] })
+    },
   })
 }
 
@@ -378,6 +381,18 @@ export function useUpdateUniversity() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Parameters<typeof adminApi.updateUniversity>[1] }) => adminApi.updateUniversity(id, data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['universities'] }) },
+  })
+}
+
+export function useCreateProgram() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ universityId, data }: { universityId: string; data: Parameters<typeof coordinatorApi.createProgram>[1] }) =>
+      coordinatorApi.createProgram(universityId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['universities'] })
+      qc.invalidateQueries({ queryKey: ['university-programs'] })
+    },
   })
 }
 

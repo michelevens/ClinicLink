@@ -337,6 +337,8 @@ export const coordinatorApi = {
     ),
   updateProgram: (programId: string, data: { required_hours?: number; name?: string; specialties?: string[] }) =>
     api.put<ApiProgram>(`/programs/${programId}`, data),
+  createProgram: (universityId: string, data: { name: string; degree_type: string; required_hours: number; specialties?: string[] }) =>
+    api.post<ApiProgram>(`/universities/${universityId}/programs`, data),
 }
 
 // --- Dashboard ---
@@ -406,7 +408,7 @@ export const adminApi = {
     return api.get<PaginatedResponse<ApiUser>>(`/admin/users?${qs}`)
   },
   getUser: (id: string) => api.get<{ user: ApiUser; stats: AdminUserStats }>(`/admin/users/${id}`),
-  updateUser: (id: string, data: { role?: string; is_active?: boolean }) =>
+  updateUser: (id: string, data: { first_name?: string; last_name?: string; email?: string; phone?: string; username?: string; role?: string; is_active?: boolean }) =>
     api.put<{ user: ApiUser }>(`/admin/users/${id}`, data),
   deleteUser: (id: string) => api.delete(`/admin/users/${id}`),
   resetUserPassword: (id: string) => api.post<{ message: string }>(`/admin/users/${id}/reset-password`, {}),

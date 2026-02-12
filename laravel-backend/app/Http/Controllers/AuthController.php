@@ -48,7 +48,13 @@ class AuthController extends Controller
             . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
 
         // Send welcome email with password change link
-        Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
+        $emailSent = false;
+        try {
+            Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send welcome email to ' . $user->email . ': ' . $e->getMessage());
+        }
 
         $userData = $user->toArray();
         $userData['onboarding_completed'] = false;

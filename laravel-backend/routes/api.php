@@ -127,11 +127,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/students/{student}/prior-hours', [StudentController::class, 'setPriorHours']);
         Route::post('/students/bulk-prior-hours', [StudentController::class, 'bulkSetPriorHours']);
         Route::put('/programs/{program}', [UniversityController::class, 'updateProgram']);
+        Route::post('/universities/{university}/programs', [UniversityController::class, 'storeProgram']);
     });
 
-    // Student Profile & Credentials (students only)
+    // Student Profile read (students, coordinators, professors need university_id for CE Policy etc.)
+    Route::middleware('role:student,coordinator,professor')
+        ->get('/student/profile', [StudentController::class, 'profile']);
+
+    // Student Profile updates & Credentials (students only)
     Route::middleware('role:student')->group(function () {
-        Route::get('/student/profile', [StudentController::class, 'profile']);
         Route::put('/student/profile', [StudentController::class, 'updateProfile']);
         Route::get('/student/credentials', [StudentController::class, 'credentials']);
         Route::post('/student/credentials', [StudentController::class, 'storeCredential']);

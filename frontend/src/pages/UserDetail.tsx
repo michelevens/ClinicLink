@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Shield, Mail, Phone, Calendar, Clock, FileText, ClipboardCheck,
   Building2, GraduationCap, Award, MapPin, Star, Loader2, ToggleLeft, ToggleRight,
-  Trash2, Users, Stethoscope, CheckCircle2, KeyRound
+  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -34,6 +35,8 @@ export function UserDetail() {
   const [newRole, setNewRole] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [resetPwConfirm, setResetPwConfirm] = useState(false)
+  const [editProfile, setEditProfile] = useState(false)
+  const [profileForm, setProfileForm] = useState({ first_name: '', last_name: '', email: '', phone: '', username: '' })
 
   const user = data?.user
   const stats = data?.stats
@@ -104,6 +107,15 @@ export function UserDetail() {
 
           {/* Admin Actions */}
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-primary-100">
+            <Button variant="outline" size="sm" onClick={() => {
+              setProfileForm({
+                first_name: user.first_name, last_name: user.last_name,
+                email: user.email, phone: user.phone || '', username: user.username || '',
+              })
+              setEditProfile(true)
+            }}>
+              <Pencil className="w-4 h-4 mr-1" /> Edit Profile
+            </Button>
             <Button variant="outline" size="sm" onClick={() => { setEditRole(true); setNewRole(user.role) }}>
               <Shield className="w-4 h-4 mr-1" /> Change Role
             </Button>
@@ -189,14 +201,90 @@ export function UserDetail() {
                   try {
                     const res = await resetPwMut.mutateAsync(user.id)
                     setResetPwConfirm(false)
-                    alert(res.message)
+                    toast.success(res.message)
                   } catch (e: any) {
-                    alert(e.message || 'Failed to send reset email.')
+                    toast.error(e.message || 'Failed to send reset email.')
                   }
                 }}
                 isLoading={resetPwMut.isPending}
               >
                 <KeyRound className="w-4 h-4 mr-2" /> Send Reset Link
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Edit Profile Modal */}
+      {editProfile && (
+        <Modal isOpen onClose={() => setEditProfile(false)} title="Edit User Profile" size="md">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">First Name</label>
+                <input
+                  type="text"
+                  value={profileForm.first_name}
+                  onChange={e => setProfileForm({ ...profileForm, first_name: e.target.value })}
+                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Last Name</label>
+                <input
+                  type="text"
+                  value={profileForm.last_name}
+                  onChange={e => setProfileForm({ ...profileForm, last_name: e.target.value })}
+                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={profileForm.email}
+                onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
+                className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={profileForm.phone}
+                  onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
+                  placeholder="Optional"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Username</label>
+                <input
+                  type="text"
+                  value={profileForm.username}
+                  onChange={e => setProfileForm({ ...profileForm, username: e.target.value })}
+                  placeholder="Optional"
+                  className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditProfile(false)}>Cancel</Button>
+              <Button
+                onClick={async () => {
+                  try {
+                    await updateUser.mutateAsync({ id: user.id, data: profileForm })
+                    setEditProfile(false)
+                    toast.success('User profile updated.')
+                  } catch (e: any) {
+                    toast.error(e.message || 'Failed to update profile.')
+                  }
+                }}
+                isLoading={updateUser.isPending}
+              >
+                <Pencil className="w-4 h-4 mr-2" /> Save Changes
               </Button>
             </div>
           </div>

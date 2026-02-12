@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Search, GraduationCap, Clock, BookOpen, Mail, ChevronRight } from 'lucide-react'
+import { Users, Search, GraduationCap, Clock, BookOpen, ChevronRight } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useMyStudents } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
@@ -18,7 +18,6 @@ export function MyStudents() {
 
   const [search, setSearch] = useState('')
   const [programFilter, setProgramFilter] = useState<string>('all')
-  const [viewStudent, setViewStudent] = useState<ApiMyStudent | null>(null)
 
   // Get unique programs for filter
   const programs = useMemo(() => {
@@ -147,7 +146,7 @@ export function MyStudents() {
               key={student.id}
               student={student}
               isPreceptor={isPreceptor}
-              onView={() => setViewStudent(student)}
+              onView={() => navigate(`/students/${student.id}`)}
               onReviewHours={() => navigate('/hours')}
               onWriteEval={() => navigate('/evaluations')}
             />
@@ -155,16 +154,6 @@ export function MyStudents() {
         </div>
       )}
 
-      {/* Student Detail Modal */}
-      {viewStudent && (
-        <StudentDetailView
-          student={viewStudent}
-          isPreceptor={isPreceptor}
-          onClose={() => setViewStudent(null)}
-          onReviewHours={() => { setViewStudent(null); navigate('/hours') }}
-          onWriteEval={() => { setViewStudent(null); navigate('/evaluations') }}
-        />
-      )}
     </div>
   )
 }
@@ -252,122 +241,3 @@ function StudentCard({ student, isPreceptor, onView, onReviewHours, onWriteEval 
   )
 }
 
-function StudentDetailView({ student, isPreceptor, onClose, onReviewHours, onWriteEval }: {
-  student: ApiMyStudent
-  isPreceptor: boolean
-  onClose: () => void
-  onReviewHours: () => void
-  onWriteEval: () => void
-}) {
-  const totalHours = student.total_hours ?? (student.prior_hours + student.hours_completed)
-  const progress = student.hours_required > 0
-    ? Math.min(100, Math.round((totalHours / student.hours_required) * 100))
-    : 0
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] sm:max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200">
-          <h2 className="text-lg font-semibold text-stone-900">Student Details</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-stone-100 transition-colors text-stone-500">
-            <span className="sr-only">Close</span>&times;
-          </button>
-        </div>
-        <div className="px-6 py-5 overflow-y-auto flex-1 space-y-5">
-          {/* Profile Header */}
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-lg">
-              {student.first_name[0]}{student.last_name[0]}
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-stone-900">{student.first_name} {student.last_name}</h3>
-              <p className="text-sm text-stone-500 flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5" /> {student.email}
-              </p>
-            </div>
-          </div>
-
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-stone-500 mb-1">University</p>
-              <p className="text-sm font-semibold text-stone-900">{student.university || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-stone-500 mb-1">Program</p>
-              <p className="text-sm font-semibold text-stone-900">{student.program || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-stone-500 mb-1">Degree</p>
-              <p className="text-sm font-semibold text-stone-900">{student.degree_type || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-stone-500 mb-1">GPA</p>
-              <p className="text-sm font-semibold text-stone-900">{student.gpa?.toFixed(2) || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-stone-500 mb-1">Graduation</p>
-              <p className="text-sm font-semibold text-stone-900">
-                {student.graduation_date ? new Date(student.graduation_date).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-          </div>
-
-          {/* Hours Progress */}
-          <div className="p-4 bg-stone-50 rounded-xl">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-stone-700">Clinical Hours Progress</span>
-              <span className="text-sm font-bold text-stone-900">{progress}%</span>
-            </div>
-            <div className="w-full h-3 bg-stone-200 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-2 text-xs text-stone-500">
-              <span>{totalHours}h completed{student.prior_hours > 0 ? ` (${student.prior_hours}h prior)` : ''}</span>
-              <span>{student.hours_required}h required</span>
-            </div>
-            {student.pending_hours > 0 && (
-              <p className="text-xs text-amber-600 mt-1">{student.pending_hours}h pending review</p>
-            )}
-          </div>
-
-          {/* Clinical Interests */}
-          {student.clinical_interests && student.clinical_interests.length > 0 && (
-            <div>
-              <p className="text-xs text-stone-500 mb-2">Clinical Interests</p>
-              <div className="flex flex-wrap gap-1.5">
-                {student.clinical_interests.map(interest => (
-                  <Badge key={interest} variant="default" size="sm">{interest}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Bio */}
-          {student.bio && (
-            <div>
-              <p className="text-xs text-stone-500 mb-1">Bio</p>
-              <p className="text-sm text-stone-700">{student.bio}</p>
-            </div>
-          )}
-
-          {/* Actions */}
-          {isPreceptor && (
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={onReviewHours} className="flex-1">
-                <Clock className="w-4 h-4 mr-2" /> Review Hours
-              </Button>
-              <Button onClick={onWriteEval} className="flex-1">
-                <GraduationCap className="w-4 h-4 mr-2" /> Write Evaluation
-              </Button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}

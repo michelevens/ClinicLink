@@ -1,11 +1,17 @@
 import { useState } from 'react'
-import { BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2 } from 'lucide-react'
-import { useSites } from '../hooks/useApi.ts'
+import { BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2, Plus } from 'lucide-react'
+import { useStudentProfile, useCreateProgram } from '../hooks/useApi.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
+import { Button } from '../components/ui/Button.tsx'
+import { Modal } from '../components/ui/Modal.tsx'
 import { api } from '../services/api.ts'
 import type { ApiUniversity, ApiProgram } from '../services/api.ts'
 import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+
+const DEGREE_TYPES = ['BSN', 'MSN', 'DNP', 'PA', 'NP', 'DPT', 'OTD', 'MSW', 'PharmD', 'other'] as const
 
 function useUniversities(params?: { search?: string }) {
   return useQuery({
@@ -17,24 +23,45 @@ function useUniversities(params?: { search?: string }) {
 function useUniversityPrograms(id: string) {
   return useQuery({
     queryKey: ['university-programs', id],
-    queryFn: () => api.get<{ programs: ApiProgram[] }>(`/universities/${id}/programs`),
+    queryFn: () => api.get<ApiProgram[]>(`/universities/${id}/programs`),
     enabled: !!id,
   })
 }
 
 export function Programs() {
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
   const { data, isLoading } = useUniversities({ search: search || undefined })
   const universities = data?.data || []
+  const { data: profileData } = useStudentProfile()
+  const coordUniversityId = (profileData as any)?.university_id || null
 
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showAddProgram, setShowAddProgram] = useState(false)
+
+  const canAddProgram = (user?.role === 'coordinator' || user?.role === 'admin') && coordUniversityId
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900">Programs</h1>
-        <p className="text-stone-500 mt-1">Universities and their clinical programs</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">Programs</h1>
+          <p className="text-stone-500 mt-1">Universities and their clinical programs</p>
+        </div>
+        {canAddProgram && (
+          <Button onClick={() => setShowAddProgram(true)}>
+            <Plus className="w-4 h-4 mr-1" /> Add Program
+          </Button>
+        )}
       </div>
+
+      {/* Add Program Modal */}
+      {showAddProgram && coordUniversityId && (
+        <AddProgramModal
+          universityId={coordUniversityId}
+          onClose={() => setShowAddProgram(false)}
+        />
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -83,6 +110,7 @@ function UniversityCard({ university, isExpanded, onToggle }: {
   onToggle: () => void
 }) {
   const { data, isLoading } = useUniversityPrograms(isExpanded ? university.id : '')
+  const programs = Array.isArray(data) ? data : []
 
   return (
     <Card>
@@ -109,11 +137,11 @@ function UniversityCard({ university, isExpanded, onToggle }: {
             <div className="flex justify-center py-4">
               <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : (data?.programs || []).length === 0 ? (
+          ) : programs.length === 0 ? (
             <p className="text-sm text-stone-500 text-center py-4">No programs listed for this university.</p>
           ) : (
             <div className="space-y-3">
-              {(data?.programs || []).map(program => (
+              {programs.map(program => (
                 <div key={program.id} className="p-3 bg-stone-50 rounded-xl">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2">
@@ -144,5 +172,100 @@ function UniversityCard({ university, isExpanded, onToggle }: {
         </div>
       )}
     </Card>
+  )
+}
+
+function AddProgramModal({ universityId, onClose }: { universityId: string; onClose: () => void }) {
+  const createProgram = useCreateProgram()
+  const [form, setForm] = useState({
+    name: '',
+    degree_type: 'MSN' as string,
+    required_hours: 500,
+    specialties: '' as string,
+  })
+
+  const handleSubmit = () => {
+    if (!form.name.trim()) {
+      toast.error('Program name is required.')
+      return
+    }
+    const specialtiesArr = form.specialties
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+
+    createProgram.mutate({
+      universityId,
+      data: {
+        name: form.name.trim(),
+        degree_type: form.degree_type,
+        required_hours: form.required_hours,
+        specialties: specialtiesArr.length > 0 ? specialtiesArr : undefined,
+      },
+    }, {
+      onSuccess: () => {
+        toast.success('Program created successfully.')
+        onClose()
+      },
+      onError: (err) => toast.error(err.message || 'Failed to create program.'),
+    })
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Add New Program" size="md">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Program Name</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            placeholder="e.g. Family Nurse Practitioner"
+            className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Degree Type</label>
+            <select
+              value={form.degree_type}
+              onChange={e => setForm({ ...form, degree_type: e.target.value })}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              {DEGREE_TYPES.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Required Clinical Hours</label>
+            <input
+              type="number"
+              min="0"
+              value={form.required_hours}
+              onChange={e => setForm({ ...form, required_hours: Number(e.target.value) })}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Specialties (comma-separated)</label>
+          <input
+            type="text"
+            value={form.specialties}
+            onChange={e => setForm({ ...form, specialties: e.target.value })}
+            placeholder="e.g. Family Practice, Pediatrics, Women's Health"
+            className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={createProgram.isPending}>
+            <Plus className="w-4 h-4 mr-1" /> Create Program
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

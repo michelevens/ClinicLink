@@ -165,6 +165,11 @@ class AdminController extends Controller
     public function updateUser(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
+            'first_name' => ['sometimes', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['sometimes', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users,username,' . $user->id, 'regex:/^[a-z0-9._-]+$/'],
             'role' => ['sometimes', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
             'is_active' => ['sometimes', 'boolean'],
         ]);

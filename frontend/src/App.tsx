@@ -27,6 +27,7 @@ import { UserDetail } from './pages/UserDetail.tsx'
 import { OnboardingChecklists } from './pages/OnboardingChecklists.tsx'
 import { VerifyCertificate } from './pages/VerifyCertificate.tsx'
 import { SitePreceptors } from './pages/SitePreceptors.tsx'
+import { StudentDetail } from './pages/StudentDetail.tsx'
 import { AcceptInvite } from './pages/AcceptInvite.tsx'
 import { Agreements } from './pages/Agreements.tsx'
 import { ComplianceDashboard } from './pages/ComplianceDashboard.tsx'
@@ -104,6 +105,7 @@ export default function App() {
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="/site" element={<ProtectedRoute roles={['site_manager', 'preceptor']}><MySite /></ProtectedRoute>} />
       <Route path="/students" element={<ProtectedRoute roles={['preceptor', 'site_manager', 'coordinator', 'professor', 'admin']}><MyStudents /></ProtectedRoute>} />
+      <Route path="/students/:id" element={<ProtectedRoute roles={['preceptor', 'site_manager', 'coordinator', 'professor', 'admin']}><StudentDetail /></ProtectedRoute>} />
       <Route path="/programs" element={<ProtectedRoute roles={['coordinator', 'admin']}><Programs /></ProtectedRoute>} />
       <Route path="/placements" element={<ProtectedRoute roles={['coordinator', 'professor', 'admin']}><Placements /></ProtectedRoute>} />
       <Route path="/sites" element={<ProtectedRoute roles={['coordinator', 'admin']}><SitesDirectory /></ProtectedRoute>} />

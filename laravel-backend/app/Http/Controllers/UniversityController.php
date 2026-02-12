@@ -271,6 +271,34 @@ class UniversityController extends Controller
     }
 
     /**
+     * Create a new program for a university (coordinator for own university, or admin).
+     */
+    public function storeProgram(Request $request, University $university): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->isCoordinator()) {
+            $coordUniversityId = $user->studentProfile?->university_id;
+            if (!$coordUniversityId || $university->id !== $coordUniversityId) {
+                return response()->json(['message' => 'You can only add programs to your own university.'], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'degree_type' => ['required', 'in:BSN,MSN,DNP,PA,NP,DPT,OTD,MSW,PharmD,other'],
+            'required_hours' => ['required', 'integer', 'min:0'],
+            'specialties' => ['nullable', 'array'],
+        ]);
+
+        $validated['university_id'] = $university->id;
+
+        $program = Program::create($validated);
+
+        return response()->json($program, 201);
+    }
+
+    /**
      * Update a program's required_hours (coordinator for own university, or admin).
      */
     public function updateProgram(Request $request, Program $program): JsonResponse
