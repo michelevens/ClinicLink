@@ -351,7 +351,7 @@ export const coordinatorApi = {
   createProgram: (universityId: string, data: { name: string; degree_type: string; required_hours: number; specialties?: string[] }) =>
     api.post<ApiProgram>(`/universities/${universityId}/programs`, data),
   assignStudentProgram: (studentId: string, programId: string) =>
-    api.put<{ message: string; student_id: string; program: ApiProgram }>(`/students/${studentId}/program`, { program_id: programId }),
+    api.post<{ message: string; student_id: string; program: ApiProgram }>('/students/assign-program', { student_id: studentId, program_id: programId }),
 }
 
 // --- Dashboard ---

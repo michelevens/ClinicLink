@@ -301,9 +301,16 @@ class StudentController extends Controller
     /**
      * Assign a student to a program (coordinator/admin only).
      */
-    public function assignProgram(Request $request, User $student): JsonResponse
+    public function assignProgram(Request $request): JsonResponse
     {
         $user = $request->user();
+
+        $validated = $request->validate([
+            'student_id' => ['required', 'uuid', 'exists:users,id'],
+            'program_id' => ['required', 'uuid', 'exists:programs,id'],
+        ]);
+
+        $student = User::findOrFail($validated['student_id']);
 
         if (!$student->isStudent()) {
             return response()->json(['message' => 'User is not a student.'], 422);
@@ -317,10 +324,6 @@ class StudentController extends Controller
                 return response()->json(['message' => 'Student is not at your university.'], 403);
             }
         }
-
-        $validated = $request->validate([
-            'program_id' => ['required', 'uuid', 'exists:programs,id'],
-        ]);
 
         // Verify the program belongs to the student's university
         $profile = $student->studentProfile;
