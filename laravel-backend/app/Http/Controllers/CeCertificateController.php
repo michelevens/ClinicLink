@@ -189,8 +189,11 @@ class CeCertificateController extends Controller
             return response()->json(['message' => 'Certificate PDF not available.'], 404);
         }
 
-        // Generate PDF on-demand if it hasn't been generated yet
-        if (!$ceCertificate->certificate_path) {
+        // Generate PDF on-demand if it hasn't been generated yet or file is missing from disk
+        $needsGeneration = !$ceCertificate->certificate_path
+            || !Storage::disk()->exists($ceCertificate->certificate_path);
+
+        if ($needsGeneration) {
             try {
                 $generator = new CECertificateGenerator();
                 $generator->generatePdf($ceCertificate);
@@ -201,7 +204,7 @@ class CeCertificateController extends Controller
             }
         }
 
-        if (!$ceCertificate->certificate_path) {
+        if (!$ceCertificate->certificate_path || !Storage::disk()->exists($ceCertificate->certificate_path)) {
             return response()->json(['message' => 'Certificate PDF not available.'], 404);
         }
 

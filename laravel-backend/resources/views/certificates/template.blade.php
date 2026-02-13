@@ -149,7 +149,7 @@
         .seal {
             position: absolute;
             left: 1.00in;
-            top: 4.65in;
+            top: 4.55in;
             z-index: 10;
             width: 110px;
             height: 110px;
@@ -203,10 +203,10 @@
 
         .cert-title {
             font-family: Georgia, 'Times New Roman', Times, serif;
-            font-size: 56px;
+            font-size: 52px;
             letter-spacing: 6px;
             color: #0B3C5D;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .cert-subtitle {
@@ -221,12 +221,12 @@
             width: 64%;
             height: 1px;
             background: rgba(0,0,0,0.08);
-            margin: 16px auto;
+            margin: 12px auto;
         }
 
         /* ── Body ──────────────────────────────────────── */
         .presented-to {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 3px;
             color: #6B7280;
@@ -234,60 +234,94 @@
 
         .student-name {
             font-family: Georgia, 'Times New Roman', Times, serif;
-            font-size: 42px;
+            font-size: 40px;
             font-style: italic;
             color: #0B3C5D;
-            margin-top: 6px;
-            margin-bottom: 6px;
+            margin-top: 4px;
+            margin-bottom: 2px;
+        }
+
+        /* [1] Learner program line */
+        .program-line {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333333;
+            margin-top: 2px;
+        }
+
+        /* [2] Affiliated institution */
+        .institution-line {
+            font-size: 11px;
+            color: #6B7280;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            margin-bottom: 4px;
+        }
+
+        .institution-label {
+            font-variant: small-caps;
+            letter-spacing: 1px;
         }
 
         .description {
-            font-size: 13px;
+            font-size: 12px;
             color: #333333;
             line-height: 1.45;
             max-width: 7.5in;
-            margin: 0 auto 0.25in;
+            margin: 0 auto 0.18in;
         }
 
         /* ── Details grid ──────────────────────────────── */
         .details-grid {
             width: 92%;
-            margin: 0 auto 0.12in;
+            margin: 0 auto 0.08in;
             border-collapse: separate;
-            border-spacing: 16px 6px;
+            border-spacing: 14px 4px;
         }
 
         .detail-item {
             text-align: center;
-            padding: 4px 8px;
+            padding: 3px 6px;
         }
 
         .detail-label {
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: #6B7280;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .detail-value {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #2F2F2F;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
-        /* ── University info ───────────────────────────── */
-        .university-info {
-            font-size: 10px;
-            color: #6B7280;
-            margin-bottom: 0.12in;
+        /* [5] & [6] Compliance statements */
+        .compliance-statements {
+            margin-top: 0.08in;
+            text-align: center;
+        }
+
+        .compliance-text {
+            font-size: 9.5px;
+            color: #78716c;
+            line-height: 1.5;
+        }
+
+        .non-ce-text {
+            font-size: 9px;
+            color: #a8a29e;
+            line-height: 1.5;
+            margin-top: 2px;
         }
 
         /* ── Signatures ────────────────────────────────── */
         .signatures {
             position: absolute;
-            bottom: 1.05in;
+            bottom: 1.00in;
             left: 0.85in;
             right: 0.85in;
             z-index: 10;
@@ -307,22 +341,22 @@
 
         .sig-line {
             border-top: 1px solid rgba(0,0,0,0.15);
-            padding-top: 6px;
+            padding-top: 5px;
             margin: 0 12px;
         }
 
         .sig-name {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #2F2F2F;
         }
 
         .sig-title {
-            font-size: 10px;
+            font-size: 9px;
             color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
         /* ── Footer ────────────────────────────────────── */
@@ -336,7 +370,7 @@
         }
 
         .footer-text {
-            font-size: 10px;
+            font-size: 9px;
             color: #6B7280;
         }
 
@@ -346,6 +380,17 @@
     </style>
 </head>
 <body>
+    @php
+        $preceptor = $certificate->slot->preceptor;
+        $site = $certificate->slot->site;
+        $preceptorName = $preceptorDisplay ?? ($preceptor ? $preceptor->first_name . ' ' . $preceptor->last_name : 'N/A');
+        $programName = $program?->name;
+        $degreeType = $program?->degree_type;
+        $programDisplay = $programName ?: ($degreeType ? $degreeType . ' Student' : null);
+        $universityName = $university?->name;
+        $locationDisplay = ($site->city ?? '') . ($site->city && $site->state ? ', ' : '') . ($site->state ?? '');
+    @endphp
+
     <div class="certificate">
         <!-- Subtle diagonal pattern -->
         <div class="pattern-overlay"></div>
@@ -389,13 +434,25 @@
 
             <div class="student-name">{{ $certificate->student->first_name }} {{ $certificate->student->last_name }}</div>
 
+            {{-- [1] Learner Program --}}
+            @if($programDisplay)
+            <div class="program-line">{{ $programDisplay }}</div>
+            @endif
+
+            {{-- [2] Affiliated Institution --}}
+            @if($universityName)
+            <div class="institution-line">
+                <span class="institution-label">Affiliated Institution:</span> {{ $universityName }}
+            </div>
+            @endif
+
             <div class="description">
                 has successfully completed the {{ $certificate->slot->specialty }} clinical rotation
-                at {{ $certificate->slot->site->name }}, fulfilling all requirements for the rotation titled
+                at {{ $site->name }}, fulfilling all requirements for the rotation titled
                 &ldquo;{{ $certificate->title }}&rdquo; &ndash; Completion Certificate.
             </div>
 
-            <!-- Details Row 1: 4 columns -->
+            {{-- Details Row 1: Specialty, Rotation Period, Clinical Site, Total Hours --}}
             <table class="details-grid">
                 <tr>
                     <td class="detail-item">
@@ -408,7 +465,7 @@
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Clinical Site</div>
-                        <div class="detail-value">{{ $certificate->slot->site->name }}</div>
+                        <div class="detail-value">{{ $site->name }}</div>
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Total Hours</div>
@@ -417,12 +474,18 @@
                 </tr>
             </table>
 
-            <!-- Details Row 2: Preceptor + Evaluation Score -->
-            <table class="details-grid" style="width: 66%;">
+            {{-- Details Row 2: Preceptor, Location of Training, Evaluation Score --}}
+            <table class="details-grid" style="width: 80%;">
                 <tr>
-                    <td class="detail-item" style="width: 70%;">
+                    {{-- [4] Expanded preceptor with credentials --}}
+                    <td class="detail-item" style="width: 40%;">
                         <div class="detail-label">Preceptor</div>
-                        <div class="detail-value">{{ $certificate->slot->preceptor ? $certificate->slot->preceptor->first_name . ' ' . $certificate->slot->preceptor->last_name : 'N/A' }}</div>
+                        <div class="detail-value">{{ $preceptorName }}</div>
+                    </td>
+                    {{-- [3] Training Location --}}
+                    <td class="detail-item" style="width: 30%;">
+                        <div class="detail-label">Location of Training</div>
+                        <div class="detail-value">{{ $locationDisplay ?: 'N/A' }}</div>
                     </td>
                     <td class="detail-item" style="width: 30%;">
                         <div class="detail-label">Evaluation Score</div>
@@ -431,32 +494,31 @@
                 </tr>
             </table>
 
-            @if($university || $program)
-            <div class="university-info">
-                @if($university && $program)
-                    {{ $university->name }} &bull; {{ $program->name }}
-                @elseif($university)
-                    {{ $university->name }}
-                @elseif($program)
-                    {{ $program->name }}
-                @endif
+            {{-- [5] Supervision compliance + [6] Non-CE protection --}}
+            <div class="compliance-statements">
+                <div class="compliance-text">
+                    Supervision was provided in accordance with applicable program and state requirements.
+                </div>
+                <div class="non-ce-text">
+                    This certificate documents supervised clinical hours and does not itself confer continuing education credit.
+                </div>
             </div>
-            @endif
         </div>
 
         <!-- Signatures -->
         <div class="signatures">
             <table class="sig-table">
                 <tr>
+                    {{-- [4] Preceptor with credentials in signature --}}
                     <td class="sig-block">
                         <div class="sig-line">
-                            <div class="sig-name">{{ $certificate->slot->preceptor ? $certificate->slot->preceptor->first_name . ' ' . $certificate->slot->preceptor->last_name : '—' }}</div>
+                            <div class="sig-name">{{ $preceptorName }}</div>
                             <div class="sig-title">Preceptor</div>
                         </div>
                     </td>
                     <td class="sig-block">
                         <div class="sig-line">
-                            <div class="sig-name">{{ $certificate->slot->site->manager ? $certificate->slot->site->manager->first_name . ' ' . $certificate->slot->site->manager->last_name : '—' }}</div>
+                            <div class="sig-name">{{ $site->manager ? $site->manager->first_name . ' ' . $site->manager->last_name : '—' }}</div>
                             <div class="sig-title">Site Manager</div>
                         </div>
                     </td>
@@ -470,14 +532,14 @@
             </table>
         </div>
 
-        <!-- Footer -->
+        {{-- [7] Footer with plain-text verification URL --}}
         <div class="footer">
             <div class="footer-text">
                 Certificate ID: <span class="cert-number">{{ $certificate->certificate_number }}</span>
                 &nbsp;&bull;&nbsp;
                 Issued: {{ $certificate->issued_date->format('F j, Y') }}
                 &nbsp;&bull;&nbsp;
-                Verify: {{ $verifyUrl }}
+                Verify at: {{ $verifyUrl }}
             </div>
         </div>
     </div>

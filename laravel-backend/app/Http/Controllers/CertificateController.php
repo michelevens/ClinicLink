@@ -210,7 +210,7 @@ class CertificateController extends Controller
             'student.studentProfile.university',
             'student.studentProfile.program',
             'slot.site.manager',
-            'slot.preceptor',
+            'slot.preceptor.credentials',
             'issuer',
         ]);
 
@@ -224,12 +224,29 @@ class CertificateController extends Controller
         $university = $certificate->student->studentProfile?->university;
         $program = $certificate->student->studentProfile?->program;
 
+        // Build preceptor display name with credentials (e.g. "Dr. Nageley Michel, DNP, PMHNP-BC")
+        $preceptor = $certificate->slot->preceptor;
+        $preceptorDisplay = $preceptor ? $preceptor->first_name . ' ' . $preceptor->last_name : null;
+        if ($preceptor && $preceptor->credentials->isNotEmpty()) {
+            $suffixes = $preceptor->credentials
+                ->whereIn('type', ['degree', 'certification', 'license'])
+                ->where('status', 'approved')
+                ->pluck('name')
+                ->filter(fn ($n) => strlen($n) <= 20) // only short credential abbreviations
+                ->unique()
+                ->values();
+            if ($suffixes->isNotEmpty()) {
+                $preceptorDisplay .= ', ' . $suffixes->implode(', ');
+            }
+        }
+
         $pdf = Pdf::loadView('certificates.template', [
             'certificate' => $certificate,
             'qrCode' => $qrCode,
             'verifyUrl' => $verifyUrl,
             'university' => $university,
             'program' => $program,
+            'preceptorDisplay' => $preceptorDisplay,
         ])->setPaper('letter', 'landscape');
 
         $filename = 'ClinicLink-Certificate-' . $certificate->certificate_number . '.pdf';
