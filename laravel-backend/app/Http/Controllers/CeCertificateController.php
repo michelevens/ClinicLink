@@ -190,23 +190,36 @@ class CeCertificateController extends Controller
                 return response()->json(['message' => 'Certificate PDF not available.'], 404);
             }
 
-            // Generate PDF on-demand if it hasn't been generated yet or file is missing from disk
-            $needsGeneration = !$ceCertificate->certificate_path
-                || !Storage::disk()->exists($ceCertificate->certificate_path);
+            // Generate PDF inline and stream directly (no filesystem dependency)
+            $ceCertificate->load([
+                'university',
+                'preceptor',
+                'application.slot.site.manager',
+                'application.slot.preceptor',
+                'application.student.studentProfile.university',
+                'application.student.studentProfile.program',
+                'approvedByUser',
+            ]);
 
-            if ($needsGeneration) {
-                $generator = new CECertificateGenerator();
-                $generator->generatePdf($ceCertificate);
-                $ceCertificate->refresh();
-            }
+            $frontendUrl = config('app.frontend_url', 'https://michelevens.github.io/ClinicLink');
+            $verifyUrl = $frontendUrl . '/verify-ce/' . $ceCertificate->verification_uuid;
 
-            if (!$ceCertificate->certificate_path || !Storage::disk()->exists($ceCertificate->certificate_path)) {
-                return response()->json(['message' => 'Certificate PDF not available.'], 404);
-            }
+            // Generate QR code as SVG (no imagick extension required)
+            $qrSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)->margin(1)->generate($verifyUrl);
+            $qrCode = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+
+            $policy = $ceCertificate->university?->cePolicy;
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.ce-template', [
+                'certificate' => $ceCertificate,
+                'qrCode' => $qrCode,
+                'verifyUrl' => $verifyUrl,
+                'policy' => $policy,
+            ])->setPaper('letter', 'landscape');
 
             $filename = 'CE-Certificate-' . substr($ceCertificate->verification_uuid, 0, 8) . '.pdf';
 
-            return Storage::disk()->download($ceCertificate->certificate_path, $filename);
+            return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('CE certificate download error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             return response()->json([
