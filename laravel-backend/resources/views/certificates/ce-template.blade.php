@@ -9,7 +9,11 @@
             margin: 0;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -17,250 +21,463 @@
             width: 11in;
             height: 8.5in;
             position: relative;
-            background: #fff;
+            background: #FAFAF8;
+            overflow: hidden;
         }
 
         .certificate {
-            width: 100%;
-            height: 100%;
-            padding: 0.5in;
+            width: 11in;
+            height: 8.5in;
             position: relative;
+            overflow: hidden;
         }
 
+        /* ── Subtle diagonal pattern ───────────────────── */
+        .pattern-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                135deg,
+                rgba(0,0,0,0.03),
+                rgba(0,0,0,0.03) 2px,
+                transparent 2px,
+                transparent 16px
+            );
+            z-index: 0;
+        }
+
+        /* ── Gold outer border ─────────────────────────── */
         .border-outer {
             position: absolute;
-            top: 0.35in; left: 0.35in; right: 0.35in; bottom: 0.35in;
-            border: 3px solid #065f46;
-            border-radius: 8px;
+            top: 0.45in;
+            left: 0.45in;
+            right: 0.45in;
+            bottom: 0.45in;
+            border: 3px solid #CFAF6E;
+            border-radius: 18px;
+            z-index: 1;
         }
 
+        /* ── Deep green inner border ───────────────────── */
         .border-inner {
             position: absolute;
-            top: 0.42in; left: 0.42in; right: 0.42in; bottom: 0.42in;
-            border: 1px solid #6ee7b7;
-            border-radius: 6px;
+            top: 0.57in;
+            left: 0.57in;
+            right: 0.57in;
+            bottom: 0.57in;
+            border: 1.5px solid #065f46;
+            border-radius: 14px;
+            z-index: 1;
         }
 
-        .corner { position: absolute; width: 40px; height: 40px; }
-        .corner-tl { top: 0.3in; left: 0.3in; border-top: 4px solid #10b981; border-left: 4px solid #10b981; border-radius: 4px 0 0 0; }
-        .corner-tr { top: 0.3in; right: 0.3in; border-top: 4px solid #10b981; border-right: 4px solid #10b981; border-radius: 0 4px 0 0; }
-        .corner-bl { bottom: 0.3in; left: 0.3in; border-bottom: 4px solid #10b981; border-left: 4px solid #10b981; border-radius: 0 0 0 4px; }
-        .corner-br { bottom: 0.3in; right: 0.3in; border-bottom: 4px solid #10b981; border-right: 4px solid #10b981; border-radius: 0 0 4px 0; }
-
-        .content {
-            position: relative; z-index: 1; text-align: center;
-            height: 100%; display: flex; flex-direction: column;
-            padding: 0.15in 0.3in;
+        /* ── Corner ornaments ──────────────────────────── */
+        .corner {
+            position: absolute;
+            width: 52px;
+            height: 52px;
+            border: 2px solid #E5C98B;
+            z-index: 2;
         }
 
+        .corner-tl {
+            top: 0.70in;
+            left: 0.70in;
+            border-right: 0;
+            border-bottom: 0;
+            border-radius: 32px 0 0 0;
+        }
+
+        .corner-tr {
+            top: 0.70in;
+            right: 0.70in;
+            border-left: 0;
+            border-bottom: 0;
+            border-radius: 0 32px 0 0;
+        }
+
+        .corner-bl {
+            bottom: 0.70in;
+            left: 0.70in;
+            border-right: 0;
+            border-top: 0;
+            border-radius: 0 0 0 32px;
+        }
+
+        .corner-br {
+            bottom: 0.70in;
+            right: 0.70in;
+            border-left: 0;
+            border-top: 0;
+            border-radius: 0 0 32px 0;
+        }
+
+        /* ── QR Code ─── upper right ──────────────────── */
         .qr-container {
-            position: absolute; top: 0.55in; right: 0.6in;
-            text-align: center; z-index: 2;
+            position: absolute;
+            top: 0.90in;
+            right: 0.90in;
+            text-align: center;
+            z-index: 10;
         }
-        .qr-container img { width: 80px; height: 80px; }
+
+        .qr-box {
+            width: 0.95in;
+            height: 0.95in;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.15);
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .qr-container img {
+            width: 0.95in;
+            height: 0.95in;
+        }
+
         .qr-label {
-            font-size: 6.5px; color: #78716c; margin-top: 3px;
-            letter-spacing: 0.5px; text-transform: uppercase;
+            font-size: 9px;
+            color: #6B7280;
+            margin-top: 4px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
-        .header { margin-bottom: 0.15in; }
-        .logo-row {
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 6px;
-        }
-        .logo-icon {
-            width: 32px; height: 32px;
-            background: linear-gradient(135deg, #10b981, #065f46);
-            border-radius: 8px; display: inline-flex;
-            align-items: center; justify-content: center;
-            margin-right: 10px; color: white;
-            font-size: 18px; font-weight: bold; vertical-align: middle;
-        }
-        .logo-text {
-            font-size: 22px; font-weight: 700;
-            background: linear-gradient(135deg, #10b981, #065f46);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 1px; vertical-align: middle;
+        /* ── Verified seal ─────────────────────────────── */
+        .seal {
+            position: absolute;
+            left: 1.00in;
+            top: 4.65in;
+            z-index: 10;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 2px solid #CFAF6E;
+            background: rgba(207,175,110,0.15);
+            text-align: center;
         }
 
-        .divider {
-            width: 120px; height: 2px;
-            background: linear-gradient(90deg, transparent, #10b981, transparent);
-            margin: 8px auto;
+        .seal-inner {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            border: 1px solid #E5C98B;
+            margin: 10px auto 0;
+            padding-top: 26px;
+        }
+
+        .seal-text {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #065f46;
+        }
+
+        .seal-brand {
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: #6B7280;
+            margin-top: 4px;
+        }
+
+        /* ── Content area ──────────────────────────────── */
+        .content {
+            position: absolute;
+            top: 0.85in;
+            left: 0.85in;
+            right: 0.85in;
+            bottom: 0.70in;
+            text-align: center;
+            z-index: 5;
+        }
+
+        /* ── Header ────────────────────────────────────── */
+        .brand {
+            font-size: 16px;
+            font-weight: 700;
+            color: #065f46;
+            letter-spacing: 1px;
         }
 
         .cert-title {
-            font-size: 24px; font-weight: 300; letter-spacing: 6px;
-            text-transform: uppercase; color: #065f46; margin-bottom: 2px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 48px;
+            letter-spacing: 4px;
+            color: #065f46;
+            margin-top: 8px;
         }
+
         .cert-subtitle {
-            font-size: 11px; letter-spacing: 4px;
-            text-transform: uppercase; color: #78716c;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #6B7280;
+            margin-top: 2px;
         }
 
-        .body {
-            flex: 1; display: flex; flex-direction: column;
-            justify-content: center;
+        .divider {
+            width: 64%;
+            height: 1px;
+            background: rgba(0,0,0,0.08);
+            margin: 14px auto;
         }
+
+        /* ── Body ──────────────────────────────────────── */
         .presented-to {
-            font-size: 11px; color: #78716c; letter-spacing: 3px;
-            text-transform: uppercase; margin-bottom: 8px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #6B7280;
         }
+
         .preceptor-name {
-            font-size: 32px; font-weight: 600; color: #065f46;
-            margin-bottom: 6px; font-style: italic;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 42px;
+            font-style: italic;
+            color: #065f46;
+            margin-top: 6px;
+            margin-bottom: 6px;
         }
+
         .description {
-            font-size: 11px; color: #57534e; line-height: 1.7;
-            max-width: 7in; margin: 0 auto 0.2in;
+            font-size: 13px;
+            color: #333333;
+            line-height: 1.45;
+            max-width: 7.5in;
+            margin: 0 auto 0.2in;
         }
 
+        .hours-highlight {
+            font-size: 18px;
+            font-weight: 800;
+            color: #065f46;
+        }
+
+        /* ── Details grid ──────────────────────────────── */
         .details-grid {
-            display: table; width: 80%; margin: 0 auto 0.2in;
-            border-collapse: separate; border-spacing: 16px 6px;
+            width: 92%;
+            margin: 0 auto 0.08in;
+            border-collapse: separate;
+            border-spacing: 16px 6px;
         }
-        .details-row { display: table-row; }
-        .detail-item { display: table-cell; text-align: center; padding: 6px 12px; }
+
+        .detail-item {
+            text-align: center;
+            padding: 4px 8px;
+        }
+
         .detail-label {
-            font-size: 7.5px; text-transform: uppercase;
-            letter-spacing: 1.5px; color: #a8a29e; margin-bottom: 3px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #6B7280;
+            margin-bottom: 3px;
         }
-        .detail-value { font-size: 11px; font-weight: 600; color: #1c1917; }
 
+        .detail-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2F2F2F;
+            margin-top: 3px;
+        }
+
+        /* ── Accreditation ─────────────────────────────── */
         .accreditation-info {
-            font-size: 9.5px; color: #78716c; margin-bottom: 0.2in;
+            font-size: 10px;
+            color: #6B7280;
+            margin-bottom: 0.12in;
         }
 
+        /* ── Signatures ────────────────────────────────── */
         .signatures {
-            display: table; width: 70%; margin: 0 auto;
-            border-collapse: separate; border-spacing: 40px 0;
-        }
-        .sig-row { display: table-row; }
-        .sig-block {
-            display: table-cell; text-align: center;
-            width: 50%; vertical-align: bottom;
-        }
-        .sig-line {
-            border-top: 1px solid #d6d3d1; padding-top: 6px;
-            margin-top: 30px;
-        }
-        .sig-name { font-size: 10px; font-weight: 600; color: #1c1917; }
-        .sig-title {
-            font-size: 8px; color: #a8a29e;
-            text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;
+            position: absolute;
+            bottom: 1.05in;
+            left: 0.85in;
+            right: 0.85in;
+            z-index: 10;
         }
 
-        .footer {
-            text-align: center; padding-top: 8px;
-            border-top: 1px solid #e7e5e4; margin-top: auto;
+        .sig-table {
+            width: 70%;
+            margin: 0 auto;
+            border-collapse: separate;
+            border-spacing: 40px 0;
         }
-        .footer-text { font-size: 7.5px; color: #a8a29e; letter-spacing: 0.5px; }
-        .cert-number { font-weight: 600; color: #78716c; }
+
+        .sig-block {
+            text-align: center;
+            width: 50%;
+            vertical-align: bottom;
+        }
+
+        .sig-line {
+            border-top: 1px solid rgba(0,0,0,0.15);
+            padding-top: 6px;
+            margin: 0 12px;
+        }
+
+        .sig-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2F2F2F;
+        }
+
+        .sig-title {
+            font-size: 10px;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 3px;
+        }
+
+        /* ── Footer ────────────────────────────────────── */
+        .footer {
+            position: absolute;
+            bottom: 0.62in;
+            left: 0.85in;
+            right: 0.85in;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .footer-text {
+            font-size: 10px;
+            color: #6B7280;
+        }
+
+        .cert-number {
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="certificate">
+        <!-- Subtle diagonal pattern -->
+        <div class="pattern-overlay"></div>
+
+        <!-- Decorative borders -->
         <div class="border-outer"></div>
         <div class="border-inner"></div>
+
+        <!-- Corner ornaments -->
         <div class="corner corner-tl"></div>
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
         <div class="corner corner-br"></div>
 
+        <!-- QR Code - upper right -->
         <div class="qr-container">
-            <img src="{{ $qrCode }}" alt="Verify">
+            <div class="qr-box">
+                <img src="{{ $qrCode }}" alt="Verify">
+            </div>
             <div class="qr-label">Scan to Verify</div>
         </div>
 
+        <!-- Verified Seal - left side -->
+        <div class="seal">
+            <div class="seal-inner">
+                <div class="seal-text">VERIFIED</div>
+                <div class="seal-brand">CLINICLINK</div>
+            </div>
+        </div>
+
+        <!-- Content -->
         <div class="content">
-            <div class="header">
-                <div class="logo-row">
-                    <span class="logo-icon">+</span>
-                    <span class="logo-text">ClinicLink</span>
-                </div>
-                <div class="divider"></div>
-                <div class="cert-title">Continuing Education</div>
-                <div class="cert-subtitle">Certificate of Completion</div>
+            <div class="brand">ClinicLink</div>
+
+            <div class="cert-title">CONTINUING EDUCATION</div>
+            <div class="cert-subtitle">Certificate of Completion</div>
+
+            <div class="divider"></div>
+
+            <div class="presented-to">This is to certify that</div>
+
+            <div class="preceptor-name">{{ $certificate->preceptor->first_name }} {{ $certificate->preceptor->last_name }}</div>
+
+            <div class="description">
+                has been awarded <span class="hours-highlight">{{ number_format($certificate->contact_hours, 1) }} contact hours</span>
+                of continuing education credit for serving as clinical preceptor
+                for the {{ $certificate->application->slot->specialty }} rotation
+                at {{ $certificate->application->slot->site->name }},
+                during the period of
+                {{ $certificate->application->slot->start_date->format('M d, Y') }} &ndash;
+                {{ $certificate->application->slot->end_date->format('M d, Y') }}.
             </div>
 
-            <div class="body">
-                <div class="presented-to">This is to certify that</div>
-                <div class="preceptor-name">{{ $certificate->preceptor->first_name }} {{ $certificate->preceptor->last_name }}</div>
+            <!-- Details Row 1: 3 columns -->
+            <table class="details-grid">
+                <tr>
+                    <td class="detail-item">
+                        <div class="detail-label">Contact Hours</div>
+                        <div class="detail-value">{{ number_format($certificate->contact_hours, 1) }}</div>
+                    </td>
+                    <td class="detail-item">
+                        <div class="detail-label">Clinical Site</div>
+                        <div class="detail-value">{{ $certificate->application->slot->site->name }}</div>
+                    </td>
+                    <td class="detail-item">
+                        <div class="detail-label">Specialty</div>
+                        <div class="detail-value">{{ $certificate->application->slot->specialty }}</div>
+                    </td>
+                </tr>
+            </table>
 
-                <div class="description">
-                    has been awarded <strong>{{ number_format($certificate->contact_hours, 2) }} contact hours</strong>
-                    of continuing education credit for serving as clinical preceptor
-                    for the <strong>{{ $certificate->application->slot->specialty }}</strong> rotation
-                    at <strong>{{ $certificate->application->slot->site->name }}</strong>,
-                    during the period of
-                    {{ $certificate->application->slot->start_date->format('M d, Y') }} &ndash;
-                    {{ $certificate->application->slot->end_date->format('M d, Y') }}.
-                </div>
+            <!-- Details Row 2: 3 columns -->
+            <table class="details-grid">
+                <tr>
+                    <td class="detail-item">
+                        <div class="detail-label">Rotation Period</div>
+                        <div class="detail-value">{{ $certificate->application->slot->start_date->format('M d, Y') }} - {{ $certificate->application->slot->end_date->format('M d, Y') }}</div>
+                    </td>
+                    <td class="detail-item">
+                        <div class="detail-label">Issuing Institution</div>
+                        <div class="detail-value">{{ $certificate->university->name }}</div>
+                    </td>
+                    <td class="detail-item">
+                        <div class="detail-label">Issue Date</div>
+                        <div class="detail-value">{{ ($certificate->issued_at ?? now())->format('M d, Y') }}</div>
+                    </td>
+                </tr>
+            </table>
 
-                <div class="details-grid">
-                    <div class="details-row">
-                        <div class="detail-item">
-                            <div class="detail-label">Contact Hours</div>
-                            <div class="detail-value">{{ number_format($certificate->contact_hours, 2) }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Clinical Site</div>
-                            <div class="detail-value">{{ $certificate->application->slot->site->name }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Specialty</div>
-                            <div class="detail-value">{{ $certificate->application->slot->specialty }}</div>
-                        </div>
-                    </div>
-                    <div class="details-row">
-                        <div class="detail-item">
-                            <div class="detail-label">Rotation Period</div>
-                            <div class="detail-value">{{ $certificate->application->slot->start_date->format('M d, Y') }} &ndash; {{ $certificate->application->slot->end_date->format('M d, Y') }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Issuing Institution</div>
-                            <div class="detail-value">{{ $certificate->university->name }}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Issue Date</div>
-                            <div class="detail-value">{{ ($certificate->issued_at ?? now())->format('M d, Y') }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                @if($policy && $policy->accrediting_body)
-                <div class="accreditation-info">
-                    Accredited by {{ $policy->accrediting_body }}
-                    &bull; {{ $certificate->university->name }}
-                </div>
-                @endif
-
-                <div class="signatures">
-                    <div class="sig-row">
-                        <div class="sig-block">
-                            <div class="sig-line">
-                                <div class="sig-name">{{ $policy->signer_name ?? 'Program Director' }}</div>
-                                <div class="sig-title">{{ $policy->signer_credentials ?? 'Authorized Signatory' }}</div>
-                            </div>
-                        </div>
-                        <div class="sig-block">
-                            <div class="sig-line">
-                                <div class="sig-name">ClinicLink Platform</div>
-                                <div class="sig-title">Verification Authority</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            @if($policy && $policy->accrediting_body)
+            <div class="accreditation-info">
+                Accredited by {{ $policy->accrediting_body }}
+                &bull; {{ $certificate->university->name }}
             </div>
+            @endif
+        </div>
 
-            <div class="footer">
-                <div class="footer-text">
-                    Verification ID: <span class="cert-number">{{ $certificate->verification_uuid }}</span>
-                    &nbsp;&bull;&nbsp;
-                    Issued {{ ($certificate->issued_at ?? now())->format('F d, Y') }}
-                    &nbsp;&bull;&nbsp;
-                    Verify at {{ $verifyUrl }}
-                </div>
+        <!-- Signatures -->
+        <div class="signatures">
+            <table class="sig-table">
+                <tr>
+                    <td class="sig-block">
+                        <div class="sig-line">
+                            <div class="sig-name">{{ $policy->signer_name ?? 'Program Director' }}</div>
+                            <div class="sig-title">{{ $policy->signer_credentials ?? 'Authorized Signatory' }}</div>
+                        </div>
+                    </td>
+                    <td class="sig-block">
+                        <div class="sig-line">
+                            <div class="sig-name">ClinicLink Platform</div>
+                            <div class="sig-title">Verification Authority</div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                Verification ID: <span class="cert-number">{{ $certificate->verification_uuid }}</span>
+                &nbsp;&bull;&nbsp;
+                Issued: {{ ($certificate->issued_at ?? now())->format('F j, Y') }}
+                &nbsp;&bull;&nbsp;
+                Verify: {{ $verifyUrl }}
             </div>
         </div>
     </div>

@@ -7,7 +7,9 @@ use App\Models\Application;
 use App\Models\OnboardingTask;
 use App\Models\RotationSlot;
 use App\Models\StudentProfile;
+use App\Models\User;
 use App\Notifications\ApplicationReviewedNotification;
+use App\Notifications\CeCertificateIssuedNotification;
 use App\Notifications\NewApplicationNotification;
 use App\Notifications\StudentApplicationSubmittedNotification;
 use App\Services\CECertificateGenerator;
@@ -227,6 +229,16 @@ class ApplicationController extends Controller
                 'ce_status' => $ceCert->status,
                 'contact_hours' => $ceCert->contact_hours,
             ];
+
+            // Notify the preceptor about their CE certificate
+            $application->loadMissing('slot');
+            if ($application->slot?->preceptor_id) {
+                $preceptor = User::find($application->slot->preceptor_id);
+                if ($preceptor) {
+                    $ceCert->load(['university', 'application.slot.site', 'application.student']);
+                    $preceptor->notify(new CeCertificateIssuedNotification($ceCert));
+                }
+            }
         } else {
             $ceResult = [
                 'ce_certificate_created' => false,

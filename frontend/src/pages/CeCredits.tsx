@@ -110,6 +110,8 @@ function CoordinatorCeView() {
 
   // Coordinator's university comes from auth user (set during login/onboarding)
   const universityId = user?.universityId || null
+  const { data: policyData } = useCePolicy(universityId || '')
+  const ceNotConfigured = universityId && (!policyData?.policy || !policyData.policy.offers_ce)
 
   return (
     <div className="space-y-6">
@@ -117,6 +119,26 @@ function CoordinatorCeView() {
         <h1 className="text-2xl font-bold text-stone-900">CE Credit Management</h1>
         <p className="text-stone-500 mt-1">Manage continuing education credits and policies</p>
       </div>
+
+      {/* CE Not Configured Banner */}
+      {ceNotConfigured && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold text-amber-800">CE Credits Not Configured</h3>
+            <p className="text-sm text-amber-700 mt-0.5">
+              Your university has not enabled CE credits. Preceptors supervising your students won't receive CE certificates until you configure a CE policy.
+            </p>
+            <button
+              onClick={() => setTab('policy')}
+              className="mt-2 px-4 py-1.5 rounded-lg text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+            >
+              <Settings2 className="w-3.5 h-3.5 inline mr-1.5" />
+              Configure CE Policy
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 bg-stone-100 p-1 rounded-lg w-fit">

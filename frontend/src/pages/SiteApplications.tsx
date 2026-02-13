@@ -3,13 +3,14 @@ import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useApplications, useReviewApplication, useCompleteApplication } from '../hooks/useApi.ts'
+import { useApplications, useReviewApplication, useCompleteApplication, useCeEligibility } from '../hooks/useApi.ts'
 import type { ApiApplication } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
   CheckCircle, XCircle, Clock, User, FileText,
   Calendar, MapPin, Building2, Loader2, Inbox,
-  ChevronDown, ChevronUp, GraduationCap, BadgeCheck
+  ChevronDown, ChevronUp, GraduationCap, BadgeCheck,
+  CheckCircle2, AlertTriangle, Info
 } from 'lucide-react'
 
 export function SiteApplications() {
@@ -247,26 +248,7 @@ export function SiteApplications() {
                   )}
 
                   {app.status === 'accepted' && (
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        isLoading={completeMutation.isPending}
-                        onClick={() => {
-                          completeMutation.mutate(app.id, {
-                            onSuccess: (res) => {
-                              toast.success('Placement marked as completed!')
-                              if (res.ce?.ce_certificate_created) {
-                                toast.success(`CE certificate created (${res.ce.contact_hours} hrs) — Status: ${res.ce.ce_status}`)
-                              }
-                            },
-                            onError: (err) => toast.error(err.message),
-                          })
-                        }}
-                      >
-                        <BadgeCheck className="w-4 h-4" /> Mark Complete
-                      </Button>
-                    </div>
+                    <CompleteWithCePreview app={app} completeMutation={completeMutation} />
                   )}
                 </div>
               )}
@@ -325,6 +307,66 @@ export function SiteApplications() {
           </div>
         )}
       </Modal>
+    </div>
+  )
+}
+
+// --- Inline CE Eligibility Preview + Complete Button ---
+function CompleteWithCePreview({ app, completeMutation }: {
+  app: ApiApplication
+  completeMutation: ReturnType<typeof useCompleteApplication>
+}) {
+  const { data: ceEligibility } = useCeEligibility(app.id)
+  const [confirming, setConfirming] = useState(false)
+
+  return (
+    <div className="pt-2 space-y-2">
+      {/* CE Eligibility Indicator */}
+      {ceEligibility && (
+        <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg ${
+          ceEligibility.eligible
+            ? 'bg-green-50 text-green-700'
+            : ceEligibility.reason?.includes('does not offer')
+              ? 'bg-stone-50 text-stone-500'
+              : 'bg-amber-50 text-amber-700'
+        }`}>
+          {ceEligibility.eligible ? (
+            <><CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> CE: {ceEligibility.contact_hours}h will be awarded to preceptor</>
+          ) : ceEligibility.reason?.includes('does not offer') ? (
+            <><Info className="w-3.5 h-3.5 shrink-0" /> CE not configured for university</>
+          ) : (
+            <><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> CE: {ceEligibility.reason}</>
+          )}
+        </div>
+      )}
+
+      {!confirming ? (
+        <Button size="sm" variant="outline" onClick={() => setConfirming(true)}>
+          <BadgeCheck className="w-4 h-4" /> Mark Complete
+        </Button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            isLoading={completeMutation.isPending}
+            onClick={() => {
+              completeMutation.mutate(app.id, {
+                onSuccess: (res) => {
+                  toast.success('Placement marked as completed!')
+                  if (res.ce?.ce_certificate_created) {
+                    toast.success(`CE certificate created (${res.ce.contact_hours} hrs) — Status: ${res.ce.ce_status}`)
+                  }
+                  setConfirming(false)
+                },
+                onError: (err) => toast.error(err.message),
+              })
+            }}
+          >
+            <CheckCircle2 className="w-4 h-4" /> Confirm
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>Cancel</Button>
+        </div>
+      )}
     </div>
   )
 }

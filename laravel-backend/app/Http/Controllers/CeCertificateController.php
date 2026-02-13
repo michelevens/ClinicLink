@@ -6,6 +6,8 @@ use App\Models\Application;
 use App\Models\CeCertificate;
 use App\Models\StudentProfile;
 use App\Models\UniversityCePolicy;
+use App\Models\User;
+use App\Notifications\CeCertificateIssuedNotification;
 use App\Services\CECertificateGenerator;
 use App\Services\CEEligibilityService;
 use Illuminate\Http\JsonResponse;
@@ -126,7 +128,13 @@ class CeCertificateController extends Controller
             // Certificate stays as 'approved'; PDF will be generated on-demand at download time
         }
 
-        $ceCertificate->load(['university', 'preceptor', 'application.slot.site', 'approvedByUser']);
+        $ceCertificate->load(['university', 'preceptor', 'application.slot.site', 'application.student', 'approvedByUser']);
+
+        // Notify the preceptor about their CE certificate
+        $preceptor = User::find($ceCertificate->preceptor_id);
+        if ($preceptor) {
+            $preceptor->notify(new CeCertificateIssuedNotification($ceCertificate));
+        }
 
         return response()->json(['ce_certificate' => $ceCertificate]);
     }

@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Mail, GraduationCap, Clock, BookOpen,
-  Calendar, Award, Loader2, Users
+  Calendar, Award, Loader2, Users, BadgeCheck, AlertTriangle, CheckCircle2, Info
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import { useMyStudents } from '../hooks/useApi.ts'
+import { useMyStudents, useApplications, useCeEligibility, useCompleteApplication } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
@@ -14,7 +16,10 @@ export function StudentDetail() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isPreceptor = user?.role === 'preceptor' || user?.role === 'site_manager'
+  const canComplete = user?.role === 'preceptor' || user?.role === 'site_manager' || user?.role === 'coordinator' || user?.role === 'admin'
   const { data, isLoading } = useMyStudents()
+  const { data: appsData } = useApplications()
+  const [showConfirm, setShowConfirm] = useState(false)
   const students = data?.students || []
   const student = students.find(s => s.id === id)
 
@@ -194,6 +199,9 @@ export function StudentDetail() {
         </Card>
       )}
 
+      {/* Rotation Completion & CE Eligibility */}
+      {canComplete && <RotationCompletionSection studentId={id!} applications={appsData?.data || []} showConfirm={showConfirm} setShowConfirm={setShowConfirm} />}
+
       {/* Preceptor Actions */}
       {isPreceptor && (
         <div className="flex gap-3">
@@ -206,5 +214,132 @@ export function StudentDetail() {
         </div>
       )}
     </div>
+  )
+}
+
+// --- Rotation Completion Section ---
+function RotationCompletionSection({ studentId, applications, showConfirm, setShowConfirm }: {
+  studentId: string
+  applications: { id: string; student_id: string; status: string; slot?: { id: string; title?: string; end_date?: string; site?: { name: string }; preceptor?: { first_name: string; last_name: string } } }[]
+  showConfirm: boolean
+  setShowConfirm: (v: boolean) => void
+}) {
+  // Find accepted applications for this student
+  const acceptedApps = applications.filter(a => a.student_id === studentId && a.status === 'accepted')
+
+  if (acceptedApps.length === 0) return null
+
+  return (
+    <>
+      {acceptedApps.map(app => (
+        <RotationCompleteCard key={app.id} application={app} showConfirm={showConfirm} setShowConfirm={setShowConfirm} />
+      ))}
+    </>
+  )
+}
+
+function RotationCompleteCard({ application, showConfirm, setShowConfirm }: {
+  application: { id: string; slot?: { id: string; title?: string; end_date?: string; site?: { name: string }; preceptor?: { first_name: string; last_name: string } } }
+  showConfirm: boolean
+  setShowConfirm: (v: boolean) => void
+}) {
+  const { data: ceEligibility, isLoading: ceLoading } = useCeEligibility(application.id)
+  const completeMutation = useCompleteApplication()
+
+  const slot = application.slot
+  const isRotationEnded = slot?.end_date ? new Date(slot.end_date) < new Date() : false
+  const rotationTitle = slot?.title || slot?.site?.name || 'Rotation'
+
+  return (
+    <Card className="border-2 border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0 mt-0.5">
+          <BadgeCheck className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-stone-900 text-sm">Complete Rotation</h3>
+          <p className="text-xs text-stone-500 mt-0.5">{rotationTitle}{slot?.site?.name ? ` at ${slot.site.name}` : ''}</p>
+
+          {slot?.end_date && (
+            <p className={`text-xs mt-1 ${isRotationEnded ? 'text-green-600 font-medium' : 'text-amber-600'}`}>
+              {isRotationEnded
+                ? `Rotation ended ${new Date(slot.end_date).toLocaleDateString()}`
+                : `Ends ${new Date(slot.end_date).toLocaleDateString()}`}
+            </p>
+          )}
+
+          {/* CE Eligibility Indicator */}
+          {!ceLoading && ceEligibility && (
+            <div className={`mt-3 p-3 rounded-xl text-xs ${
+              ceEligibility.eligible
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-amber-50 border border-amber-200'
+            }`}>
+              <div className="flex items-center gap-1.5">
+                {ceEligibility.eligible ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                    <span className="text-green-700 font-medium">
+                      CE Credit: {ceEligibility.contact_hours} contact hours will be awarded
+                    </span>
+                  </>
+                ) : ceEligibility.reason?.includes('does not offer') ? (
+                  <>
+                    <Info className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                    <span className="text-stone-500">CE Credits: Not configured for this university</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span className="text-amber-700">{ceEligibility.reason}</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Confirm / Complete Button */}
+          {!showConfirm ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-3"
+              onClick={() => setShowConfirm(true)}
+            >
+              <BadgeCheck className="w-4 h-4" /> Mark Rotation Complete
+            </Button>
+          ) : (
+            <div className="mt-3 p-3 bg-white rounded-xl border border-stone-200">
+              <p className="text-xs text-stone-600 mb-3">
+                This will mark the rotation as completed. {ceEligibility?.eligible
+                  ? `The preceptor will receive ${ceEligibility.contact_hours} CE contact hours.`
+                  : 'CE credits may not be awarded (see status above).'}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  isLoading={completeMutation.isPending}
+                  onClick={() => {
+                    completeMutation.mutate(application.id, {
+                      onSuccess: (res) => {
+                        toast.success('Rotation marked as completed!')
+                        if (res.ce?.ce_certificate_created) {
+                          toast.success(`CE certificate created (${res.ce.contact_hours} hrs) — Status: ${res.ce.ce_status}`)
+                        }
+                        setShowConfirm(false)
+                      },
+                      onError: (err) => toast.error(err.message),
+                    })
+                  }}
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Confirm Complete
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowConfirm(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
   )
 }
