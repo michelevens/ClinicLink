@@ -61,14 +61,14 @@
             z-index: 1;
         }
 
-        /* ── Deep green inner border ───────────────────── */
+        /* ── Navy inner border (aligned with learner cert) */
         .border-inner {
             position: absolute;
             top: 0.57in;
             left: 0.57in;
             right: 0.57in;
             bottom: 0.57in;
-            border: 1.5px solid #065f46;
+            border: 1.5px solid #0B3C5D;
             border-radius: 14px;
             z-index: 1;
         }
@@ -149,7 +149,7 @@
         .seal {
             position: absolute;
             left: 1.00in;
-            top: 4.65in;
+            top: 4.55in;
             z-index: 10;
             width: 110px;
             height: 110px;
@@ -172,7 +172,7 @@
             font-size: 12px;
             font-weight: 800;
             letter-spacing: 2px;
-            color: #065f46;
+            color: #0B3C5D;
         }
 
         .seal-brand {
@@ -197,20 +197,21 @@
         .brand {
             font-size: 16px;
             font-weight: 700;
-            color: #065f46;
+            color: #0B3C5D;
             letter-spacing: 1px;
         }
 
+        /* [1] Title Block — CE-Specific */
         .cert-title {
             font-family: Georgia, 'Times New Roman', Times, serif;
-            font-size: 48px;
+            font-size: 40px;
             letter-spacing: 4px;
-            color: #065f46;
-            margin-top: 8px;
+            color: #0B3C5D;
+            margin-top: 4px;
         }
 
         .cert-subtitle {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 4px;
             color: #6B7280;
@@ -221,79 +222,97 @@
             width: 64%;
             height: 1px;
             background: rgba(0,0,0,0.08);
-            margin: 14px auto;
+            margin: 10px auto;
         }
 
         /* ── Body ──────────────────────────────────────── */
         .presented-to {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 3px;
             color: #6B7280;
         }
 
+        /* [2] Preceptor Identity with Credentials */
         .preceptor-name {
             font-family: Georgia, 'Times New Roman', Times, serif;
-            font-size: 42px;
+            font-size: 36px;
             font-style: italic;
-            color: #065f46;
-            margin-top: 6px;
-            margin-bottom: 6px;
+            color: #0B3C5D;
+            margin-top: 4px;
+            margin-bottom: 2px;
         }
 
-        .description {
-            font-size: 13px;
-            color: #333333;
-            line-height: 1.45;
-            max-width: 7.5in;
-            margin: 0 auto 0.2in;
+        /* [4] Contact Hours — HIGH VISIBILITY */
+        .hours-block {
+            margin: 6px auto 4px;
         }
 
-        .hours-highlight {
-            font-size: 18px;
+        .hours-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #6B7280;
+        }
+
+        .hours-value {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 28px;
             font-weight: 800;
-            color: #065f46;
+            color: #0B3C5D;
+            margin-top: 2px;
+        }
+
+        /* [3] CE Award Statement */
+        .ce-statement {
+            font-size: 11px;
+            color: #333333;
+            line-height: 1.5;
+            max-width: 7.5in;
+            margin: 6px auto 4px;
+        }
+
+        /* [8] Completion Criteria */
+        .criteria-statement {
+            font-size: 10px;
+            color: #78716c;
+            line-height: 1.4;
+            max-width: 7.5in;
+            margin: 2px auto 0.08in;
         }
 
         /* ── Details grid ──────────────────────────────── */
         .details-grid {
             width: 92%;
-            margin: 0 auto 0.08in;
+            margin: 0 auto 0.06in;
             border-collapse: separate;
-            border-spacing: 16px 6px;
+            border-spacing: 14px 4px;
         }
 
         .detail-item {
             text-align: center;
-            padding: 4px 8px;
+            padding: 3px 6px;
         }
 
         .detail-label {
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: #6B7280;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .detail-value {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             color: #2F2F2F;
-            margin-top: 3px;
-        }
-
-        /* ── Accreditation ─────────────────────────────── */
-        .accreditation-info {
-            font-size: 10px;
-            color: #6B7280;
-            margin-bottom: 0.12in;
+            margin-top: 2px;
         }
 
         /* ── Signatures ────────────────────────────────── */
         .signatures {
             position: absolute;
-            bottom: 1.05in;
+            bottom: 1.00in;
             left: 0.85in;
             right: 0.85in;
             z-index: 10;
@@ -314,22 +333,22 @@
 
         .sig-line {
             border-top: 1px solid rgba(0,0,0,0.15);
-            padding-top: 6px;
+            padding-top: 5px;
             margin: 0 12px;
         }
 
         .sig-name {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             color: #2F2F2F;
         }
 
         .sig-title {
-            font-size: 10px;
+            font-size: 9px;
             color: #6B7280;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
         /* ── Footer ────────────────────────────────────── */
@@ -343,18 +362,26 @@
         }
 
         .footer-text {
-            font-size: 10px;
+            font-size: 9px;
             color: #6B7280;
         }
 
         .cert-number {
             font-weight: 600;
         }
+
+        /* [9] Platform Clarifier */
+        .platform-clarifier {
+            font-size: 8px;
+            color: #a8a29e;
+            margin-top: 3px;
+        }
     </style>
 </head>
 <body>
     @php
-        $preceptorName = ($certificate->preceptor->first_name ?? '') . ' ' . ($certificate->preceptor->last_name ?? '');
+        // Safe data extraction with nullsafe operators
+        $preceptorName = $preceptorDisplay ?? (($certificate->preceptor->first_name ?? '') . ' ' . ($certificate->preceptor->last_name ?? ''));
         $slot = $certificate->application?->slot;
         $site = $slot?->site;
         $specialty = $slot?->specialty ?? 'Clinical';
@@ -367,6 +394,9 @@
         $issuedAt = $certificate->issued_at ?? now();
         $signerName = $policy?->signer_name ?? 'Program Director';
         $signerCredentials = $policy?->signer_credentials ?? 'Authorized Signatory';
+        $accreditingBody = $policy?->accrediting_body;
+        $activityTitle = 'Clinical Preceptorship' . ($specialty !== 'Clinical' ? ' — ' . $specialty . ' Rotation' : '');
+        $locationDisplay = ($site?->city ?? '') . ($site?->city && $site?->state ? ', ' : '') . ($site?->state ?? '');
     @endphp
 
     <div class="certificate">
@@ -383,7 +413,7 @@
         <div class="corner corner-bl"></div>
         <div class="corner corner-br"></div>
 
-        <!-- QR Code - upper right -->
+        {{-- [11] QR Code — upper right --}}
         <div class="qr-container">
             <div class="qr-box">
                 <img src="{{ $qrCode }}" alt="Verify">
@@ -391,7 +421,7 @@
             <div class="qr-label">Scan to Verify</div>
         </div>
 
-        <!-- Verified Seal - left side -->
+        <!-- Verified Seal -->
         <div class="seal">
             <div class="seal-inner">
                 <div class="seal-text">VERIFIED</div>
@@ -403,70 +433,74 @@
         <div class="content">
             <div class="brand">ClinicLink</div>
 
+            {{-- [1] Title Block — CE-Specific --}}
             <div class="cert-title">CONTINUING EDUCATION</div>
-            <div class="cert-subtitle">Certificate of Completion</div>
+            <div class="cert-subtitle">Preceptor CE Credit</div>
 
             <div class="divider"></div>
 
             <div class="presented-to">This is to certify that</div>
 
+            {{-- [2] Preceptor Identity with Credentials --}}
             <div class="preceptor-name">{{ $preceptorName }}</div>
 
-            <div class="description">
-                has been awarded <span class="hours-highlight">{{ number_format($certificate->contact_hours, 1) }} contact hours</span>
-                of continuing education credit for serving as clinical preceptor
-                for the {{ $specialty }} rotation
-                at {{ $siteName }},
-                during the period of
-                {{ $startDateFormatted }} &ndash;
-                {{ $endDateFormatted }}.
+            {{-- [4] Contact Hours — HIGH VISIBILITY --}}
+            <div class="hours-block">
+                <div class="hours-label">Awarded Contact Hours</div>
+                <div class="hours-value">{{ number_format($certificate->contact_hours, 2) }}</div>
             </div>
 
-            <!-- Details Row 1: 3 columns -->
+            {{-- [3] CE Award Statement --}}
+            <div class="ce-statement">
+                This certificate verifies that the preceptor named above has met the requirements for
+                continuing education credit associated with clinical precepting activities.
+            </div>
+
+            {{-- [8] Completion Criteria --}}
+            <div class="criteria-statement">
+                Credit is awarded upon completion of the issuing organization&rsquo;s requirements for this activity.
+            </div>
+
+            {{-- [5] Activity / Rotation Information + [6] Accrediting Body + [7] Provider --}}
             <table class="details-grid">
                 <tr>
                     <td class="detail-item">
-                        <div class="detail-label">Contact Hours</div>
-                        <div class="detail-value">{{ number_format($certificate->contact_hours, 1) }}</div>
+                        <div class="detail-label">Activity Title</div>
+                        <div class="detail-value">{{ $activityTitle }}</div>
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Clinical Site</div>
                         <div class="detail-value">{{ $siteName }}</div>
                     </td>
                     <td class="detail-item">
-                        <div class="detail-label">Specialty</div>
-                        <div class="detail-value">{{ $specialty }}</div>
+                        <div class="detail-label">Activity Dates</div>
+                        <div class="detail-value">{{ $startDateFormatted }} &ndash; {{ $endDateFormatted }}</div>
                     </td>
                 </tr>
             </table>
 
-            <!-- Details Row 2: 3 columns -->
             <table class="details-grid">
                 <tr>
-                    <td class="detail-item">
-                        <div class="detail-label">Rotation Period</div>
-                        <div class="detail-value">{{ $startDateFormatted }} - {{ $endDateFormatted }}</div>
-                    </td>
-                    <td class="detail-item">
-                        <div class="detail-label">Issuing Institution</div>
+                    {{-- [7] Provider / Issuer --}}
+                    <td class="detail-item" style="width: 40%;">
+                        <div class="detail-label">Provider</div>
                         <div class="detail-value">{{ $universityName }}</div>
                     </td>
-                    <td class="detail-item">
-                        <div class="detail-label">Issue Date</div>
-                        <div class="detail-value">{{ $issuedAt->format('M d, Y') }}</div>
+                    {{-- [6] Accrediting Body --}}
+                    <td class="detail-item" style="width: 30%;">
+                        <div class="detail-label">Accrediting Body</div>
+                        <div class="detail-value">{{ $accreditingBody ?? 'N/A' }}</div>
+                    </td>
+                    {{-- Location of Activity --}}
+                    <td class="detail-item" style="width: 30%;">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">{{ $locationDisplay ?: 'N/A' }}</div>
                     </td>
                 </tr>
             </table>
-
-            @if($policy?->accrediting_body)
-            <div class="accreditation-info">
-                Accredited by {{ $policy->accrediting_body }}
-                &bull; {{ $universityName }}
-            </div>
-            @endif
         </div>
 
-        <!-- Signatures -->
+        {{-- [10] Signature Block --}}
         <div class="signatures">
             <table class="sig-table">
                 <tr>
@@ -486,14 +520,18 @@
             </table>
         </div>
 
-        <!-- Footer -->
+        {{-- [11] Footer with verification + [9] Platform Clarifier --}}
         <div class="footer">
             <div class="footer-text">
-                Verification ID: <span class="cert-number">{{ $certificate->verification_uuid }}</span>
+                Certificate ID: <span class="cert-number">{{ $certificate->verification_uuid }}</span>
                 &nbsp;&bull;&nbsp;
                 Issued: {{ $issuedAt->format('F j, Y') }}
                 &nbsp;&bull;&nbsp;
-                Verify: {{ $verifyUrl }}
+                Verify at: {{ $verifyUrl }}
+            </div>
+            {{-- [9] Ownership / Platform Clarifier --}}
+            <div class="platform-clarifier">
+                CE credit is issued by the organization named on this certificate. ClinicLink provides verification and recordkeeping.
             </div>
         </div>
     </div>

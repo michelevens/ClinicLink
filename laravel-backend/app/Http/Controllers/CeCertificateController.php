@@ -193,11 +193,9 @@ class CeCertificateController extends Controller
             // Generate PDF inline and stream directly (no filesystem dependency)
             $ceCertificate->load([
                 'university',
-                'preceptor',
-                'application.slot.site.manager',
-                'application.slot.preceptor',
-                'application.student.studentProfile.university',
-                'application.student.studentProfile.program',
+                'preceptor.credentials',
+                'application.slot.site',
+                'application.student.studentProfile',
                 'approvedByUser',
             ]);
 
@@ -210,11 +208,28 @@ class CeCertificateController extends Controller
 
             $policy = $ceCertificate->university?->cePolicy;
 
+            // Build preceptor display name with credentials (e.g. "Nageley Michel, DNP, PMHNP-BC")
+            $preceptor = $ceCertificate->preceptor;
+            $preceptorDisplay = $preceptor ? $preceptor->first_name . ' ' . $preceptor->last_name : 'N/A';
+            if ($preceptor && $preceptor->credentials && $preceptor->credentials->isNotEmpty()) {
+                $suffixes = $preceptor->credentials
+                    ->whereIn('type', ['degree', 'certification', 'license'])
+                    ->where('status', 'approved')
+                    ->pluck('name')
+                    ->filter(fn ($n) => strlen($n) <= 20)
+                    ->unique()
+                    ->values();
+                if ($suffixes->isNotEmpty()) {
+                    $preceptorDisplay .= ', ' . $suffixes->implode(', ');
+                }
+            }
+
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('certificates.ce-template', [
                 'certificate' => $ceCertificate,
                 'qrCode' => $qrCode,
                 'verifyUrl' => $verifyUrl,
                 'policy' => $policy,
+                'preceptorDisplay' => $preceptorDisplay,
             ])->setPaper('letter', 'landscape');
 
             $filename = 'CE-Certificate-' . substr($ceCertificate->verification_uuid, 0, 8) . '.pdf';
