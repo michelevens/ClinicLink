@@ -9,89 +9,105 @@
 ## Phase 1: Core Marketplace (MVP - Weeks 1-8)
 
 ### Authentication & Users
-- [ ] Email/password registration and login
-- [ ] Role-based access (Student, Preceptor, Site Manager, University Coordinator, Professor, Admin)
-- [ ] Profile setup per role (credentials, program, facility)
+- [x] Email/password registration and login
+- [x] Role-based access (Student, Preceptor, Site Manager, University Coordinator, Professor, Admin)
+- [x] Profile setup per role (credentials, program, facility)
 - [ ] University affiliation verification
 - [ ] Email verification and identity confirmation
-- [ ] MFA option for site managers and coordinators
+- [x] MFA option for all users (TOTP + backup codes)
+- [x] NIST 800-63B password policy (min 12, mixed case, numbers, symbols, HaveIBeenPwned)
+- [x] Account lockout (5 failed attempts → 30min lock)
 
 ### Student Profile & Search
-- [ ] Student profile (program, school, graduation date, certifications, clinical interests)
-- [ ] Credential upload (CPR, background check, immunizations, liability insurance)
-- [ ] Rotation search with filters (specialty, location, dates, cost, availability)
+- [x] Student profile (program, school, graduation date, certifications, clinical interests)
+- [x] Credential upload (CPR, background check, immunizations, liability insurance)
+- [x] Rotation search with filters (specialty, location, dates, cost, availability)
 - [ ] Map-based search (clinics near me / near school)
 - [ ] Saved searches and alerts (notify when new matching slots open)
 - [ ] Rotation bookmarking/favorites
-- [ ] Application submission (cover letter, resume, preferences)
-- [ ] Application status tracking
+- [x] Application submission (cover letter, preferences)
+- [x] Application status tracking
 
 ### Clinic/Site Listings
-- [ ] Facility profile (name, address, specialties, size, EHR system used)
-- [ ] Rotation slot creation (specialty, dates, capacity, requirements, cost)
+- [x] Facility profile (name, address, specialties, size, EHR system used)
+- [x] Rotation slot creation (specialty, dates, capacity, requirements, cost)
 - [ ] Slot availability calendar
-- [ ] Requirements checklist per slot (credentials, clearances needed)
-- [ ] Application review dashboard
-- [ ] Accept/decline/waitlist applicants
-- [ ] Site photos and description
-- [ ] Preceptor assignment per rotation
+- [x] Requirements checklist per slot (onboarding templates)
+- [x] Application review dashboard
+- [x] Accept/decline/waitlist applicants
+- [x] Site photos and description
+- [x] Preceptor assignment per rotation
 
 ### University Dashboard
-- [ ] Program setup (degree type, required hours, specialties)
-- [ ] Student roster with placement status
+- [x] Program setup (degree type, required hours, specialties)
+- [x] Student roster with placement status
 - [ ] Bulk student import (CSV)
-- [ ] Placement overview (placed vs unplaced vs in-progress)
-- [ ] Quick stats (placement rate, average time to place)
+- [x] Placement overview (placed vs unplaced vs in-progress)
+- [x] Quick stats (placement rate, average time to place)
 
 ### Basic Dashboard (All Roles)
-- [ ] Role-specific dashboard
-- [ ] Notification feed
-- [ ] Upcoming rotations/deadlines
-- [ ] Quick actions
+- [x] Role-specific dashboard (6 dashboards)
+- [x] Notification feed
+- [x] Upcoming rotations/deadlines
+- [x] Quick actions
 
 ---
 
 ## Phase 2: Management & Tracking (Weeks 9-16)
 
 ### Clinical Hour Logging
-- [ ] Student daily/weekly hour entry
-- [ ] Preceptor approval of logged hours
-- [ ] Running total vs required hours
-- [ ] Hour categories (direct patient care, indirect, simulation, etc.)
+- [x] Student daily/weekly hour entry
+- [x] Preceptor approval of logged hours
+- [x] Running total vs required hours
+- [x] Hour categories (direct patient care, indirect, simulation, etc.)
 - [ ] GPS check-in/check-out (optional, for verification)
-- [ ] Hour summary reports (by week, month, rotation, total)
+- [x] Hour summary reports (by week, month, rotation, total)
 - [ ] Export hours log (PDF, CSV)
 
 ### Evaluations
-- [ ] Mid-rotation evaluation (preceptor → student)
-- [ ] Final rotation evaluation (preceptor → student)
-- [ ] Student evaluation of site/preceptor
-- [ ] Standardized rubrics by discipline (AACN, PAEA standards)
+- [x] Mid-rotation evaluation (preceptor → student)
+- [x] Final rotation evaluation (preceptor → student)
+- [x] Student feedback evaluation
+- [x] Standardized rubrics (1-5 scale scoring)
 - [ ] Custom evaluation templates per university
 - [ ] Evaluation reminders and deadlines
-- [ ] Evaluation history and trends
+- [x] Evaluation history and trends
 
 ### Compliance & Document Management
-- [ ] Student credential tracking (expiration dates, renewal reminders)
-- [ ] Required document checklist per site
-- [ ] Document upload with verification status
-- [ ] Automated compliance alerts (expired CPR, background check due)
-- [ ] Bulk compliance status view (university coordinator)
-- [ ] Site-specific requirements mapping
+- [x] Student credential tracking (expiration dates, renewal reminders)
+- [x] Required document checklist per site (onboarding templates)
+- [x] Document upload with verification status
+- [x] Automated compliance alerts (credential expiration emails at 30/14/7 days)
+- [x] Bulk compliance status view (site manager + coordinator dashboards)
+- [x] Site-specific requirements mapping (onboarding templates)
+- [x] Agreement expiration email reminders
 
 ### Affiliation Agreements
 - [ ] Agreement template library
-- [ ] Digital agreement creation between university and site
+- [x] Agreement creation between university and site (CRUD)
 - [ ] E-signature integration
-- [ ] Agreement status tracking (draft → review → active → expired)
-- [ ] Renewal reminders
-- [ ] Agreement document storage
+- [x] Agreement status tracking (draft → pending review → active → expired/terminated)
+- [x] Renewal reminders (scheduled email alerts)
+- [x] Agreement document storage (upload/download)
 
 ### Communication
 - [ ] In-app messaging (student ↔ preceptor, coordinator ↔ site manager)
 - [ ] Announcement broadcasts (university → all students)
-- [ ] Notification preferences (email, SMS, in-app)
+- [x] In-app notifications (bell icon, mark read/unread)
+- [x] Email notifications (11 mail classes for applications, hours, credentials, agreements, onboarding)
 - [ ] Message templates for common communications
+
+### Security & Compliance
+- [x] TOTP Two-Factor Authentication with backup codes
+- [x] Security headers (X-Content-Type-Options, X-Frame-Options, HSTS, etc.)
+- [x] API rate limiting (global + auth endpoint throttling)
+- [x] 24hr token expiration + daily pruning
+- [x] Account lockout (5 failed attempts → 30min)
+- [x] PHI encryption (mfa_secret, mfa_backup_codes)
+- [x] Platform-wide immutable audit logging
+- [x] Admin audit log viewer with filters
+- [x] NIST 800-63B password policy
+- [x] CE audit trail (immutable CeAuditEvent model)
 
 ---
 

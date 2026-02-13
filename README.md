@@ -54,12 +54,14 @@ A two-sided marketplace + management platform:
 ## Tech Stack
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS
 - **Backend:** Laravel 12 + PHP 8.4
-- **Database:** PostgreSQL
-- **Search:** Algolia or Meilisearch (site/rotation search)
-- **Payments:** Stripe Connect (rotation fees, platform fees)
-- **Documents:** Digital signatures, document upload/verification
-- **Notifications:** Twilio (SMS) + SendGrid (Email)
-- **Calendar:** FullCalendar integration
+- **Database:** PostgreSQL (Railway)
+- **Auth:** Laravel Sanctum + TOTP MFA (Google Authenticator/Authy)
+- **File Storage:** Cloudflare R2 (S3-compatible)
+- **Email:** Resend (transactional emails, premium Blade templates)
+- **PDF:** DomPDF (certificates, reports)
+- **QR Codes:** Simple QRCode (certificate verification)
+- **Security:** Security headers, rate limiting, account lockout, audit logging, NIST 800-63B passwords
+- **Hosting:** GitHub Pages (frontend) + Railway (backend, auto-deploy from master)
 
 ## User Roles
 1. **Student** — Search rotations, apply, log hours, complete evaluations
@@ -81,8 +83,25 @@ A two-sided marketplace + management platform:
 - **Transaction Fees:** 10% platform fee on paid rotation placements
 - **Student:** Free (always — students should never pay for the platform itself)
 
+## Scheduled Commands
+| Command | Schedule | Description |
+|---------|----------|-------------|
+| `rotations:auto-complete` | Daily 02:00 | Auto-complete rotations with past end dates, approved hours, and submitted evaluations |
+| `sanctum:prune-expired` | Daily 03:00 | Prune expired API tokens (>48hrs) |
+| `reminders:credentials` | Daily 04:00 | Email students about credentials expiring within 30 days |
+| `reminders:agreements` | Daily 04:30 | Email coordinators/site managers about agreements expiring within 30 days |
+
 ## Quick Start
 ```bash
 cd frontend && npm install && npm run dev
 cd laravel-backend && composer install && php artisan serve
+```
+
+## Deploy
+```bash
+# Frontend → GitHub Pages
+cd frontend && npm run deploy
+
+# Backend → Railway (auto-deploys from master push)
+git push origin master
 ```

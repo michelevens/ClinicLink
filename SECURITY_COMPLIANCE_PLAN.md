@@ -283,7 +283,7 @@ Priority: CRITICAL | Timeline: Month 1-2
 | Control | Current | Target | Status |
 |---------|---------|--------|--------|
 | Multi-Factor Authentication | ✅ TOTP (Google Auth/Authy) + 8 backup codes | Required for all users | **DONE** — Optional per user, enforced for admin planned |
-| Password complexity | Basic bcrypt | NIST 800-63B compliant | Need min 12 chars, breach database check (HaveIBeenPwned API) |
+| Password complexity | ✅ NIST 800-63B: min 12 chars, mixed case, numbers, symbols, HaveIBeenPwned | NIST 800-63B compliant | **DONE** — `Password::defaults()` in AppServiceProvider with `uncompromised()` check |
 | Password rotation | None | Encourage, not force rotation | Need compromised password notifications |
 | Account lockout | ✅ 5 failed attempts = 30min lockout | 5 failed = 30min lockout | **DONE** — `failed_login_attempts` + `locked_until` on User model |
 | Session management | ✅ 24hr token expiry + daily pruning | 24hr token expiry, 30min idle | **DONE** — `sanctum.expiration = 1440`, `sanctum:prune-expired` scheduled daily |

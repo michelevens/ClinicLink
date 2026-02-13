@@ -177,13 +177,61 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
+## Phase 2.8: Landing Page Accuracy & Password Hardening ✅ COMPLETE
+**Goal:** Fix false claims on landing page, enforce NIST 800-63B password policy
+
+### What Was Built
+
+#### Landing Page Overhaul
+- Removed all false blockchain/AI/GPS claims from landing page
+- Replaced hardcoded fake stats (2,500+ sites, 18K students) with real capability highlights
+- Rewrote 4 key feature cards (GPS→Digital Hour Logging, Blockchain→Verified Credentials, AI Matching→Multi-Criteria Search, Automated Compliance→Compliance Tracking)
+- Fixed competitive edge section (Blockchain-Verified→Instantly Verifiable, AI-Powered→Purpose-Built)
+- Removed nonexistent features (rotation-to-hire, e-sign, accreditation reports, program benchmarking)
+- Replaced fake testimonials with "Demo Example" badges
+- Fixed lifecycle steps (removed "Match" and "Hire" — now 6 steps: Discover, Apply, Onboard, Track, Evaluate, Certify)
+
+#### NIST 800-63B Password Policy
+- Backend: `Password::defaults()` with min(12), letters, mixedCase, numbers, symbols, uncompromised (HaveIBeenPwned)
+- Frontend Register page: Updated from 8→12 char minimum, strength meter, validation
+- Frontend Reset Password page: Updated from 8→12 char minimum
+
+---
+
+## Phase 2.9: Email Notifications ✅ COMPLETE
+**Goal:** Scheduled email reminders for expiring credentials and agreements
+
+### What Was Built
+
+#### Credential Expiration Reminders
+- `reminders:credentials` Artisan command — runs daily at 04:00
+- Queries credentials expiring within 30 days, groups by student
+- Sends premium email with color-coded urgency table (red ≤7 days, orange ≤14, amber ≤30)
+
+#### Agreement Expiration Reminders
+- `reminders:agreements` Artisan command — runs daily at 04:30
+- Queries active agreements expiring within 30 days
+- Notifies coordinators (by university) and site managers (by site)
+- Premium email template with university/site breakdown table
+
+#### Application Review Email Resilience
+- Wrapped ApplicationController review email + notification in try/catch
+- Prevents mail failures from breaking the review workflow
+
+#### Existing Email System (already built)
+- 11 Mail classes: ApplicationStatusMail, HourLogReviewedMail, WelcomeMail, RegistrationReceivedMail, AccountApprovedMail, ForgotPasswordMail, PasswordResetMail, NewUserRegistrationMail, SiteInviteMail, CredentialExpirationMail, AgreementExpirationMail
+- 11 Notification classes for in-app notifications
+- 13 premium Blade email templates with gradient headers and inline CSS
+
+---
+
 ## Phase 3: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system
 - Smart matching algorithm (student prefs × site requirements)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)
 - Accreditation-ready report generation
-- Email notifications (application updates, credential expirations, agreement reminders)
+- CSV/PDF exports for hour logs, compliance reports
 
 ---
 
@@ -210,6 +258,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Email | Resend | ✅ |
 | 2FA/MFA | pragmarx/google2fa + qrcode.react | ✅ |
 | Hosting | GitHub Pages + Railway | ✅ |
+| Scheduled Jobs | Laravel Scheduler (4 daily commands) | ✅ |
 | Search | Algolia / Meilisearch | Planned |
 | Maps | Google Maps / Mapbox | Planned |
 | Payments | Stripe Connect | Planned |
