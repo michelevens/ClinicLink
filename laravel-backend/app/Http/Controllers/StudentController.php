@@ -93,6 +93,7 @@ class StudentController extends Controller
                 'email' => $student->email,
                 'university' => $profile?->university?->name,
                 'program' => $profile?->program?->name,
+                'program_id' => $profile?->program_id,
                 'degree_type' => $profile?->program?->degree_type,
                 'hours_completed' => (float) $approvedHours,
                 'prior_hours' => $profile?->prior_hours ?? 0,
@@ -294,6 +295,51 @@ class StudentController extends Controller
             'student_id' => $student->id,
             'prior_hours' => $profile->prior_hours,
             'total_hours' => $profile->total_hours,
+        ]);
+    }
+
+    /**
+     * Assign a student to a program (coordinator/admin only).
+     */
+    public function assignProgram(Request $request, User $student): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$student->isStudent()) {
+            return response()->json(['message' => 'User is not a student.'], 422);
+        }
+
+        // Coordinators can only assign students at their university
+        if ($user->isCoordinator()) {
+            $coordUniversityId = $user->studentProfile?->university_id;
+            $studentUniversityId = $student->studentProfile?->university_id;
+            if (!$coordUniversityId || $coordUniversityId !== $studentUniversityId) {
+                return response()->json(['message' => 'Student is not at your university.'], 403);
+            }
+        }
+
+        $validated = $request->validate([
+            'program_id' => ['required', 'uuid', 'exists:programs,id'],
+        ]);
+
+        // Verify the program belongs to the student's university
+        $profile = $student->studentProfile;
+        if (!$profile) {
+            return response()->json(['message' => 'Student has no profile.'], 404);
+        }
+
+        $program = \App\Models\Program::find($validated['program_id']);
+        if ($program->university_id !== $profile->university_id) {
+            return response()->json(['message' => 'Program does not belong to the student\'s university.'], 422);
+        }
+
+        $profile->update(['program_id' => $validated['program_id']]);
+        $profile->load('program');
+
+        return response()->json([
+            'message' => 'Student assigned to program successfully.',
+            'student_id' => $student->id,
+            'program' => $profile->program,
         ]);
     }
 

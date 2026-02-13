@@ -112,7 +112,7 @@ export const api = new ApiClient(API_URL)
 
 // --- Auth ---
 export const authApi = {
-  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string; university_id?: string }) =>
+  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string; university_id?: string; program_id?: string }) =>
     api.post<{ message: string; pending_approval: boolean }>('/auth/register', data),
 
   login: (data: { login: string; password: string }) =>
@@ -309,6 +309,7 @@ export interface ApiMyStudent {
   email: string
   university: string | null
   program: string | null
+  program_id: string | null
   degree_type: string | null
   graduation_date: string | null
   gpa: number | null
@@ -349,6 +350,8 @@ export const coordinatorApi = {
     api.put<ApiProgram>(`/programs/${programId}`, data),
   createProgram: (universityId: string, data: { name: string; degree_type: string; required_hours: number; specialties?: string[] }) =>
     api.post<ApiProgram>(`/universities/${universityId}/programs`, data),
+  assignStudentProgram: (studentId: string, programId: string) =>
+    api.put<{ message: string; student_id: string; program: ApiProgram }>(`/students/${studentId}/program`, { program_id: programId }),
 }
 
 // --- Dashboard ---

@@ -1,17 +1,25 @@
-import { useState } from 'react'
-import { BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2, Plus } from 'lucide-react'
-import { useCreateProgram } from '../hooks/useApi.ts'
+import { useState, useMemo } from 'react'
+import {
+  BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2, Plus,
+  Users, MapPin, Phone, Globe, CheckCircle2, UserPlus,
+} from 'lucide-react'
+import { useCreateProgram, useMyStudents, useAssignStudentProgram } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { api } from '../services/api.ts'
-import type { ApiUniversity, ApiProgram } from '../services/api.ts'
+import type { ApiUniversity, ApiProgram, ApiMyStudent } from '../services/api.ts'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 const DEGREE_TYPES = ['BSN', 'MSN', 'DNP', 'PA', 'NP', 'DPT', 'OTD', 'MSW', 'PharmD', 'other'] as const
+
+const DEGREE_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'secondary' | 'default'> = {
+  BSN: 'primary', MSN: 'secondary', DNP: 'success', PA: 'warning', NP: 'primary',
+  DPT: 'default', OTD: 'default', MSW: 'secondary', PharmD: 'danger', other: 'default',
+}
 
 function useUniversities(params?: { search?: string }) {
   return useQuery({
@@ -31,60 +39,435 @@ function useUniversityPrograms(id: string) {
 export function Programs() {
   const { user } = useAuth()
   const isCoordinator = user?.role === 'coordinator'
-  const [search, setSearch] = useState('')
-  const { data, isLoading } = useUniversities({ search: search || undefined })
-  const allUniversities = data?.data || []
   const coordUniversityId = user?.universityId || null
 
-  // Coordinators only see their associated university; admins see all
-  const universities = isCoordinator && coordUniversityId
-    ? allUniversities.filter(u => u.id === coordUniversityId)
-    : allUniversities
+  if (isCoordinator && coordUniversityId) {
+    return <CoordinatorMyUniversity universityId={coordUniversityId} />
+  }
 
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  return <AdminProgramsBrowser />
+}
+
+// ──────────────────────────────────────────
+// Coordinator: "My University" unified view
+// ──────────────────────────────────────────
+function CoordinatorMyUniversity({ universityId }: { universityId: string }) {
+  const { data: uniData, isLoading: uniLoading } = useUniversities()
+  const { data: programsData, isLoading: programsLoading } = useUniversityPrograms(universityId)
+  const { data: studentsData, isLoading: studentsLoading } = useMyStudents()
+
   const [showAddProgram, setShowAddProgram] = useState(false)
+  const [expandedProgramId, setExpandedProgramId] = useState<string | null>(null)
+  const [showUnassigned, setShowUnassigned] = useState(false)
+  const [assigningStudent, setAssigningStudent] = useState<ApiMyStudent | null>(null)
 
-  const canAddProgram = (isCoordinator || user?.role === 'admin') && coordUniversityId
+  const allUniversities = uniData?.data || []
+  const university = allUniversities.find(u => u.id === universityId)
+  const programs = Array.isArray(programsData) ? programsData : []
+  const students = studentsData?.students || []
+
+  // Group students by program
+  const studentsByProgram = useMemo(() => {
+    const map: Record<string, ApiMyStudent[]> = {}
+    const unassigned: ApiMyStudent[] = []
+    for (const s of students) {
+      if (s.program_id) {
+        if (!map[s.program_id]) map[s.program_id] = []
+        map[s.program_id].push(s)
+      } else {
+        unassigned.push(s)
+      }
+    }
+    return { map, unassigned }
+  }, [students])
+
+  const isLoading = uniLoading || programsLoading || studentsLoading
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (!university) {
+    return (
+      <Card>
+        <div className="text-center py-12">
+          <Building2 className="w-12 h-12 text-stone-300 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-stone-900 mb-1">No university found</h3>
+          <p className="text-stone-500 text-sm">
+            You are not associated with any university. Contact an admin to link your account.
+          </p>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Programs</h1>
-          <p className="text-stone-500 mt-1">
-            {isCoordinator ? 'Your university and clinical programs' : 'Universities and their clinical programs'}
-          </p>
+          <h1 className="text-2xl font-bold text-stone-900">My University</h1>
+          <p className="text-stone-500 mt-1">Manage programs and student assignments</p>
         </div>
-        {canAddProgram && (
-          <Button onClick={() => setShowAddProgram(true)}>
-            <Plus className="w-4 h-4 mr-1" /> Add Program
-          </Button>
-        )}
+        <Button onClick={() => setShowAddProgram(true)}>
+          <Plus className="w-4 h-4 mr-1" /> Add Program
+        </Button>
       </div>
 
+      {/* University Info Card */}
+      <Card>
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-100 to-secondary-100 text-primary-600 flex items-center justify-center shrink-0">
+            <GraduationCap className="w-7 h-7" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-lg font-bold text-stone-900">{university.name}</h2>
+              {university.is_verified && <Badge variant="success" size="sm">Verified</Badge>}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-500">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" /> {university.city}, {university.state}
+              </span>
+              {university.phone && (
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5" /> {university.phone}
+                </span>
+              )}
+              {university.website && (
+                <a href={university.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary-600 hover:underline">
+                  <Globe className="w-3.5 h-3.5" /> Website
+                </a>
+              )}
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-2xl font-bold text-primary-600">{programs.length}</p>
+            <p className="text-xs text-stone-500">Programs</p>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-stone-100">
+          <div className="text-center">
+            <p className="text-lg font-bold text-stone-900">{students.length}</p>
+            <p className="text-xs text-stone-500">Total Students</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-stone-900">{students.length - studentsByProgram.unassigned.length}</p>
+            <p className="text-xs text-stone-500">Assigned</p>
+          </div>
+          <div className="text-center">
+            <p className="text-lg font-bold text-amber-600">{studentsByProgram.unassigned.length}</p>
+            <p className="text-xs text-stone-500">Unassigned</p>
+          </div>
+        </div>
+      </Card>
+
+      {/* Unassigned Students Alert */}
+      {studentsByProgram.unassigned.length > 0 && (
+        <Card>
+          <button
+            onClick={() => setShowUnassigned(!showUnassigned)}
+            className="w-full flex items-center gap-3 text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <UserPlus className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-stone-900">
+                {studentsByProgram.unassigned.length} Unassigned Student{studentsByProgram.unassigned.length !== 1 ? 's' : ''}
+              </h3>
+              <p className="text-sm text-stone-500">These students need to be assigned to a program</p>
+            </div>
+            {showUnassigned
+              ? <ChevronDown className="w-5 h-5 text-stone-400" />
+              : <ChevronRight className="w-5 h-5 text-stone-400" />}
+          </button>
+
+          {showUnassigned && (
+            <div className="mt-4 pt-4 border-t border-stone-100 space-y-2">
+              {studentsByProgram.unassigned.map(student => (
+                <StudentRow
+                  key={student.id}
+                  student={student}
+                  programs={programs}
+                  onAssign={() => setAssigningStudent(student)}
+                />
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Programs with Students */}
+      {programs.length === 0 ? (
+        <Card>
+          <div className="text-center py-8">
+            <BookOpen className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+            <h3 className="font-semibold text-stone-900 mb-1">No programs yet</h3>
+            <p className="text-sm text-stone-500 mb-4">Create your first program to start assigning students.</p>
+            <Button onClick={() => setShowAddProgram(true)} variant="outline">
+              <Plus className="w-4 h-4 mr-1" /> Add Program
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          <h2 className="text-lg font-bold text-stone-900">Programs</h2>
+          {programs.map(program => {
+            const programStudents = studentsByProgram.map[program.id] || []
+            const isExpanded = expandedProgramId === program.id
+            return (
+              <ProgramCard
+                key={program.id}
+                program={program}
+                students={programStudents}
+                allPrograms={programs}
+                isExpanded={isExpanded}
+                onToggle={() => setExpandedProgramId(isExpanded ? null : program.id)}
+                onAssignStudent={setAssigningStudent}
+              />
+            )
+          })}
+        </div>
+      )}
+
       {/* Add Program Modal */}
-      {showAddProgram && coordUniversityId && (
+      {showAddProgram && (
         <AddProgramModal
-          universityId={coordUniversityId}
+          universityId={universityId}
           onClose={() => setShowAddProgram(false)}
         />
       )}
 
-      {/* Search - only show for admins who see multiple universities */}
-      {!isCoordinator && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-          <input
-            type="text"
-            placeholder="Search universities..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-          />
+      {/* Assign Student to Program Modal */}
+      {assigningStudent && (
+        <AssignProgramModal
+          student={assigningStudent}
+          programs={programs}
+          onClose={() => setAssigningStudent(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// Program Card with expandable student list
+// ──────────────────────────────────────────
+function ProgramCard({ program, students, allPrograms, isExpanded, onToggle, onAssignStudent }: {
+  program: ApiProgram
+  students: ApiMyStudent[]
+  allPrograms: ApiProgram[]
+  isExpanded: boolean
+  onToggle: () => void
+  onAssignStudent: (s: ApiMyStudent) => void
+}) {
+  return (
+    <Card>
+      <button onClick={onToggle} className="w-full flex items-center gap-3 text-left">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-50 to-secondary-50 text-primary-600 flex items-center justify-center shrink-0">
+          <BookOpen className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-stone-900">{program.name}</h3>
+            <Badge variant={DEGREE_COLORS[program.degree_type] || 'default'} size="sm">{program.degree_type}</Badge>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-stone-500 mt-0.5">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" /> {program.required_hours}h required
+            </span>
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" /> {students.length} student{students.length !== 1 ? 's' : ''}
+            </span>
+            {program.specialties && program.specialties.length > 0 && (
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> {program.specialties.join(', ')}
+              </span>
+            )}
+          </div>
+        </div>
+        {isExpanded
+          ? <ChevronDown className="w-5 h-5 text-stone-400 shrink-0" />
+          : <ChevronRight className="w-5 h-5 text-stone-400 shrink-0" />}
+      </button>
+
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t border-stone-100">
+          {students.length === 0 ? (
+            <p className="text-sm text-stone-500 text-center py-4">No students assigned to this program yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {students.map(student => (
+                <StudentRow
+                  key={student.id}
+                  student={student}
+                  programs={allPrograms}
+                  onAssign={() => onAssignStudent(student)}
+                  showReassign
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
+    </Card>
+  )
+}
 
-      {/* University List */}
+// ──────────────────────────────────────────
+// Student row with hours + assign button
+// ──────────────────────────────────────────
+function StudentRow({ student, programs, onAssign, showReassign }: {
+  student: ApiMyStudent
+  programs: ApiProgram[]
+  onAssign: () => void
+  showReassign?: boolean
+}) {
+  const hoursPercent = student.hours_required > 0
+    ? Math.min(100, Math.round((student.total_hours / student.hours_required) * 100))
+    : 0
+
+  return (
+    <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
+      <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
+        {student.first_name[0]}{student.last_name[0]}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-stone-900 truncate">
+          {student.first_name} {student.last_name}
+        </p>
+        <div className="flex items-center gap-3 text-xs text-stone-500 mt-0.5">
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" /> {student.total_hours}/{student.hours_required}h
+          </span>
+          {hoursPercent > 0 && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-16 h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${hoursPercent >= 100 ? 'bg-green-500' : hoursPercent >= 50 ? 'bg-primary-500' : 'bg-amber-500'}`}
+                  style={{ width: `${hoursPercent}%` }}
+                />
+              </div>
+              <span className="text-[10px]">{hoursPercent}%</span>
+            </div>
+          )}
+        </div>
+      </div>
+      <Button variant="ghost" size="sm" onClick={onAssign}>
+        {showReassign ? 'Reassign' : 'Assign'}
+      </Button>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// Assign/Reassign Student to Program Modal
+// ──────────────────────────────────────────
+function AssignProgramModal({ student, programs, onClose }: {
+  student: ApiMyStudent
+  programs: ApiProgram[]
+  onClose: () => void
+}) {
+  const assignMutation = useAssignStudentProgram()
+  const [selectedProgramId, setSelectedProgramId] = useState(student.program_id || '')
+
+  const handleAssign = () => {
+    if (!selectedProgramId) {
+      toast.error('Please select a program.')
+      return
+    }
+    assignMutation.mutate(
+      { studentId: student.id, programId: selectedProgramId },
+      {
+        onSuccess: () => {
+          toast.success(`${student.first_name} ${student.last_name} assigned successfully.`)
+          onClose()
+        },
+        onError: (err) => toast.error(err.message || 'Failed to assign student.'),
+      }
+    )
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title={`Assign ${student.first_name} ${student.last_name}`} size="sm">
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl">
+          <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
+            {student.first_name[0]}{student.last_name[0]}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-stone-900">{student.first_name} {student.last_name}</p>
+            <p className="text-xs text-stone-500">{student.email}</p>
+          </div>
+        </div>
+
+        {student.program && (
+          <p className="text-sm text-stone-500">
+            Currently in: <span className="font-medium text-stone-700">{student.program}</span>
+          </p>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Select Program</label>
+          <select
+            value={selectedProgramId}
+            onChange={e => setSelectedProgramId(e.target.value)}
+            className="w-full border border-stone-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">-- Choose a program --</option>
+            {programs.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.degree_type}) - {p.required_hours}h
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleAssign} isLoading={assignMutation.isPending}>
+            <UserPlus className="w-4 h-4 mr-1" /> Assign
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+// ──────────────────────────────────────────
+// Admin: Browse all universities & programs
+// ──────────────────────────────────────────
+function AdminProgramsBrowser() {
+  const [search, setSearch] = useState('')
+  const { data, isLoading } = useUniversities({ search: search || undefined })
+  const universities = data?.data || []
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-stone-900">Programs</h1>
+        <p className="text-stone-500 mt-1">Universities and their clinical programs</p>
+      </div>
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+        <input
+          type="text"
+          placeholder="Search universities..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-300 bg-white text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+        />
+      </div>
+
       {isLoading ? (
         <div className="flex justify-center py-12">
           <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
@@ -94,11 +477,7 @@ export function Programs() {
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-stone-300 mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-stone-900 mb-1">No universities found</h3>
-            <p className="text-stone-500 text-sm">
-              {isCoordinator
-                ? 'You are not associated with any university. Contact an admin to link your account.'
-                : 'Try adjusting your search criteria.'}
-            </p>
+            <p className="text-stone-500 text-sm">Try adjusting your search criteria.</p>
           </div>
         </Card>
       ) : (
@@ -161,7 +540,7 @@ function UniversityCard({ university, isExpanded, onToggle }: {
                       <BookOpen className="w-4 h-4 text-primary-500 shrink-0" />
                       <h4 className="text-sm font-semibold text-stone-900">{program.name}</h4>
                     </div>
-                    <Badge variant="primary" size="sm">{program.degree_type}</Badge>
+                    <Badge variant={DEGREE_COLORS[program.degree_type] || 'default'} size="sm">{program.degree_type}</Badge>
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500 ml-6">
                     <span className="flex items-center gap-1">

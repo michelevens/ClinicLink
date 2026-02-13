@@ -4,10 +4,11 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, CheckCircle, Building2, Search, Loader2 } from 'lucide-react'
+import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, CheckCircle, Building2, Search, Loader2, BookOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
-import { universitiesApi } from '../services/api.ts'
+import { universitiesApi, api } from '../services/api.ts'
+import type { ApiProgram } from '../services/api.ts'
 
 const ROLE_OPTIONS: { value: UserRole; label: string; desc: string }[] = [
   { value: 'student', label: 'Student', desc: 'I need clinical rotation hours' },
@@ -59,7 +60,7 @@ export function RegisterPage() {
   const prefillEmail = searchParams.get('email') || ''
   const prefillRole = (searchParams.get('role') as UserRole) || 'student'
 
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '' })
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [pendingApproval, setPendingApproval] = useState(false)
   const { register, isLoading } = useAuth()
@@ -73,7 +74,25 @@ export function RegisterPage() {
   const uniRef = useRef<HTMLDivElement>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
+  // Program selection (loads when university is selected for students)
+  const [programs, setPrograms] = useState<ApiProgram[]>([])
+  const [programsLoading, setProgramsLoading] = useState(false)
+
   const needsOrg = ['student', 'preceptor', 'coordinator', 'professor'].includes(form.role)
+  const showProgramSelect = form.role === 'student' && form.universityId
+
+  // Fetch programs when a university is selected (for students)
+  useEffect(() => {
+    if (!form.universityId || form.role !== 'student') {
+      setPrograms([])
+      return
+    }
+    setProgramsLoading(true)
+    api.get<ApiProgram[]>(`/universities/${form.universityId}/programs`)
+      .then(data => setPrograms(Array.isArray(data) ? data : []))
+      .catch(() => setPrograms([]))
+      .finally(() => setProgramsLoading(false))
+  }, [form.universityId, form.role])
 
   useEffect(() => {
     if (!uniSearch.trim() || uniSearch.length < 2) {
@@ -127,7 +146,7 @@ export function RegisterPage() {
       return
     }
     try {
-      await register({ ...form, universityId: form.universityId || undefined })
+      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined })
       setPendingApproval(true)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
@@ -301,7 +320,7 @@ export function RegisterPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => { setSelectedUni(null); setForm(f => ({ ...f, universityId: '' })); setUniSearch('') }}
+                      onClick={() => { setSelectedUni(null); setForm(f => ({ ...f, universityId: '', programId: '' })); setUniSearch(''); setPrograms([]) }}
                       className="text-stone-400 hover:text-red-500"
                     >
                       <X className="w-4 h-4" />
@@ -328,7 +347,7 @@ export function RegisterPage() {
                             type="button"
                             onClick={() => {
                               setSelectedUni({ id: u.id, name: u.name })
-                              setForm(f => ({ ...f, universityId: u.id }))
+                              setForm(f => ({ ...f, universityId: u.id, programId: '' }))
                               setShowUniDropdown(false)
                               setUniSearch('')
                             }}
@@ -355,6 +374,43 @@ export function RegisterPage() {
                     ? 'Select the school you are enrolled in'
                     : 'Select the school or organization you are affiliated with'}
                 </p>
+              </div>
+            )}
+
+            {/* Program Selection (students only, after university selected) */}
+            {showProgramSelect && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-stone-700">Your Program</label>
+                {programsLoading ? (
+                  <div className="flex items-center gap-2 p-3 rounded-xl border border-stone-200">
+                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                    <span className="text-sm text-stone-500">Loading programs...</span>
+                  </div>
+                ) : programs.length === 0 ? (
+                  <div className="p-3 rounded-xl border border-stone-200 bg-stone-50">
+                    <p className="text-sm text-stone-500">No programs found for this university.</p>
+                    <p className="text-xs text-stone-400 mt-1">Your coordinator can assign you to a program later.</p>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                      <BookOpen className="w-4 h-4" />
+                    </div>
+                    <select
+                      value={form.programId}
+                      onChange={e => setForm(f => ({ ...f, programId: e.target.value }))}
+                      className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200 appearance-none"
+                    >
+                      <option value="">-- Select your program --</option>
+                      {programs.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.degree_type}) - {p.required_hours}h
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <p className="text-xs text-stone-400">Select the clinical program you are enrolled in</p>
               </div>
             )}
 

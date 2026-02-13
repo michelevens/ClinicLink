@@ -404,6 +404,18 @@ export function useCreateProgram() {
   })
 }
 
+export function useAssignStudentProgram() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ studentId, programId }: { studentId: string; programId: string }) =>
+      coordinatorApi.assignStudentProgram(studentId, programId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-students'] })
+      qc.invalidateQueries({ queryKey: ['university-programs'] })
+    },
+  })
+}
+
 export function useDeleteUniversity() {
   const qc = useQueryClient()
   return useMutation({

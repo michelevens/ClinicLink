@@ -125,6 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Prior Hours & Program Management (coordinator, admin)
     Route::middleware('role:coordinator,admin')->group(function () {
         Route::put('/students/{student}/prior-hours', [StudentController::class, 'setPriorHours']);
+        Route::put('/students/{student}/program', [StudentController::class, 'assignProgram']);
         Route::post('/students/bulk-prior-hours', [StudentController::class, 'bulkSetPriorHours']);
         Route::put('/programs/{program}', [UniversityController::class, 'updateProgram']);
         Route::post('/universities/{university}/programs', [UniversityController::class, 'storeProgram']);

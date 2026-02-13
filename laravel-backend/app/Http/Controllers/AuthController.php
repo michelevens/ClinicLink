@@ -29,6 +29,7 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
             'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor'],
             'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
+            'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
         ]);
 
         $user = User::create([
@@ -41,12 +42,16 @@ class AuthController extends Controller
             'is_active' => false,
         ]);
 
-        // Create student profile with university affiliation if provided
+        // Create student profile with university/program affiliation if provided
         if (!empty($validated['university_id']) && in_array($validated['role'], ['student', 'preceptor', 'coordinator', 'professor'])) {
-            StudentProfile::create([
+            $profileData = [
                 'user_id' => $user->id,
                 'university_id' => $validated['university_id'],
-            ]);
+            ];
+            if (!empty($validated['program_id'])) {
+                $profileData['program_id'] = $validated['program_id'];
+            }
+            StudentProfile::create($profileData);
         }
 
         // Send registration received email (account pending approval)
