@@ -111,7 +111,7 @@ class AuthController extends Controller
 
         // Auto-accept any pending site invites matching this user's email
         $acceptedInvites = [];
-        $pendingInvites = SiteInvite::where('email', strtolower($user->email))
+        $pendingInvites = SiteInvite::whereRaw('LOWER(email) = ?', [strtolower($user->email)])
             ->where('status', 'pending')
             ->where('expires_at', '>', now())
             ->with('site:id,name')
