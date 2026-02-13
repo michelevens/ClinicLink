@@ -283,9 +283,11 @@ class CeCertificateController extends Controller
 
             $filename = 'CE-Certificate-' . substr($ceCertificate->verification_uuid, 0, 8) . '.pdf';
 
-            CeAuditEvent::recordFromRequest(
-                $ceCertificate->id, 'downloaded', $request,
-                ['user_id' => $user->id],
+            CeAuditEvent::record(
+                $ceCertificate->id, 'downloaded',
+                $user->id, $user->role ?? 'unknown',
+                null, $request->ip(),
+                substr((string) $request->userAgent(), 0, 500),
             );
 
             return $pdf->download($filename);
