@@ -11,6 +11,7 @@ use App\Http\Controllers\HourLogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OnboardingTemplateController;
 use App\Http\Controllers\OnboardingTaskController;
+use App\Http\Controllers\MfaController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RotationSiteController;
 use App\Http\Controllers\RotationSlotController;
@@ -31,6 +32,7 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
+    Route::post('/auth/mfa/verify', [MfaController::class, 'verify']);
 });
 
 // Public certificate verification
@@ -66,6 +68,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
     Route::post('/auth/complete-onboarding', [AuthController::class, 'completeOnboarding']);
+
+    // MFA management (all authenticated users)
+    Route::get('/auth/mfa/status', [MfaController::class, 'status']);
+    Route::post('/auth/mfa/setup', [MfaController::class, 'setup']);
+    Route::post('/auth/mfa/confirm', [MfaController::class, 'confirm']);
+    Route::post('/auth/mfa/disable', [MfaController::class, 'disable']);
+    Route::post('/auth/mfa/backup-codes', [MfaController::class, 'backupCodes']);
 
     // Dashboard (all authenticated users — controller scopes by role)
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);

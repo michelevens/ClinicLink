@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -105,6 +106,16 @@ class AuthController extends Controller
                 'message' => 'Your account is pending approval. You will receive an email once your account has been activated.',
                 'pending_approval' => true,
             ], 403);
+        }
+
+        // MFA challenge: if user has MFA enabled, return a temporary token instead of a real session
+        if ($user->mfa_enabled) {
+            $mfaToken = Str::uuid()->toString();
+            Cache::put('mfa_challenge:' . $mfaToken, $user->id, 300); // 5 minutes
+            return response()->json([
+                'mfa_required' => true,
+                'mfa_token' => $mfaToken,
+            ]);
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;

@@ -8,10 +8,14 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  mfaPending: boolean
+  mfaToken: string | null
 }
 
 interface AuthContextType extends AuthState {
   login: (loginId: string, password: string) => Promise<void>
+  verifyMfa: (code: string) => Promise<void>
+  cancelMfa: () => void
   register: (data: RegisterData) => Promise<void>
   logout: () => void
   demoLogin: (role: UserRole) => void
@@ -57,19 +61,39 @@ const DEMO_USERS: Record<UserRole, User> = {
   admin: { id: 'demo-admin-1', email: 'admin@cliniclink.com', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString(), onboardingCompleted: true },
 }
 
+const DEFAULT_STATE: AuthState = { user: null, token: null, isAuthenticated: false, isLoading: false, mfaPending: false, mfaToken: null }
+
+function completeLogin(res: { user: ApiUser; token: string; accepted_invites?: { site_id: string; site_name: string }[] }, setState: (s: AuthState) => void) {
+  const user = mapApiUser(res.user)
+  localStorage.setItem('cliniclink_token', res.token)
+  localStorage.setItem('cliniclink_user', JSON.stringify(user))
+  setState({ user, token: res.token, isAuthenticated: true, isLoading: false, mfaPending: false, mfaToken: null })
+
+  if (res.accepted_invites?.length) {
+    const count = res.accepted_invites.length
+    const names = res.accepted_invites.map(i => i.site_name).join(', ')
+    toast.success(
+      count === 1
+        ? `Welcome to ${names}! You've been linked as a preceptor.`
+        : `You've been linked to ${count} clinical sites: ${names}`,
+      { duration: 6000, description: 'Your pending site invitations were automatically accepted.' }
+    )
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(() => {
     const token = localStorage.getItem('cliniclink_token')
     const userStr = localStorage.getItem('cliniclink_user')
     if (token && userStr) {
       try {
-        return { user: JSON.parse(userStr), token, isAuthenticated: true, isLoading: false }
+        return { ...DEFAULT_STATE, user: JSON.parse(userStr), token, isAuthenticated: true }
       } catch {
         localStorage.removeItem('cliniclink_token')
         localStorage.removeItem('cliniclink_user')
       }
     }
-    return { user: null, token: null, isAuthenticated: false, isLoading: false }
+    return DEFAULT_STATE
   })
 
   // Verify token on mount (skip for demo tokens)
@@ -82,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }).catch(() => {
         localStorage.removeItem('cliniclink_token')
         localStorage.removeItem('cliniclink_user')
-        setState({ user: null, token: null, isAuthenticated: false, isLoading: false })
+        setState(DEFAULT_STATE)
       })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -91,26 +115,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, isLoading: true }))
     try {
       const res = await authApi.login({ login: loginId, password })
-      const user = mapApiUser(res.user)
-      localStorage.setItem('cliniclink_token', res.token)
-      localStorage.setItem('cliniclink_user', JSON.stringify(user))
-      setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
 
-      // Notify user about auto-accepted site invites
-      if (res.accepted_invites?.length) {
-        const count = res.accepted_invites.length
-        const names = res.accepted_invites.map(i => i.site_name).join(', ')
-        toast.success(
-          count === 1
-            ? `Welcome to ${names}! You've been linked as a preceptor.`
-            : `You've been linked to ${count} clinical sites: ${names}`,
-          { duration: 6000, description: 'Your pending site invitations were automatically accepted.' }
-        )
+      // MFA challenge — backend returned mfa_token instead of user/token
+      if ('mfa_required' in res && res.mfa_required) {
+        setState(s => ({ ...s, isLoading: false, mfaPending: true, mfaToken: res.mfa_token }))
+        return
       }
+
+      // Normal login (no MFA)
+      completeLogin(res as { user: ApiUser; token: string; accepted_invites?: { site_id: string; site_name: string }[] }, setState)
     } catch (err) {
       setState(s => ({ ...s, isLoading: false }))
       throw err
     }
+  }, [])
+
+  const verifyMfa = useCallback(async (code: string) => {
+    if (!state.mfaToken) throw new Error('No MFA session active.')
+    setState(s => ({ ...s, isLoading: true }))
+    try {
+      const res = await authApi.mfaVerify(state.mfaToken, code)
+      completeLogin(res, setState)
+    } catch (err) {
+      setState(s => ({ ...s, isLoading: false }))
+      throw err
+    }
+  }, [state.mfaToken])
+
+  const cancelMfa = useCallback(() => {
+    setState(DEFAULT_STATE)
   }, [])
 
   const register = useCallback(async (data: RegisterData) => {
@@ -139,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem('cliniclink_token')
     localStorage.removeItem('cliniclink_token')
     localStorage.removeItem('cliniclink_user')
-    setState({ user: null, token: null, isAuthenticated: false, isLoading: false })
+    setState(DEFAULT_STATE)
     if (token && !token.startsWith('demo-')) {
       authApi.logout().catch(() => {})
     }
@@ -157,17 +190,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       const res = await authApi.login({ login: emailMap[role], password: 'password' })
-      const user = mapApiUser(res.user)
-      localStorage.setItem('cliniclink_token', res.token)
-      localStorage.setItem('cliniclink_user', JSON.stringify(user))
-      setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
+      // Demo users shouldn't have MFA, but handle it gracefully
+      if ('mfa_required' in res && res.mfa_required) {
+        setState(s => ({ ...s, isLoading: false, mfaPending: true, mfaToken: res.mfa_token }))
+        return
+      }
+      completeLogin(res as { user: ApiUser; token: string }, setState)
     } catch {
       // Fallback to demo mode if API is unreachable
       const user = DEMO_USERS[role]
       const token = 'demo-token-' + Date.now()
       localStorage.setItem('cliniclink_token', token)
       localStorage.setItem('cliniclink_user', JSON.stringify(user))
-      setState({ user, token, isAuthenticated: true, isLoading: false })
+      setState({ ...DEFAULT_STATE, user, token, isAuthenticated: true })
     }
   }, [])
 
@@ -179,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ ...state, login, register, logout, demoLogin, completeOnboarding }}>
+    <AuthContext.Provider value={{ ...state, login, verifyMfa, cancelMfa, register, logout, demoLogin, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )

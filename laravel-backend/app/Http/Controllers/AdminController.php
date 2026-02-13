@@ -142,7 +142,8 @@ class AdminController extends Controller
         switch ($user->role) {
             case 'student':
                 $relations = [
-                    'studentProfile',
+                    'studentProfile.university',
+                    'studentProfile.program',
                     'credentials',
                     'applications.slot.site',
                     'hourLogs',

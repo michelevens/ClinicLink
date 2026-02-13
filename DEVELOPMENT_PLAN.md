@@ -84,6 +84,48 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
+## Phase 2.5: Security & MFA ✅ COMPLETE
+**Goal:** Two-factor authentication for all user accounts
+
+### What Was Built
+
+#### TOTP Two-Factor Authentication
+- Optional TOTP-based 2FA for all user roles
+- QR code setup flow via Google Authenticator / Authy / 1Password
+- Manual secret key entry fallback
+- 6-digit TOTP code verification with time-based validation
+- MFA-challenged login flow (password → MFA code → session)
+
+#### Backup Codes
+- 8 single-use backup codes generated on MFA setup
+- Hashed storage (bcrypt) — codes shown only once at generation
+- Backup code login support as TOTP fallback
+- Regeneration with password confirmation (invalidates old codes)
+- Copy-all and download-as-file options
+
+#### Security Features
+- Temporary MFA challenge tokens (5-min TTL, cache-based)
+- Rate limiting: 5 MFA attempts per challenge session
+- Password required to disable MFA or regenerate backup codes
+- MFA secret encrypted at rest (Laravel encrypted cast)
+- No Sanctum token issued until MFA is verified
+
+#### Frontend Integration
+- Settings > Security tab: full MFA management (setup, status, disable, backup codes)
+- Login page: MFA verification step with TOTP and backup code modes
+- AuthContext: `mfaPending`, `verifyMfa()`, `cancelMfa()` state management
+- QR code rendering via qrcode.react
+
+#### Backend Endpoints
+- `GET /auth/mfa/status` — Check MFA status
+- `POST /auth/mfa/setup` — Generate TOTP secret + provisioning URI
+- `POST /auth/mfa/confirm` — Verify code to enable MFA
+- `POST /auth/mfa/disable` — Disable MFA (requires password)
+- `POST /auth/mfa/backup-codes` — Regenerate backup codes
+- `POST /auth/mfa/verify` — Verify MFA during login (public, rate-limited)
+
+---
+
 ## Phase 3: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system
@@ -115,6 +157,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | PDF Generation | DomPDF | ✅ |
 | QR Codes | Simple QRCode | ✅ |
 | Email | Resend | ✅ |
+| 2FA/MFA | pragmarx/google2fa + qrcode.react | ✅ |
 | Hosting | GitHub Pages + Railway | ✅ |
 | Search | Algolia / Meilisearch | Planned |
 | Maps | Google Maps / Mapbox | Planned |
@@ -157,7 +200,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Admin Users | `/admin/users` | Admin |
 
 ### Backend API Endpoints (50+)
-- **Auth:** register, login, logout, me, forgot-password, reset-password
+- **Auth:** register, login, logout, me, forgot-password, reset-password, mfa/setup, mfa/confirm, mfa/disable, mfa/verify, mfa/backup-codes, mfa/status
 - **Students:** profile, credentials (CRUD + file upload/download), hour logs, evaluations
 - **Slots:** CRUD with search/filter, preceptor assignment
 - **Sites:** CRUD, my-sites (manager + preceptor), directory

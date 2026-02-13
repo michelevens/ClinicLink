@@ -5,12 +5,15 @@ import { Input } from '../components/ui/Input.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { authApi } from '../services/api.ts'
-import { useStudentProfile, useUpdateStudentProfile, useCredentials, useAddCredential, useDeleteCredential, useUploadCredentialFile } from '../hooks/useApi.ts'
+import { useStudentProfile, useUpdateStudentProfile, useCredentials, useAddCredential, useDeleteCredential, useUploadCredentialFile, useUniversities, useMfaStatus, useMfaSetup, useMfaConfirm, useMfaDisable, useMfaBackupCodes } from '../hooks/useApi.ts'
+import { universitiesApi } from '../services/api.ts'
+import type { ApiProgram } from '../services/api.ts'
 import { toast } from 'sonner'
+import { QRCodeSVG } from 'qrcode.react'
 import {
   User, Shield, Bell, GraduationCap, FileCheck,
   Mail, Phone, Save, Loader2, Trash2, Plus, Calendar,
-  Upload, Download, Paperclip
+  Upload, Download, Paperclip, ShieldCheck, ShieldOff, Copy, Check, Key
 } from 'lucide-react'
 import { studentApi } from '../services/api.ts'
 
@@ -165,24 +168,43 @@ function ProfileTab() {
 function AcademicTab() {
   const { data, isLoading } = useStudentProfile()
   const updateMutation = useUpdateStudentProfile()
+  const { data: universitiesData } = useUniversities()
+  const universities = universitiesData?.data || []
   const profile = data?.profile
 
   const [form, setForm] = useState({
+    university_id: '',
+    program_id: '',
     bio: '',
     graduation_date: '',
     gpa: '',
     clinical_interests: [] as string[],
   })
+  const [programs, setPrograms] = useState<ApiProgram[]>([])
   const [initialized, setInitialized] = useState(false)
 
   if (profile && !initialized) {
     setForm({
+      university_id: profile.university_id || '',
+      program_id: profile.program_id || '',
       bio: profile.bio || '',
       graduation_date: profile.graduation_date || '',
       gpa: profile.gpa ? String(profile.gpa) : '',
       clinical_interests: profile.clinical_interests || [],
     })
+    if (profile.university_id) {
+      universitiesApi.programs(profile.university_id).then(setPrograms)
+    }
     setInitialized(true)
+  }
+
+  const handleUniversityChange = async (universityId: string) => {
+    setForm(f => ({ ...f, university_id: universityId, program_id: '' }))
+    setPrograms([])
+    if (universityId) {
+      const progs = await universitiesApi.programs(universityId)
+      setPrograms(progs)
+    }
   }
 
   const toggleInterest = (s: string) => {
@@ -197,6 +219,8 @@ function AcademicTab() {
   const handleSave = async () => {
     try {
       await updateMutation.mutateAsync({
+        university_id: form.university_id || null,
+        program_id: form.program_id || null,
         bio: form.bio || null,
         graduation_date: form.graduation_date || null,
         gpa: form.gpa ? parseFloat(form.gpa) : null,
@@ -225,16 +249,33 @@ function AcademicTab() {
         <h2 className="text-lg font-semibold text-stone-900 mb-6">Academic Information</h2>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="University"
-              value={profile?.university?.name || 'Not set'}
-              disabled
-            />
-            <Input
-              label="Program"
-              value={profile?.program?.name || 'Not set'}
-              disabled
-            />
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-stone-700">University</label>
+              <select
+                value={form.university_id}
+                onChange={e => handleUniversityChange(e.target.value)}
+                className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+              >
+                <option value="">Select university...</option>
+                {universities.map(u => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-stone-700">Program</label>
+              <select
+                value={form.program_id}
+                onChange={e => setForm(f => ({ ...f, program_id: e.target.value }))}
+                className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                disabled={!form.university_id}
+              >
+                <option value="">{form.university_id ? 'Select program...' : 'Select university first'}</option>
+                {programs.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.degree_type}) - {p.required_hours}h required</option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -553,36 +594,336 @@ function SecurityTab() {
   }
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold text-stone-900 mb-6">Security</h2>
-      <div className="space-y-4 max-w-md">
-        <Input
-          label="Current Password"
-          type="password"
-          value={passwords.current}
-          onChange={e => setPasswords({ ...passwords, current: e.target.value })}
-          placeholder="Enter current password"
-        />
-        <Input
-          label="New Password"
-          type="password"
-          value={passwords.newPass}
-          onChange={e => setPasswords({ ...passwords, newPass: e.target.value })}
-          placeholder="Enter new password (min 8 chars)"
-        />
-        <Input
-          label="Confirm New Password"
-          type="password"
-          value={passwords.confirm}
-          onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
-          placeholder="Confirm new password"
-        />
-        <div className="flex justify-end pt-2">
-          <Button onClick={handleChangePassword} isLoading={saving}>
-            <Shield className="w-4 h-4" /> Update Password
+    <div className="space-y-6">
+      <Card>
+        <h2 className="text-lg font-semibold text-stone-900 mb-6">Change Password</h2>
+        <div className="space-y-4 max-w-md">
+          <Input
+            label="Current Password"
+            type="password"
+            value={passwords.current}
+            onChange={e => setPasswords({ ...passwords, current: e.target.value })}
+            placeholder="Enter current password"
+          />
+          <Input
+            label="New Password"
+            type="password"
+            value={passwords.newPass}
+            onChange={e => setPasswords({ ...passwords, newPass: e.target.value })}
+            placeholder="Enter new password (min 8 chars)"
+          />
+          <Input
+            label="Confirm New Password"
+            type="password"
+            value={passwords.confirm}
+            onChange={e => setPasswords({ ...passwords, confirm: e.target.value })}
+            placeholder="Confirm new password"
+          />
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleChangePassword} isLoading={saving}>
+              <Shield className="w-4 h-4" /> Update Password
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      <MfaSection />
+    </div>
+  )
+}
+
+function MfaSection() {
+  const { data: mfaStatus, isLoading } = useMfaStatus()
+  const setupMut = useMfaSetup()
+  const confirmMut = useMfaConfirm()
+  const disableMut = useMfaDisable()
+  const backupMut = useMfaBackupCodes()
+
+  const [setupData, setSetupData] = useState<{ secret: string; qr_code_url: string } | null>(null)
+  const [verifyCode, setVerifyCode] = useState('')
+  const [backupCodes, setBackupCodes] = useState<string[] | null>(null)
+  const [disablePassword, setDisablePassword] = useState('')
+  const [showDisable, setShowDisable] = useState(false)
+  const [showRegenerate, setShowRegenerate] = useState(false)
+  const [regenPassword, setRegenPassword] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const mfaEnabled = mfaStatus?.mfa_enabled ?? false
+
+  const handleSetup = async () => {
+    try {
+      const res = await setupMut.mutateAsync()
+      setSetupData(res)
+      setVerifyCode('')
+      setBackupCodes(null)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to initiate MFA setup.')
+    }
+  }
+
+  const handleConfirm = async () => {
+    if (verifyCode.length !== 6) {
+      toast.error('Please enter a 6-digit code')
+      return
+    }
+    try {
+      const res = await confirmMut.mutateAsync(verifyCode)
+      toast.success(res.message)
+      setBackupCodes(res.backup_codes)
+      setSetupData(null)
+      setVerifyCode('')
+    } catch (e: any) {
+      toast.error(e.message || 'Invalid code.')
+    }
+  }
+
+  const handleDisable = async () => {
+    try {
+      const res = await disableMut.mutateAsync(disablePassword)
+      toast.success(res.message)
+      setShowDisable(false)
+      setDisablePassword('')
+      setBackupCodes(null)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to disable MFA.')
+    }
+  }
+
+  const handleRegenerate = async () => {
+    try {
+      const res = await backupMut.mutateAsync(regenPassword)
+      toast.success(res.message)
+      setBackupCodes(res.backup_codes)
+      setShowRegenerate(false)
+      setRegenPassword('')
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to regenerate backup codes.')
+    }
+  }
+
+  const copyBackupCodes = () => {
+    if (!backupCodes) return
+    navigator.clipboard.writeText(backupCodes.join('\n'))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const downloadBackupCodes = () => {
+    if (!backupCodes) return
+    const text = `ClinicLink Backup Codes\n${'='.repeat(30)}\n\n${backupCodes.join('\n')}\n\nKeep these codes in a safe place.\nEach code can only be used once.`
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'cliniclink-backup-codes.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+        </div>
+      </Card>
+    )
+  }
+
+  // Show backup codes after initial setup or regeneration
+  if (backupCodes) {
+    return (
+      <Card>
+        <h2 className="text-lg font-semibold text-stone-900 mb-2 flex items-center gap-2">
+          <Key className="w-5 h-5 text-primary-500" /> Backup Codes
+        </h2>
+        <p className="text-sm text-stone-500 mb-4">
+          Save these codes in a safe place. Each code can only be used once to sign in if you lose access to your authenticator app.
+        </p>
+        <div className="grid grid-cols-2 gap-2 max-w-sm mb-4">
+          {backupCodes.map((code, i) => (
+            <code key={i} className="px-3 py-2 bg-stone-100 rounded-lg text-sm font-mono text-stone-900 text-center">
+              {code}
+            </code>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={copyBackupCodes}>
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? 'Copied' : 'Copy All'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={downloadBackupCodes}>
+            <Download className="w-4 h-4" /> Download
+          </Button>
+          <Button size="sm" onClick={() => setBackupCodes(null)}>
+            Done
           </Button>
         </div>
+      </Card>
+    )
+  }
+
+  // Setup flow: show QR code and verification
+  if (setupData) {
+    return (
+      <Card>
+        <h2 className="text-lg font-semibold text-stone-900 mb-2 flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-primary-500" /> Set Up Two-Factor Authentication
+        </h2>
+        <p className="text-sm text-stone-500 mb-4">
+          Scan the QR code below with your authenticator app (Google Authenticator, Authy, etc.), then enter the 6-digit code to verify.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-6 items-start">
+          <div className="bg-white p-4 rounded-xl border border-stone-200 shrink-0">
+            <QRCodeSVG value={setupData.qr_code_url} size={180} />
+          </div>
+          <div className="space-y-4 flex-1">
+            <div>
+              <label className="block text-xs font-medium text-stone-500 mb-1">Manual entry key</label>
+              <code className="block px-3 py-2 bg-stone-100 rounded-lg text-sm font-mono text-stone-900 break-all select-all">
+                {setupData.secret}
+              </code>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1">Verification Code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={verifyCode}
+                onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                className="w-full max-w-[200px] rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-lg font-mono tracking-widest text-center focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleConfirm} isLoading={confirmMut.isPending} disabled={verifyCode.length !== 6}>
+                <ShieldCheck className="w-4 h-4" /> Verify & Enable
+              </Button>
+              <Button variant="outline" onClick={() => setSetupData(null)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
+  // MFA enabled state
+  if (mfaEnabled) {
+    return (
+      <Card>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-green-500" /> Two-Factor Authentication
+            </h2>
+            <p className="text-sm text-stone-500 mt-1">Your account is protected with 2FA.</p>
+          </div>
+          <Badge variant="success">Enabled</Badge>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+            <div>
+              <p className="text-sm font-medium text-stone-900">Authenticator App</p>
+              <p className="text-xs text-stone-500">
+                Enabled {mfaStatus?.mfa_confirmed_at ? new Date(mfaStatus.mfa_confirmed_at).toLocaleDateString() : ''}
+              </p>
+            </div>
+            <Badge variant="success" size="sm">Active</Badge>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+            <div>
+              <p className="text-sm font-medium text-stone-900">Backup Codes</p>
+              <p className="text-xs text-stone-500">{mfaStatus?.backup_codes_remaining ?? 0} codes remaining</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowRegenerate(true)}>
+              <Key className="w-4 h-4" /> Regenerate
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-stone-200">
+          <Button variant="outline" size="sm" onClick={() => setShowDisable(true)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+            <ShieldOff className="w-4 h-4" /> Disable 2FA
+          </Button>
+        </div>
+
+        {/* Disable confirmation */}
+        {showDisable && (
+          <div className="mt-4 p-4 bg-red-50 rounded-xl space-y-3">
+            <p className="text-sm font-medium text-red-900">Confirm your password to disable 2FA</p>
+            <Input
+              type="password"
+              value={disablePassword}
+              onChange={e => setDisablePassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+            <div className="flex gap-2">
+              <Button variant="danger" size="sm" onClick={handleDisable} isLoading={disableMut.isPending}>
+                Disable 2FA
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setShowDisable(false); setDisablePassword('') }}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Regenerate backup codes */}
+        {showRegenerate && (
+          <div className="mt-4 p-4 bg-amber-50 rounded-xl space-y-3">
+            <p className="text-sm font-medium text-amber-900">Confirm your password to regenerate backup codes</p>
+            <p className="text-xs text-amber-700">This will invalidate all existing backup codes.</p>
+            <Input
+              type="password"
+              value={regenPassword}
+              onChange={e => setRegenPassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleRegenerate} isLoading={backupMut.isPending}>
+                <Key className="w-4 h-4" /> Regenerate Codes
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { setShowRegenerate(false); setRegenPassword('') }}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+    )
+  }
+
+  // MFA disabled state — offer to enable
+  return (
+    <Card>
+      <h2 className="text-lg font-semibold text-stone-900 mb-2 flex items-center gap-2">
+        <Shield className="w-5 h-5 text-stone-400" /> Two-Factor Authentication
+      </h2>
+      <p className="text-sm text-stone-500 mb-4">
+        Add an extra layer of security to your account by requiring a verification code from your authenticator app when signing in.
+      </p>
+      <div className="bg-stone-50 rounded-xl p-4 mb-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-stone-900">Authenticator App</p>
+            <p className="text-xs text-stone-500 mt-0.5">
+              Use an app like Google Authenticator, Authy, or 1Password to generate verification codes.
+            </p>
+          </div>
+        </div>
       </div>
+      <Button onClick={handleSetup} isLoading={setupMut.isPending}>
+        <ShieldCheck className="w-4 h-4" /> Enable Two-Factor Authentication
+      </Button>
     </Card>
   )
 }

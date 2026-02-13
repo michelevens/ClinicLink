@@ -3,7 +3,7 @@ import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
   onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
-  cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi,
+  cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -434,6 +434,7 @@ export function useAssignStudentProgram() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-students'] })
       qc.invalidateQueries({ queryKey: ['university-programs'] })
+      qc.invalidateQueries({ queryKey: ['admin-user'] })
     },
   })
 }
@@ -451,6 +452,44 @@ export function useUniversity(id: string | null) {
     queryKey: ['university', id],
     queryFn: () => universitiesApi.get(id!),
     enabled: !!id,
+  })
+}
+
+// --- MFA ---
+export function useMfaStatus() {
+  return useQuery({
+    queryKey: ['mfa-status'],
+    queryFn: () => authApi.mfaStatus(),
+  })
+}
+
+export function useMfaSetup() {
+  return useMutation({
+    mutationFn: () => authApi.mfaSetup(),
+  })
+}
+
+export function useMfaConfirm() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (code: string) => authApi.mfaConfirm(code),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mfa-status'] }) },
+  })
+}
+
+export function useMfaDisable() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (password: string) => authApi.mfaDisable(password),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mfa-status'] }) },
+  })
+}
+
+export function useMfaBackupCodes() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (password: string) => authApi.mfaBackupCodes(password),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['mfa-status'] }) },
   })
 }
 

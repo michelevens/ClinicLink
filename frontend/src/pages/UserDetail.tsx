@@ -6,12 +6,13 @@ import {
   Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil, Copy, Check, Plus, X
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite } from '../hooks/useApi.ts'
+import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite, useUniversities, useAssignStudentProgram } from '../hooks/useApi.ts'
+import { universitiesApi } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import type { ApiUser, AdminUserStats } from '../services/api.ts'
+import type { ApiUser, AdminUserStats, ApiProgram } from '../services/api.ts'
 
 const ROLES = ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] as const
 const ROLE_LABELS: Record<string, string> = {
@@ -379,15 +380,21 @@ function StatCards({ user, stats }: { user: ApiUser; stats: AdminUserStats }) {
 // ─── Student Sections ────────────────────────────────────────────
 function StudentSections({ user }: { user: ApiUser }) {
   const profile = user.student_profile
+  const [showAssignProgram, setShowAssignProgram] = useState(false)
 
   return (
     <>
       {/* Student Profile */}
       {profile && (
         <Card>
-          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-primary-500" /> Student Profile
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-primary-500" /> Student Profile
+            </h2>
+            <Button size="sm" onClick={() => setShowAssignProgram(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Assign Program
+            </Button>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="bg-stone-50 rounded-xl p-3">
               <p className="text-xs text-stone-500 mb-1">University</p>
@@ -534,7 +541,116 @@ function StudentSections({ user }: { user: ApiUser }) {
           </div>
         </Card>
       )}
+
+      {/* Assign Program Modal */}
+      {showAssignProgram && (
+        <AssignProgramModal
+          studentId={user.id}
+          currentProgramId={profile?.program?.id}
+          onClose={() => setShowAssignProgram(false)}
+        />
+      )}
     </>
+  )
+}
+
+// ─── Assign Program Modal ────────────────────────────────────────
+function AssignProgramModal({ studentId, currentProgramId, onClose }: { studentId: string; currentProgramId?: string; onClose: () => void }) {
+  const [selectedUniversityId, setSelectedUniversityId] = useState('')
+  const [selectedProgramId, setSelectedProgramId] = useState('')
+  const [programs, setPrograms] = useState<ApiProgram[]>([])
+  const [loadingPrograms, setLoadingPrograms] = useState(false)
+  const { data: universitiesData } = useUniversities()
+  const assignMut = useAssignStudentProgram()
+
+  const universities = (universitiesData as { data?: { id: string; name: string }[] })?.data || []
+
+  const handleUniversityChange = async (universityId: string) => {
+    setSelectedUniversityId(universityId)
+    setSelectedProgramId('')
+    setPrograms([])
+    if (!universityId) return
+    setLoadingPrograms(true)
+    try {
+      const progs = await universitiesApi.programs(universityId)
+      setPrograms(progs)
+    } catch {
+      toast.error('Failed to load programs.')
+    } finally {
+      setLoadingPrograms(false)
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!selectedProgramId) return
+    try {
+      const res = await assignMut.mutateAsync({ studentId, programId: selectedProgramId })
+      toast.success(res.message || 'Program assigned successfully.')
+      onClose()
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to assign program.')
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Assign Student to Program" size="md">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">University</label>
+          <select
+            value={selectedUniversityId}
+            onChange={e => handleUniversityChange(e.target.value)}
+            className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+          >
+            <option value="">Select a university...</option>
+            {universities.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1">Program</label>
+          <select
+            value={selectedProgramId}
+            onChange={e => setSelectedProgramId(e.target.value)}
+            disabled={!selectedUniversityId || loadingPrograms}
+            className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="">{loadingPrograms ? 'Loading programs...' : 'Select a program...'}</option>
+            {programs.map(p => (
+              <option key={p.id} value={p.id} disabled={p.id === currentProgramId}>
+                {p.name} ({p.degree_type}) {p.id === currentProgramId ? '(current)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {selectedProgramId && (
+          <div className="bg-primary-50 rounded-xl p-3">
+            {(() => {
+              const prog = programs.find(p => p.id === selectedProgramId)
+              return prog ? (
+                <div className="text-sm">
+                  <p className="font-medium text-stone-900">{prog.name}</p>
+                  <p className="text-stone-600">{prog.degree_type} &middot; {prog.required_hours}h required</p>
+                  {prog.specialties?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {prog.specialties.map((s: string) => <Badge key={s} variant="default" size="sm">{s}</Badge>)}
+                    </div>
+                  )}
+                </div>
+              ) : null
+            })()}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={assignMut.isPending} disabled={!selectedProgramId || selectedProgramId === currentProgramId}>
+            <GraduationCap className="w-4 h-4 mr-2" /> Assign Program
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 

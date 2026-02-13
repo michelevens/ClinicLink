@@ -1,30 +1,136 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, User, Lock, Eye, EyeOff } from 'lucide-react'
+import { Stethoscope, User, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function LoginPage() {
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoading } = useAuth()
+  const { login, verifyMfa, cancelMfa, mfaPending, isLoading, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect')
+
+  // MFA verification state
+  const [mfaCode, setMfaCode] = useState('')
+  const [useBackupCode, setUseBackupCode] = useState(false)
+
+  // Navigate on successful auth (including after MFA)
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(redirect || '/dashboard')
+    }
+  }, [isAuthenticated, navigate, redirect])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       await login(loginId, password)
-      navigate(redirect || '/dashboard')
+      // If MFA is required, login won't throw but mfaPending will become true
+      // Navigation happens via useEffect when isAuthenticated becomes true
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.'
       toast.error(message)
     }
+  }
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!mfaCode.trim()) return
+    try {
+      await verifyMfa(mfaCode.trim())
+      // Navigation happens via useEffect
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid verification code.'
+      toast.error(message)
+    }
+  }
+
+  const handleMfaCodeChange = (value: string) => {
+    if (useBackupCode) {
+      setMfaCode(value)
+    } else {
+      // Only allow digits for TOTP
+      setMfaCode(value.replace(/\D/g, '').slice(0, 6))
+    }
+  }
+
+  // MFA verification screen
+  if (mfaPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50 px-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-stone-900">Two-Factor Authentication</h1>
+            <p className="text-stone-500 mt-1">
+              {useBackupCode
+                ? 'Enter one of your backup codes'
+                : 'Enter the 6-digit code from your authenticator app'
+              }
+            </p>
+          </div>
+
+          <Card>
+            <form onSubmit={handleMfaSubmit} className="space-y-4">
+              {useBackupCode ? (
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Backup Code</label>
+                  <input
+                    type="text"
+                    value={mfaCode}
+                    onChange={e => handleMfaCodeChange(e.target.value)}
+                    placeholder="XXXX-XXXX"
+                    autoFocus
+                    className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-mono tracking-wider text-center focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-stone-700 mb-1">Verification Code</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={mfaCode}
+                    onChange={e => handleMfaCodeChange(e.target.value)}
+                    placeholder="000000"
+                    maxLength={6}
+                    autoFocus
+                    className="w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-2xl font-mono tracking-[0.5em] text-center focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              <Button type="submit" isLoading={isLoading} className="w-full" disabled={!mfaCode.trim()}>
+                <ShieldCheck className="w-4 h-4" /> Verify
+              </Button>
+            </form>
+
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                onClick={() => { cancelMfa(); setMfaCode(''); setUseBackupCode(false) }}
+                className="text-sm text-stone-500 hover:text-stone-700 flex items-center gap-1"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Back to login
+              </button>
+              <button
+                onClick={() => { setUseBackupCode(!useBackupCode); setMfaCode('') }}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                {useBackupCode ? 'Use authenticator app' : 'Use a backup code'}
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (

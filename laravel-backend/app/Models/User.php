@@ -23,11 +23,17 @@ class User extends Authenticatable
         'avatar_url',
         'is_active',
         'onboarding_completed_at',
+        'mfa_enabled',
+        'mfa_secret',
+        'mfa_confirmed_at',
+        'mfa_backup_codes',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'mfa_secret',
+        'mfa_backup_codes',
     ];
 
     protected function casts(): array
@@ -35,6 +41,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'mfa_enabled' => 'boolean',
+            'mfa_secret' => 'encrypted',
+            'mfa_confirmed_at' => 'datetime',
+            'mfa_backup_codes' => 'array',
         ];
     }
 

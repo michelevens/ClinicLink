@@ -116,7 +116,7 @@ export const authApi = {
     api.post<{ message: string; pending_approval: boolean }>('/auth/register', data),
 
   login: (data: { login: string; password: string }) =>
-    api.post<{ user: ApiUser; token: string; accepted_invites?: { site_id: string; site_name: string }[] }>('/auth/login', data),
+    api.post<{ user: ApiUser; token: string; accepted_invites?: { site_id: string; site_name: string }[] } | { mfa_required: true; mfa_token: string }>('/auth/login', data),
 
   me: () => api.get<ApiUser>('/auth/me'),
 
@@ -133,6 +133,14 @@ export const authApi = {
 
   completeOnboarding: (data: Record<string, unknown>) =>
     api.post<{ user: ApiUser }>('/auth/complete-onboarding', data),
+
+  // MFA
+  mfaStatus: () => api.get<{ mfa_enabled: boolean; mfa_confirmed_at: string | null; backup_codes_remaining: number }>('/auth/mfa/status'),
+  mfaSetup: () => api.post<{ secret: string; qr_code_url: string }>('/auth/mfa/setup'),
+  mfaConfirm: (code: string) => api.post<{ message: string; backup_codes: string[] }>('/auth/mfa/confirm', { code }),
+  mfaDisable: (password: string) => api.post<{ message: string }>('/auth/mfa/disable', { password }),
+  mfaBackupCodes: (password: string) => api.post<{ message: string; backup_codes: string[] }>('/auth/mfa/backup-codes', { password }),
+  mfaVerify: (mfa_token: string, code: string) => api.post<{ user: ApiUser; token: string }>('/auth/mfa/verify', { mfa_token, code }),
 }
 
 // --- Rotation Sites ---
@@ -503,6 +511,7 @@ export interface ApiUser {
   phone: string | null
   avatar_url: string | null
   is_active: boolean
+  mfa_enabled: boolean
   email_verified: boolean
   created_at: string
   student_profile?: ApiStudentProfile
