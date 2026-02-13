@@ -368,6 +368,28 @@ export function useBulkInviteUsers() {
   })
 }
 
+export function useAssignPreceptorToSites() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, siteIds }: { userId: string; siteIds: string[] }) => adminApi.assignPreceptorToSites(userId, siteIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-user'] })
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
+export function useRemovePreceptorFromSite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, siteId }: { userId: string; siteId: string }) => adminApi.removePreceptorFromSite(userId, siteId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-user'] })
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
 // --- Universities ---
 export function useUniversities(params?: { search?: string; state?: string; page?: number }) {
   return useQuery({

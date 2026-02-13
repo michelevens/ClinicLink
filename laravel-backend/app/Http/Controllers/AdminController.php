@@ -69,6 +69,22 @@ class AdminController extends Controller
             ]);
         }
 
+        // Assign preceptor to sites via auto-accepted invites
+        if ($validated['role'] === 'preceptor' && !empty($validated['site_ids'])) {
+            foreach ($validated['site_ids'] as $siteId) {
+                SiteInvite::create([
+                    'site_id' => $siteId,
+                    'invited_by' => $request->user()->id,
+                    'token' => Str::random(48),
+                    'email' => $user->email,
+                    'status' => 'accepted',
+                    'accepted_by' => $user->id,
+                    'accepted_at' => now(),
+                    'expires_at' => now()->addDays(30),
+                ]);
+            }
+        }
+
         // Send welcome email with password reset link
         $emailSent = false;
         try {
@@ -149,6 +165,18 @@ class AdminController extends Controller
         }
 
         $user->load($relations);
+
+        // For preceptors, attach associated sites from accepted invites
+        if ($user->role === 'preceptor') {
+            $siteIds = SiteInvite::where('accepted_by', $user->id)
+                ->where('status', 'accepted')
+                ->pluck('site_id')
+                ->unique();
+
+            $user->setAttribute('assigned_sites', RotationSite::whereIn('id', $siteIds)
+                ->select('id', 'name', 'city', 'state', 'specialties')
+                ->get());
+        }
 
         $stats = [
             'applications_count' => $user->applications()->count(),
@@ -335,6 +363,22 @@ class AdminController extends Controller
                     RotationSite::whereIn('id', $siteIds)->update(['manager_id' => $user->id]);
                 }
 
+                // Assign preceptor to sites via auto-accepted invites
+                if ($role === 'preceptor' && !empty($siteIds)) {
+                    foreach ($siteIds as $siteId) {
+                        SiteInvite::create([
+                            'site_id' => $siteId,
+                            'invited_by' => $request->user()->id,
+                            'token' => Str::random(48),
+                            'email' => $email,
+                            'status' => 'accepted',
+                            'accepted_by' => $user->id,
+                            'accepted_at' => now(),
+                            'expires_at' => now()->addDays(30),
+                        ]);
+                    }
+                }
+
                 // Send welcome email
                 $resetToken = Str::random(64);
                 DB::table('password_reset_tokens')->updateOrInsert(
@@ -358,6 +402,78 @@ class AdminController extends Controller
             'summary' => ['sent' => $sent, 'skipped' => $skipped, 'failed' => $failed, 'total' => $emails->count()],
             'results' => $results,
         ], 201);
+    }
+
+    public function assignPreceptorToSites(Request $request, User $user): JsonResponse
+    {
+        if ($user->role !== 'preceptor') {
+            return response()->json(['message' => 'User is not a preceptor.'], 422);
+        }
+
+        $validated = $request->validate([
+            'site_ids' => ['required', 'array', 'min:1'],
+            'site_ids.*' => ['uuid', 'exists:rotation_sites,id'],
+        ]);
+
+        $assigned = [];
+        $skipped = [];
+
+        foreach ($validated['site_ids'] as $siteId) {
+            // Check if already associated (accepted invite or slot assignment)
+            $alreadyAccepted = SiteInvite::where('site_id', $siteId)
+                ->where('accepted_by', $user->id)
+                ->where('status', 'accepted')
+                ->exists();
+
+            if ($alreadyAccepted) {
+                $site = RotationSite::find($siteId);
+                $skipped[] = $site?->name ?? $siteId;
+                continue;
+            }
+
+            SiteInvite::create([
+                'site_id' => $siteId,
+                'invited_by' => $request->user()->id,
+                'token' => Str::random(48),
+                'email' => $user->email,
+                'status' => 'accepted',
+                'accepted_by' => $user->id,
+                'accepted_at' => now(),
+                'expires_at' => now()->addDays(30),
+            ]);
+
+            $site = RotationSite::find($siteId);
+            $assigned[] = $site?->name ?? $siteId;
+        }
+
+        $message = count($assigned) > 0
+            ? 'Preceptor assigned to: ' . implode(', ', $assigned) . '.'
+            : 'No new assignments made.';
+
+        if (count($skipped) > 0) {
+            $message .= ' Already associated with: ' . implode(', ', $skipped) . '.';
+        }
+
+        return response()->json(['message' => $message, 'assigned' => $assigned, 'skipped' => $skipped]);
+    }
+
+    public function removePreceptorFromSite(Request $request, User $user, RotationSite $site): JsonResponse
+    {
+        if ($user->role !== 'preceptor') {
+            return response()->json(['message' => 'User is not a preceptor.'], 422);
+        }
+
+        // Revoke accepted invites for this preceptor at this site
+        $revoked = SiteInvite::where('site_id', $site->id)
+            ->where('accepted_by', $user->id)
+            ->where('status', 'accepted')
+            ->update(['status' => 'revoked']);
+
+        if ($revoked === 0) {
+            return response()->json(['message' => 'Preceptor is not associated with this site.'], 404);
+        }
+
+        return response()->json(['message' => "Preceptor removed from {$site->name}."]);
     }
 
     public function seedUniversities(Request $request): JsonResponse

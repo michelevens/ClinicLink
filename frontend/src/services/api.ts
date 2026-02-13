@@ -439,6 +439,10 @@ export const adminApi = {
   updateUniversity: (id: string, data: Partial<ApiUniversity>) =>
     api.put<ApiUniversity>(`/admin/universities/${id}`, data),
   deleteUniversity: (id: string) => api.delete(`/admin/universities/${id}`),
+  assignPreceptorToSites: (userId: string, siteIds: string[]) =>
+    api.post<{ message: string; assigned: string[]; skipped: string[] }>(`/admin/users/${userId}/assign-sites`, { site_ids: siteIds }),
+  removePreceptorFromSite: (userId: string, siteId: string) =>
+    api.delete<{ message: string }>(`/admin/users/${userId}/remove-site/${siteId}`),
 }
 
 // --- Onboarding Templates ---
@@ -509,6 +513,7 @@ export interface ApiUser {
   evaluations_as_preceptor?: ApiEvaluation[]
   preceptor_slots?: ApiSlot[]
   managed_sites?: ApiSite[]
+  assigned_sites?: { id: string; name: string; city: string; state: string; specialties: string[] }[]
   onboarding_completed?: boolean
 }
 

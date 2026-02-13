@@ -234,6 +234,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/users/{user}', [AdminController::class, 'updateUser'])->whereUuid('user');
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->whereUuid('user');
         Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->whereUuid('user');
+        Route::post('/users/{user}/assign-sites', [AdminController::class, 'assignPreceptorToSites'])->whereUuid('user');
+        Route::delete('/users/{user}/remove-site/{site}', [AdminController::class, 'removePreceptorFromSite'])->whereUuid('user');
         Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
 
         Route::post('/universities', [UniversityController::class, 'store']);

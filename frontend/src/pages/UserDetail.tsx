@@ -3,10 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Shield, Mail, Phone, Calendar, Clock, FileText, ClipboardCheck,
   Building2, GraduationCap, Award, MapPin, Star, Loader2, ToggleLeft, ToggleRight,
-  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil, Copy, Check
+  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil, Copy, Check, Plus, X
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword } from '../hooks/useApi.ts'
+import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
@@ -540,8 +540,66 @@ function StudentSections({ user }: { user: ApiUser }) {
 
 // ─── Preceptor Sections ──────────────────────────────────────────
 function PreceptorSections({ user }: { user: ApiUser }) {
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [removeConfirm, setRemoveConfirm] = useState<{ id: string; name: string } | null>(null)
+  const removeMut = useRemovePreceptorFromSite()
+
+  const assignedSites = user.assigned_sites || []
+
+  const handleRemove = async () => {
+    if (!removeConfirm) return
+    try {
+      const res = await removeMut.mutateAsync({ userId: user.id, siteId: removeConfirm.id })
+      toast.success(res.message)
+      setRemoveConfirm(null)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to remove from site.')
+    }
+  }
+
   return (
     <>
+      {/* Assigned Sites */}
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-primary-500" /> Assigned Sites ({assignedSites.length})
+          </h2>
+          <Button size="sm" onClick={() => setShowAssignModal(true)}>
+            <Plus className="w-4 h-4 mr-1" /> Assign to Site
+          </Button>
+        </div>
+        {assignedSites.length > 0 ? (
+          <div className="space-y-2">
+            {assignedSites.map((site) => (
+              <div key={site.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+                <div>
+                  <Link to={`/sites/${site.id}`} className="text-sm font-medium text-primary-600 hover:underline">{site.name}</Link>
+                  <p className="text-xs text-stone-500 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> {site.city}, {site.state}
+                  </p>
+                  {site.specialties?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {site.specialties.slice(0, 3).map((s: string) => <Badge key={s} variant="default" size="sm">{s}</Badge>)}
+                      {site.specialties.length > 3 && <Badge variant="default" size="sm">+{site.specialties.length - 3}</Badge>}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setRemoveConfirm({ id: site.id, name: site.name })}
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  title="Remove from site"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-stone-400 text-center py-4">No sites assigned yet.</p>
+        )}
+      </Card>
+
       {/* Rotation Slots */}
       {user.preceptor_slots && user.preceptor_slots.length > 0 && (
         <Card>
@@ -598,7 +656,92 @@ function PreceptorSections({ user }: { user: ApiUser }) {
           </div>
         </Card>
       )}
+
+      {/* Assign to Site Modal */}
+      {showAssignModal && (
+        <AssignToSiteModal
+          userId={user.id}
+          assignedSiteIds={assignedSites.map(s => s.id)}
+          onClose={() => setShowAssignModal(false)}
+        />
+      )}
+
+      {/* Remove Confirmation */}
+      {removeConfirm && (
+        <Modal isOpen onClose={() => setRemoveConfirm(null)} title="Remove from Site" size="sm">
+          <div className="space-y-4">
+            <p className="text-sm text-stone-600">
+              Remove <strong>{user.first_name} {user.last_name}</strong> from <strong>{removeConfirm.name}</strong>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setRemoveConfirm(null)}>Cancel</Button>
+              <Button variant="danger" onClick={handleRemove} isLoading={removeMut.isPending}>
+                <X className="w-4 h-4 mr-2" /> Remove
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
+  )
+}
+
+// ─── Assign to Site Modal ────────────────────────────────────────
+function AssignToSiteModal({ userId, assignedSiteIds, onClose }: { userId: string; assignedSiteIds: string[]; onClose: () => void }) {
+  const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([])
+  const { data: sitesData } = useSites()
+  const assignMut = useAssignPreceptorToSites()
+
+  const sites = ((sitesData as { data?: { id: string; name: string; city: string; state: string }[] })?.data || [])
+    .filter(s => !assignedSiteIds.includes(s.id))
+
+  const toggleSite = (siteId: string) => {
+    setSelectedSiteIds(prev => prev.includes(siteId) ? prev.filter(id => id !== siteId) : [...prev, siteId])
+  }
+
+  const handleSubmit = async () => {
+    if (selectedSiteIds.length === 0) return
+    try {
+      const res = await assignMut.mutateAsync({ userId, siteIds: selectedSiteIds })
+      toast.success(res.message)
+      onClose()
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to assign sites.')
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Assign Preceptor to Sites" size="md">
+      <div className="space-y-4">
+        {sites.length > 0 ? (
+          <div className="max-h-64 overflow-y-auto border border-stone-200 rounded-xl divide-y divide-stone-100">
+            {sites.map(site => (
+              <label key={site.id} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedSiteIds.includes(site.id)}
+                  onChange={() => toggleSite(site.id)}
+                  className="rounded border-stone-300 text-primary-500 focus:ring-primary-500"
+                />
+                <div>
+                  <p className="text-sm font-medium text-stone-900">{site.name}</p>
+                  <p className="text-xs text-stone-500">{site.city}, {site.state}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-stone-400 text-center py-4">All sites are already assigned.</p>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={assignMut.isPending} disabled={selectedSiteIds.length === 0}>
+            <Plus className="w-4 h-4 mr-2" /> Assign {selectedSiteIds.length > 0 ? `(${selectedSiteIds.length})` : ''}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 
