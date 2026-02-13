@@ -11,6 +11,8 @@ export interface User {
   phone?: string
   createdAt: string
   onboardingCompleted: boolean
+  universityId?: string
+  programId?: string
 }
 
 export interface StudentProfile extends User {

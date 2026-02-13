@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2, Plus } from 'lucide-react'
-import { useStudentProfile, useCreateProgram } from '../hooks/useApi.ts'
+import { useCreateProgram } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -34,8 +34,7 @@ export function Programs() {
   const [search, setSearch] = useState('')
   const { data, isLoading } = useUniversities({ search: search || undefined })
   const allUniversities = data?.data || []
-  const { data: profileData } = useStudentProfile()
-  const coordUniversityId = profileData?.profile?.university_id || null
+  const coordUniversityId = user?.universityId || null
 
   // Coordinators only see their associated university; admins see all
   const universities = isCoordinator && coordUniversityId

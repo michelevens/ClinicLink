@@ -41,6 +41,8 @@ function mapApiUser(u: ApiUser): User {
     avatar: u.avatar_url || undefined,
     createdAt: u.created_at,
     onboardingCompleted: u.onboarding_completed ?? false,
+    universityId: u.student_profile?.university_id || undefined,
+    programId: u.student_profile?.program_id || undefined,
   }
 }
 

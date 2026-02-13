@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import {
   useCeCertificates, useCePolicy, useUpsertCePolicy,
-  useApproveCeCertificate, useRejectCeCertificate, useStudentProfile,
+  useApproveCeCertificate, useRejectCeCertificate,
 } from '../hooks/useApi.ts'
 import { ceCertificatesApi, type ApiCeCertificate } from '../services/api.ts'
 import { toast } from 'sonner'
@@ -105,11 +105,11 @@ function PreceptorCeView() {
 // ─── Coordinator View ────────────────────────────────────────────
 
 function CoordinatorCeView() {
+  const { user } = useAuth()
   const [tab, setTab] = useState<'approvals' | 'policy'>('approvals')
 
-  // Coordinator's university comes from their student profile (via API)
-  const { data: profileData } = useStudentProfile()
-  const universityId = profileData?.profile?.university_id || null
+  // Coordinator's university comes from auth user (set during login/onboarding)
+  const universityId = user?.universityId || null
 
   return (
     <div className="space-y-6">

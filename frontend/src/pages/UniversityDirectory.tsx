@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, MapPin, Phone, Globe, Search, ChevronLeft, ChevronRight, GraduationCap, CheckCircle2, Clock, Plus, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
-import { useUniversities, useCreateUniversity, useUpdateUniversity, useDeleteUniversity, useStudentProfile, useCreateProgram } from '../hooks/useApi.ts'
+import { useUniversities, useCreateUniversity, useUpdateUniversity, useDeleteUniversity, useCreateProgram } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -63,9 +63,8 @@ export function UniversityDirectory() {
   const isCoordinator = user?.role === 'coordinator'
   const navigate = useNavigate()
 
-  // Coordinator scoping
-  const { data: profileData } = useStudentProfile()
-  const coordUniversityId = isCoordinator ? (profileData?.profile?.university_id || null) : null
+  // Coordinator scoping — universityId comes from auth user
+  const coordUniversityId = isCoordinator ? (user?.universityId || null) : null
 
   const [search, setSearch] = useState('')
   const [state, setState] = useState('')
