@@ -166,51 +166,54 @@ class CeCertificateController extends Controller
 
     public function download(Request $request, CeCertificate $ceCertificate)
     {
-        // Authenticate via query token (for window.open() browser downloads)
-        $user = $request->user();
-        if (!$user && $request->filled('token')) {
-            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->input('token'));
-            if (!$token) {
+        try {
+            // Authenticate via query token (for window.open() browser downloads)
+            $user = $request->user();
+            if (!$user && $request->filled('token')) {
+                $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->input('token'));
+                if (!$token) {
+                    return response()->json(['message' => 'Unauthorized.'], 401);
+                }
+                $user = $token->tokenable;
+            }
+
+            if (!$user) {
                 return response()->json(['message' => 'Unauthorized.'], 401);
             }
-            $user = $token->tokenable;
-        }
 
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized.'], 401);
-        }
+            // Authorization: preceptor who owns it, coordinator for the university, or admin
+            if (!$this->canAccessCeCertificate($user, $ceCertificate)) {
+                return response()->json(['message' => 'Unauthorized.'], 403);
+            }
 
-        // Authorization: preceptor who owns it, coordinator for the university, or admin
-        if (!$this->canAccessCeCertificate($user, $ceCertificate)) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
-        }
+            if (!in_array($ceCertificate->status, ['approved', 'issued'])) {
+                return response()->json(['message' => 'Certificate PDF not available.'], 404);
+            }
 
-        if (!in_array($ceCertificate->status, ['approved', 'issued'])) {
-            return response()->json(['message' => 'Certificate PDF not available.'], 404);
-        }
+            // Generate PDF on-demand if it hasn't been generated yet or file is missing from disk
+            $needsGeneration = !$ceCertificate->certificate_path
+                || !Storage::disk()->exists($ceCertificate->certificate_path);
 
-        // Generate PDF on-demand if it hasn't been generated yet or file is missing from disk
-        $needsGeneration = !$ceCertificate->certificate_path
-            || !Storage::disk()->exists($ceCertificate->certificate_path);
-
-        if ($needsGeneration) {
-            try {
+            if ($needsGeneration) {
                 $generator = new CECertificateGenerator();
                 $generator->generatePdf($ceCertificate);
                 $ceCertificate->refresh();
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to generate CE certificate PDF: ' . $e->getMessage());
-                return response()->json(['message' => 'Failed to generate certificate PDF. Please try again later.'], 500);
             }
+
+            if (!$ceCertificate->certificate_path || !Storage::disk()->exists($ceCertificate->certificate_path)) {
+                return response()->json(['message' => 'Certificate PDF not available.'], 404);
+            }
+
+            $filename = 'CE-Certificate-' . substr($ceCertificate->verification_uuid, 0, 8) . '.pdf';
+
+            return Storage::disk()->download($ceCertificate->certificate_path, $filename);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('CE certificate download error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'message' => 'Failed to generate certificate PDF.',
+                'error' => config('app.debug') ? $e->getMessage() : null,
+            ], 500);
         }
-
-        if (!$ceCertificate->certificate_path || !Storage::disk()->exists($ceCertificate->certificate_path)) {
-            return response()->json(['message' => 'Certificate PDF not available.'], 404);
-        }
-
-        $filename = 'CE-Certificate-' . substr($ceCertificate->verification_uuid, 0, 8) . '.pdf';
-
-        return Storage::disk()->download($ceCertificate->certificate_path, $filename);
     }
 
     // ─── Public verification ──────────────────────────────────────
