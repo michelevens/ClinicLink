@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/Button.tsx'
 import { Card } from '../components/ui/Card.tsx'
+import { Badge } from '../components/ui/Badge.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { useSlots } from '../hooks/useApi.ts'
 import {
   Stethoscope, GraduationCap, Building2, BookOpen,
   Search, Clock, Shield, Star, ArrowRight, Users, CheckCircle,
   Zap, Award, BarChart3, Globe, Lock, FileCheck,
-  Brain, Smartphone, ClipboardCheck, TrendingUp,
+  Brain, Smartphone, ClipboardCheck,
   ChevronRight, Sparkles, MapPin, Calendar
 } from 'lucide-react'
 import type { UserRole } from '../types/index.ts'
@@ -14,6 +16,8 @@ import type { UserRole } from '../types/index.ts'
 export function LandingPage() {
   const navigate = useNavigate()
   const { demoLogin } = useAuth()
+  const { data: slotsData } = useSlots({ status: 'open' })
+  const featuredSlots = (slotsData?.data || []).slice(0, 6)
 
   const handleDemo = (role: UserRole) => {
     demoLogin(role)
@@ -163,6 +167,61 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Featured Rotations */}
+      {featuredSlots.length > 0 && (
+        <section className="py-12 sm:py-20 px-4 sm:px-6 bg-white">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="inline-block px-3 py-1 rounded-full bg-green-50 text-green-600 text-sm font-medium mb-4">Open Now</span>
+              <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-4">Available Rotations</h2>
+              <p className="text-lg text-stone-600 max-w-2xl mx-auto">
+                Browse real rotation opportunities posted by clinical sites. Sign up to apply.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {featuredSlots.map(slot => {
+                const weeks = Math.round((new Date(slot.end_date).getTime() - new Date(slot.start_date).getTime()) / (1000 * 60 * 60 * 24 * 7))
+                const spotsLeft = slot.capacity - slot.filled
+                return (
+                  <Card key={slot.id} hover onClick={() => navigate('/rotations')} className="cursor-pointer">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+                        <Stethoscope className="w-5 h-5" />
+                      </div>
+                      <Badge variant="success" size="sm">{spotsLeft} spot{spotsLeft !== 1 ? 's' : ''} left</Badge>
+                    </div>
+                    <h3 className="font-semibold text-stone-900 mb-1 line-clamp-1">{slot.title}</h3>
+                    <p className="text-sm text-stone-500 mb-2">{slot.site?.name}</p>
+                    <p className="text-xs text-stone-500 line-clamp-2 mb-3">{slot.description}</p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      <Badge variant="primary" size="sm">{slot.specialty}</Badge>
+                      <Badge variant={slot.cost_type === 'free' ? 'success' : 'warning'} size="sm">
+                        {slot.cost_type === 'free' ? 'Free' : `$${slot.cost}`}
+                      </Badge>
+                      <Badge variant="default" size="sm">{weeks}w</Badge>
+                    </div>
+                    <div className="space-y-1 text-xs text-stone-500">
+                      {slot.site && (
+                        <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3" />{slot.site.city}, {slot.site.state}</div>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(slot.start_date).toLocaleDateString()} - {new Date(slot.end_date).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </Card>
+                )
+              })}
+            </div>
+            <div className="text-center mt-8">
+              <Button size="lg" onClick={() => navigate('/rotations')}>
+                View All Rotations <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Key Features */}
       <section id="features" className="py-12 sm:py-20 px-4 sm:px-6 bg-white">

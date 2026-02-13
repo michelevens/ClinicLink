@@ -128,7 +128,12 @@ class RotationSiteController extends Controller
     {
         $user = $request->user();
 
-        if ($user->isPreceptor()) {
+        if ($user->isAdmin()) {
+            // Admin: return all sites
+            $sites = RotationSite::with('slots')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } elseif ($user->isPreceptor()) {
             // Preceptors: return sites where they have assigned slots
             $siteIds = \App\Models\RotationSlot::where('preceptor_id', $user->id)
                 ->distinct()
