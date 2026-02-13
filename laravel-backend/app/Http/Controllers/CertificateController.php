@@ -7,6 +7,8 @@ use App\Models\HourLog;
 use App\Models\Evaluation;
 use App\Models\Application;
 use App\Models\StudentProfile;
+use App\Models\User;
+use App\Notifications\CertificateIssuedNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -121,6 +123,13 @@ class CertificateController extends Controller
             'status' => 'issued',
             'issued_date' => now()->toDateString(),
         ]);
+
+        // Notify the student via email + in-app
+        $student = User::find($validated['student_id']);
+        if ($student) {
+            $certificate->load(['slot.site', 'issuer']);
+            $student->notify(new CertificateIssuedNotification($certificate));
+        }
 
         return response()->json([
             'certificate' => $certificate->load(['student', 'slot.site', 'issuer']),

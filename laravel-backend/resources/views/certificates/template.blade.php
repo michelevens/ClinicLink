@@ -22,32 +22,33 @@
             height: 8.5in;
             position: relative;
             background: #fff;
+            overflow: hidden;
         }
 
         .certificate {
-            width: 100%;
-            height: 100%;
-            padding: 0.5in;
+            width: 11in;
+            height: 8.5in;
             position: relative;
+            overflow: hidden;
         }
 
-        /* Decorative border */
+        /* ── Decorative outer frame ─────────────────────── */
         .border-outer {
             position: absolute;
-            top: 0.35in;
-            left: 0.35in;
-            right: 0.35in;
-            bottom: 0.35in;
+            top: 0.3in;
+            left: 0.3in;
+            right: 0.3in;
+            bottom: 0.3in;
             border: 3px solid #0369a1;
             border-radius: 8px;
         }
 
         .border-inner {
             position: absolute;
-            top: 0.42in;
-            left: 0.42in;
-            right: 0.42in;
-            bottom: 0.42in;
+            top: 0.38in;
+            left: 0.38in;
+            right: 0.38in;
+            bottom: 0.38in;
             border: 1px solid #7dd3fc;
             border-radius: 6px;
         }
@@ -55,95 +56,107 @@
         /* Corner accents */
         .corner {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
+        }
+        .corner-tl { top: 0.25in; left: 0.25in; border-top: 5px solid #0ea5e9; border-left: 5px solid #0ea5e9; border-radius: 6px 0 0 0; }
+        .corner-tr { top: 0.25in; right: 0.25in; border-top: 5px solid #0ea5e9; border-right: 5px solid #0ea5e9; border-radius: 0 6px 0 0; }
+        .corner-bl { bottom: 0.25in; left: 0.25in; border-bottom: 5px solid #0ea5e9; border-left: 5px solid #0ea5e9; border-radius: 0 0 0 6px; }
+        .corner-br { bottom: 0.25in; right: 0.25in; border-bottom: 5px solid #0ea5e9; border-right: 5px solid #0ea5e9; border-radius: 0 0 6px 0; }
+
+        /* Accent side lines */
+        .accent-left {
+            position: absolute;
+            top: 1.2in;
+            left: 0.5in;
+            bottom: 1.2in;
+            width: 2px;
+            background: #bae6fd;
+        }
+        .accent-right {
+            position: absolute;
+            top: 1.2in;
+            right: 0.5in;
+            bottom: 1.2in;
+            width: 2px;
+            background: #bae6fd;
         }
 
-        .corner-tl { top: 0.3in; left: 0.3in; border-top: 4px solid #0ea5e9; border-left: 4px solid #0ea5e9; border-radius: 4px 0 0 0; }
-        .corner-tr { top: 0.3in; right: 0.3in; border-top: 4px solid #0ea5e9; border-right: 4px solid #0ea5e9; border-radius: 0 4px 0 0; }
-        .corner-bl { bottom: 0.3in; left: 0.3in; border-bottom: 4px solid #0ea5e9; border-left: 4px solid #0ea5e9; border-radius: 0 0 0 4px; }
-        .corner-br { bottom: 0.3in; right: 0.3in; border-bottom: 4px solid #0ea5e9; border-right: 4px solid #0ea5e9; border-radius: 0 0 4px 0; }
-
-        .content {
-            position: relative;
-            z-index: 1;
-            text-align: center;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            padding: 0.15in 0.3in;
-        }
-
-        /* QR Code - top right */
+        /* ── QR Code ─── upper right ────────────────────── */
         .qr-container {
             position: absolute;
-            top: 0.55in;
-            right: 0.6in;
+            top: 0.5in;
+            right: 0.65in;
             text-align: center;
-            z-index: 2;
+            z-index: 10;
         }
-
         .qr-container img {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
         }
-
         .qr-label {
-            font-size: 6.5px;
+            font-size: 6px;
             color: #78716c;
-            margin-top: 3px;
+            margin-top: 2px;
             letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
-        /* Header */
+        /* ── Content area (absolute positioning, no flexbox) ─── */
+        .content {
+            position: absolute;
+            top: 0.5in;
+            left: 0.7in;
+            right: 0.7in;
+            bottom: 0.55in;
+            text-align: center;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
         .header {
-            margin-bottom: 0.15in;
+            padding-top: 0.05in;
         }
 
         .logo-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 6px;
+            text-align: center;
+            margin-bottom: 4px;
         }
 
         .logo-icon {
-            width: 32px;
-            height: 32px;
+            display: inline-block;
+            width: 28px;
+            height: 28px;
             background: linear-gradient(135deg, #0ea5e9, #0369a1);
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
+            border-radius: 7px;
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
+            line-height: 28px;
+            text-align: center;
             vertical-align: middle;
+            margin-right: 8px;
         }
 
         .logo-text {
-            font-size: 22px;
+            display: inline-block;
+            font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #0ea5e9, #0369a1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #0369a1;
             letter-spacing: 1px;
             vertical-align: middle;
         }
 
         .divider {
-            width: 120px;
+            width: 140px;
             height: 2px;
             background: linear-gradient(90deg, transparent, #0ea5e9, transparent);
-            margin: 8px auto;
+            margin: 6px auto;
         }
 
         .cert-title {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 300;
-            letter-spacing: 8px;
+            letter-spacing: 10px;
             text-transform: uppercase;
             color: #0c4a6e;
             margin-bottom: 2px;
@@ -156,16 +169,13 @@
             color: #78716c;
         }
 
-        /* Body */
+        /* ── Body ───────────────────────────────────────── */
         .body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            padding-top: 0.22in;
         }
 
         .presented-to {
-            font-size: 11px;
+            font-size: 10px;
             color: #78716c;
             letter-spacing: 3px;
             text-transform: uppercase;
@@ -173,76 +183,65 @@
         }
 
         .student-name {
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 600;
             color: #0c4a6e;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-style: italic;
         }
 
         .description {
-            font-size: 11px;
+            font-size: 10.5px;
             color: #57534e;
             line-height: 1.7;
-            max-width: 7in;
-            margin: 0 auto 0.2in;
+            max-width: 7.5in;
+            margin: 0 auto;
+            padding-bottom: 0.15in;
         }
 
-        /* Details grid */
+        /* ── Details grid (table layout for DomPDF) ───── */
         .details-grid {
-            display: table;
-            width: 80%;
-            margin: 0 auto 0.2in;
+            width: 85%;
+            margin: 0 auto 0.12in;
             border-collapse: separate;
-            border-spacing: 16px 6px;
-        }
-
-        .details-row {
-            display: table-row;
+            border-spacing: 12px 4px;
         }
 
         .detail-item {
-            display: table-cell;
             text-align: center;
-            padding: 6px 12px;
+            padding: 4px 8px;
         }
 
         .detail-label {
-            font-size: 7.5px;
+            font-size: 7px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             color: #a8a29e;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
         }
 
         .detail-value {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: #1c1917;
         }
 
-        /* University info */
+        /* ── University info ─────────────────────────────── */
         .university-info {
-            font-size: 9.5px;
+            font-size: 9px;
             color: #78716c;
-            margin-bottom: 0.2in;
+            margin-bottom: 0.12in;
         }
 
-        /* Signatures */
+        /* ── Signatures ──────────────────────────────────── */
         .signatures {
-            display: table;
             width: 85%;
             margin: 0 auto;
             border-collapse: separate;
-            border-spacing: 40px 0;
-        }
-
-        .sig-row {
-            display: table-row;
+            border-spacing: 30px 0;
         }
 
         .sig-block {
-            display: table-cell;
             text-align: center;
             width: 33.33%;
             vertical-align: bottom;
@@ -250,34 +249,37 @@
 
         .sig-line {
             border-top: 1px solid #d6d3d1;
-            padding-top: 6px;
-            margin-top: 30px;
+            padding-top: 5px;
+            margin-top: 22px;
         }
 
         .sig-name {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 600;
             color: #1c1917;
         }
 
         .sig-title {
-            font-size: 8px;
+            font-size: 7.5px;
             color: #a8a29e;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
-        /* Footer */
+        /* ── Footer ──────────────────────────────────────── */
         .footer {
+            position: absolute;
+            bottom: 0.5in;
+            left: 0.7in;
+            right: 0.7in;
             text-align: center;
-            padding-top: 8px;
+            padding-top: 6px;
             border-top: 1px solid #e7e5e4;
-            margin-top: auto;
         }
 
         .footer-text {
-            font-size: 7.5px;
+            font-size: 7px;
             color: #a8a29e;
             letter-spacing: 0.5px;
         }
@@ -297,8 +299,10 @@
         <div class="corner corner-tr"></div>
         <div class="corner corner-bl"></div>
         <div class="corner corner-br"></div>
+        <div class="accent-left"></div>
+        <div class="accent-right"></div>
 
-        <!-- QR Code -->
+        <!-- QR Code - upper right -->
         <div class="qr-container">
             <img src="{{ $qrCode }}" alt="Verify">
             <div class="qr-label">Scan to Verify</div>
@@ -325,40 +329,40 @@
                     has successfully completed the <strong>{{ $certificate->slot->specialty }}</strong> clinical rotation
                     at <strong>{{ $certificate->slot->site->name }}</strong>,
                     fulfilling all requirements for the rotation titled
-                    "<strong>{{ $certificate->title }}</strong>."
+                    &ldquo;<strong>{{ $certificate->title }}</strong>.&rdquo;
                 </div>
 
                 <!-- Details -->
-                <div class="details-grid">
-                    <div class="details-row">
-                        <div class="detail-item">
+                <table class="details-grid">
+                    <tr>
+                        <td class="detail-item">
                             <div class="detail-label">Specialty</div>
                             <div class="detail-value">{{ $certificate->slot->specialty }}</div>
-                        </div>
-                        <div class="detail-item">
+                        </td>
+                        <td class="detail-item">
                             <div class="detail-label">Clinical Site</div>
                             <div class="detail-value">{{ $certificate->slot->site->name }}</div>
-                        </div>
-                        <div class="detail-item">
+                        </td>
+                        <td class="detail-item">
                             <div class="detail-label">Preceptor</div>
                             <div class="detail-value">{{ $certificate->slot->preceptor ? $certificate->slot->preceptor->first_name . ' ' . $certificate->slot->preceptor->last_name : 'N/A' }}</div>
-                        </div>
-                    </div>
-                    <div class="details-row">
-                        <div class="detail-item">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="detail-item">
                             <div class="detail-label">Rotation Period</div>
                             <div class="detail-value">{{ $certificate->slot->start_date->format('M d, Y') }} &ndash; {{ $certificate->slot->end_date->format('M d, Y') }}</div>
-                        </div>
-                        <div class="detail-item">
+                        </td>
+                        <td class="detail-item">
                             <div class="detail-label">Total Hours</div>
                             <div class="detail-value">{{ number_format($certificate->total_hours, 1) }} hours</div>
-                        </div>
-                        <div class="detail-item">
+                        </td>
+                        <td class="detail-item">
                             <div class="detail-label">Evaluation Score</div>
                             <div class="detail-value">{{ $certificate->overall_score ? number_format($certificate->overall_score, 1) . ' / 5.0' : 'N/A' }}</div>
-                        </div>
-                    </div>
-                </div>
+                        </td>
+                    </tr>
+                </table>
 
                 @if($university || $program)
                 <div class="university-info">
@@ -373,39 +377,39 @@
                 @endif
 
                 <!-- Signatures -->
-                <div class="signatures">
-                    <div class="sig-row">
-                        <div class="sig-block">
+                <table class="signatures">
+                    <tr>
+                        <td class="sig-block">
                             <div class="sig-line">
                                 <div class="sig-name">{{ $certificate->slot->preceptor ? $certificate->slot->preceptor->first_name . ' ' . $certificate->slot->preceptor->last_name : '—' }}</div>
                                 <div class="sig-title">Preceptor</div>
                             </div>
-                        </div>
-                        <div class="sig-block">
+                        </td>
+                        <td class="sig-block">
                             <div class="sig-line">
                                 <div class="sig-name">{{ $certificate->slot->site->manager ? $certificate->slot->site->manager->first_name . ' ' . $certificate->slot->site->manager->last_name : '—' }}</div>
                                 <div class="sig-title">Site Manager</div>
                             </div>
-                        </div>
-                        <div class="sig-block">
+                        </td>
+                        <td class="sig-block">
                             <div class="sig-line">
                                 <div class="sig-name">{{ $certificate->issuer->first_name }} {{ $certificate->issuer->last_name }}</div>
                                 <div class="sig-title">Issued By</div>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </td>
+                    </tr>
+                </table>
             </div>
+        </div>
 
-            <!-- Footer -->
-            <div class="footer">
-                <div class="footer-text">
-                    Certificate No. <span class="cert-number">{{ $certificate->certificate_number }}</span>
-                    &nbsp;&bull;&nbsp;
-                    Issued {{ $certificate->issued_date->format('F d, Y') }}
-                    &nbsp;&bull;&nbsp;
-                    Verify at {{ $verifyUrl }}
-                </div>
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                Certificate No. <span class="cert-number">{{ $certificate->certificate_number }}</span>
+                &nbsp;&bull;&nbsp;
+                Issued {{ $certificate->issued_date->format('F d, Y') }}
+                &nbsp;&bull;&nbsp;
+                Verify at {{ $verifyUrl }}
             </div>
         </div>
     </div>
