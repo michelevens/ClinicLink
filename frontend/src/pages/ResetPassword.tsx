@@ -50,8 +50,8 @@ export function ResetPassword() {
       return
     }
 
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters')
+    if (password.length < 12) {
+      toast.error('Password must be at least 12 characters')
       return
     }
 
@@ -110,11 +110,11 @@ export function ResetPassword() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="At least 8 characters"
+                      placeholder="At least 12 characters"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       required
-                      minLength={8}
+                      minLength={12}
                       className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-10 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
                     />
                     <button

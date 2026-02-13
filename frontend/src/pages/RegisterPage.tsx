@@ -42,8 +42,8 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
   if (!pw) return { score: 0, label: '', color: '' }
 
   let score = 0
-  if (pw.length >= 8) score++
   if (pw.length >= 12) score++
+  if (pw.length >= 16) score++
   if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++
   if (/\d/.test(pw)) score++
   if (/[^a-zA-Z0-9]/.test(pw)) score++
@@ -125,7 +125,7 @@ export function RegisterPage() {
   const strength = useMemo(() => getPasswordStrength(form.password), [form.password])
 
   const passwordChecks = useMemo(() => [
-    { label: 'At least 8 characters', pass: form.password.length >= 8 },
+    { label: 'At least 12 characters', pass: form.password.length >= 12 },
     { label: 'Uppercase letter', pass: /[A-Z]/.test(form.password) },
     { label: 'Lowercase letter', pass: /[a-z]/.test(form.password) },
     { label: 'Number', pass: /\d/.test(form.password) },
@@ -141,8 +141,8 @@ export function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.password.length < 8) {
-      toast.error('Password must be at least 8 characters')
+    if (form.password.length < 12) {
+      toast.error('Password must be at least 12 characters')
       return
     }
     try {
@@ -221,7 +221,7 @@ export function RegisterPage() {
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Create a password (min 8 chars)"
+                  placeholder="Create a password (min 12 chars)"
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                   required

@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { useSlots } from '../hooks/useApi.ts'
 import {
   Stethoscope, GraduationCap, Building2, BookOpen,
-  Search, Clock, Shield, Star, ArrowRight, Users, CheckCircle,
+  Search, Clock, Shield, ArrowRight, Users, CheckCircle,
   Zap, Award, BarChart3, Globe, Lock, FileCheck,
   Brain, Smartphone, ClipboardCheck,
   ChevronRight, Sparkles, MapPin, Calendar
@@ -65,17 +65,17 @@ export function LandingPage() {
               <span className="bg-gradient-to-r from-accent-300 to-amber-300 bg-clip-text text-transparent">Verified Credential</span>
             </h1>
             <p className="text-base sm:text-xl text-white/80 max-w-3xl mx-auto mb-4">
-              The all-in-one platform that handles the <strong className="text-white">entire clinical education lifecycle</strong> — from finding a rotation to earning blockchain-verified credentials.
+              The all-in-one platform that handles the <strong className="text-white">entire clinical education lifecycle</strong> — from finding a rotation to earning digitally verified credentials.
             </p>
 
             {/* Lifecycle Flow */}
             <div className="flex items-center justify-center gap-1 sm:gap-2 my-8 flex-wrap">
-              {['Discover', 'Apply', 'Match', 'Onboard', 'Track', 'Evaluate', 'Certify', 'Hire'].map((step, i) => (
+              {['Discover', 'Apply', 'Onboard', 'Track', 'Evaluate', 'Certify'].map((step, i) => (
                 <span key={step} className="flex items-center gap-1 sm:gap-2">
                   <span className="px-2 sm:px-3 py-1 rounded-full bg-white/20 text-white text-xs sm:text-sm font-medium backdrop-blur-sm">
                     {step}
                   </span>
-                  {i < 7 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white/50" />}
+                  {i < 5 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white/50" />}
                 </span>
               ))}
             </div>
@@ -85,7 +85,7 @@ export function LandingPage() {
                 Start Free Today <ArrowRight className="w-5 h-5" />
               </Button>
               <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/10 w-full sm:w-auto" onClick={() => navigate('/rotations')}>
-                Browse 2,500+ Rotations
+                Browse Open Rotations
               </Button>
             </div>
           </div>
@@ -96,10 +96,10 @@ export function LandingPage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               {[
-                { label: 'Clinical Sites', value: '2,500+', icon: Building2 },
-                { label: 'Students Placed', value: '18,000+', icon: GraduationCap },
-                { label: 'University Programs', value: '350+', icon: BookOpen },
-                { label: 'Hours Tracked', value: '2.1M+', icon: Clock },
+                { label: 'Role-Based Dashboards', value: '6', icon: Building2 },
+                { label: 'Lifecycle Stages', value: '7', icon: GraduationCap },
+                { label: 'Compliance Tracking', value: '✓', icon: BookOpen },
+                { label: 'Hour Logging & Approval', value: '✓', icon: Clock },
               ].map(stat => (
                 <div key={stat.label} className="text-center">
                   <stat.icon className="w-5 h-5 text-white/60 mx-auto mb-1" />
@@ -149,9 +149,9 @@ export function LandingPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: <Search className="w-8 h-8" />, title: 'Discover & Apply', desc: 'Browse thousands of rotations by specialty, location, dates, and cost. Apply instantly with your profile and credentials. Get AI-powered recommendations.', step: '01' },
-              { icon: <ClipboardCheck className="w-8 h-8" />, title: 'Track & Complete', desc: 'Log hours daily with GPS verification. Receive mid-rotation and final evaluations. Complete onboarding checklists. Everything your program needs.', step: '02' },
-              { icon: <Award className="w-8 h-8" />, title: 'Certify & Advance', desc: 'Earn beautiful digital certificates with blockchain verification. Build an immutable credential portfolio. Get matched with job opportunities.', step: '03' },
+              { icon: <Search className="w-8 h-8" />, title: 'Discover & Apply', desc: 'Browse rotations by specialty, location, dates, and cost. Apply instantly with your profile and credentials. Filter across multiple criteria to find your perfect match.', step: '01' },
+              { icon: <ClipboardCheck className="w-8 h-8" />, title: 'Track & Complete', desc: 'Log hours digitally with preceptor approval. Receive mid-rotation and final evaluations. Complete onboarding checklists. Everything your program needs.', step: '02' },
+              { icon: <Award className="w-8 h-8" />, title: 'Certify & Advance', desc: 'Earn digital certificates with unique verification links. Build a verified credential portfolio that employers and schools can confirm instantly.', step: '03' },
             ].map(step => (
               <Card key={step.title} hover className="relative overflow-hidden">
                 <span className="absolute top-4 right-4 text-5xl font-black text-primary-50">{step.step}</span>
@@ -229,19 +229,19 @@ export function LandingPage() {
           <div className="text-center mb-10 sm:mb-16">
             <span className="inline-block px-3 py-1 rounded-full bg-secondary-50 text-secondary-600 text-sm font-medium mb-4">Platform Features</span>
             <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-4">Everything You Need, Nothing You Don't</h2>
-            <p className="text-lg text-stone-600 max-w-2xl mx-auto">From search to certification, every step is automated, tracked, and verified.</p>
+            <p className="text-lg text-stone-600 max-w-2xl mx-auto">From search to certification, every step is digitized, tracked, and verifiable.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: <Search className="w-6 h-6" />, title: 'Smart Rotation Search', desc: 'Filter by specialty, location, dates, cost, and availability. AI-powered matching recommends your ideal placements.', color: 'primary' },
-              { icon: <FileCheck className="w-6 h-6" />, title: 'Credential Vault', desc: 'Upload, track, and auto-verify all credentials. Get alerts 30/14/7 days before expiry. One-click compliance reports.', color: 'green' },
-              { icon: <Clock className="w-6 h-6" />, title: 'GPS-Verified Hour Logging', desc: 'Log hours daily from your phone with geofencing. Preceptors approve in one tap. Immutable audit trail.', color: 'secondary' },
-              { icon: <ClipboardCheck className="w-6 h-6" />, title: 'Structured Evaluations', desc: 'Mid-rotation and final evaluations with standardized rubrics. Digital signatures. Auto-generated PDF reports.', color: 'amber' },
-              { icon: <Lock className="w-6 h-6" />, title: 'Blockchain Credentials', desc: 'Every completed rotation earns a blockchain-anchored certificate. QR-verifiable by employers and licensing boards.', color: 'purple' },
-              { icon: <Brain className="w-6 h-6" />, title: 'AI Matching Engine', desc: 'Smart algorithms match students to rotations based on specialty, schedule, location, ratings, and requirements.', color: 'rose' },
-              { icon: <BarChart3 className="w-6 h-6" />, title: 'Analytics Dashboard', desc: 'Real-time placement rates, hour tracking, compliance status, and demand heat maps for every stakeholder.', color: 'indigo' },
-              { icon: <Zap className="w-6 h-6" />, title: 'Automated Compliance', desc: 'Affiliation agreements with e-signatures. HIPAA training modules. Auto-generated accreditation reports.', color: 'orange' },
-              { icon: <Smartphone className="w-6 h-6" />, title: 'Mobile-First Design', desc: 'Full-featured responsive app for students and preceptors. Push notifications. Log hours on the go.', color: 'teal' },
+              { icon: <Search className="w-6 h-6" />, title: 'Smart Rotation Search', desc: 'Filter by specialty, location, dates, cost, and availability. Find your ideal placement across multiple criteria.', color: 'primary' },
+              { icon: <FileCheck className="w-6 h-6" />, title: 'Credential Vault', desc: 'Upload and track all credentials with expiry alerts. Monitor compliance status with traffic-light dashboards.', color: 'green' },
+              { icon: <Clock className="w-6 h-6" />, title: 'Digital Hour Logging', desc: 'Log hours online with preceptor approval workflow. Track progress toward required hours with a complete audit trail.', color: 'secondary' },
+              { icon: <ClipboardCheck className="w-6 h-6" />, title: 'Structured Evaluations', desc: 'Mid-rotation and final evaluations with standardized rubrics (1-5 scale). Draft, submit, and review evaluations digitally.', color: 'amber' },
+              { icon: <Lock className="w-6 h-6" />, title: 'Verified Credentials', desc: 'Earn completion certificates with unique verification links. Employers and schools can verify credentials instantly.', color: 'purple' },
+              { icon: <Search className="w-6 h-6" />, title: 'Multi-Criteria Search', desc: 'Filter rotations by specialty, schedule, location, cost, and availability to find the right match for your program.', color: 'rose' },
+              { icon: <BarChart3 className="w-6 h-6" />, title: 'Compliance Dashboard', desc: 'Real-time placement tracking, hour summaries, credential status, and compliance overview for every stakeholder.', color: 'indigo' },
+              { icon: <Zap className="w-6 h-6" />, title: 'Compliance Tracking', desc: 'Manage affiliation agreements, onboarding checklists, and credential requirements with status tracking dashboards.', color: 'orange' },
+              { icon: <Smartphone className="w-6 h-6" />, title: 'Responsive Design', desc: 'Works on any device — desktop, tablet, or phone. Manage rotations, log hours, and review applications on the go.', color: 'teal' },
             ].map(feature => (
               <Card key={feature.title} hover>
                 <div className={`w-12 h-12 rounded-xl bg-${feature.color}-50 text-${feature.color}-600 flex items-center justify-center mb-4`}>
@@ -268,28 +268,28 @@ export function LandingPage() {
                 icon: <GraduationCap className="w-6 h-6" />,
                 role: 'Students',
                 tagline: 'Find, apply, and complete rotations with ease',
-                features: ['AI-recommended rotations', 'One-click applications', 'Mobile hour logging', 'Digital credential wallet', 'Rotation-to-hire pipeline'],
+                features: ['Filter-based rotation search', 'One-click applications', 'Digital hour logging', 'Credential tracking with alerts', 'Verified completion certificates'],
                 color: 'primary',
               },
               {
                 icon: <Building2 className="w-6 h-6" />,
                 role: 'Clinical Sites',
                 tagline: 'Fill slots faster, manage students effortlessly',
-                features: ['Create rotation listings', 'Review applications in bulk', 'Track student compliance', 'Manage preceptor assignments', 'Get paid for placements'],
+                features: ['Create rotation listings', 'Review applications in bulk', 'Track student compliance', 'Manage preceptor assignments', 'Onboarding checklists'],
                 color: 'secondary',
               },
               {
                 icon: <BookOpen className="w-6 h-6" />,
                 role: 'Universities',
                 tagline: 'Monitor, comply, and report — automatically',
-                features: ['Real-time placement dashboards', 'Automated credential tracking', 'E-sign affiliation agreements', 'One-click accreditation reports', 'Program benchmarking'],
+                features: ['Real-time placement dashboards', 'Credential tracking with alerts', 'Manage affiliation agreements', 'Student compliance overview', 'Program and roster management'],
                 color: 'accent',
               },
               {
                 icon: <Shield className="w-6 h-6" />,
                 role: 'Preceptors',
                 tagline: 'Teach, evaluate, and earn recognition',
-                features: ['Approve hours on mobile', 'Structured evaluation rubrics', 'Earn CE credit hours', 'Build preceptor reputation', 'Digital teaching portfolio'],
+                features: ['Approve hours digitally', 'Structured evaluation rubrics', 'Earn CE credit hours', 'Grow your precepting experience', 'Track your precepting activity'],
                 color: 'primary',
               },
             ].map(item => (
@@ -327,8 +327,8 @@ export function LandingPage() {
           <div className="grid sm:grid-cols-3 gap-6">
             {[
               { title: 'All-in-One', desc: 'Search, apply, track, evaluate, certify — no more stitching together 5 tools', icon: <Globe className="w-6 h-6" /> },
-              { title: 'Blockchain-Verified', desc: 'Every credential is immutable and verifiable by employers and licensing boards', icon: <Lock className="w-6 h-6" /> },
-              { title: 'AI-Powered', desc: 'Smart matching, demand forecasting, and automated compliance scoring', icon: <Brain className="w-6 h-6" /> },
+              { title: 'Instantly Verifiable', desc: 'Every certificate includes a unique verification link — employers can confirm credentials in seconds', icon: <Lock className="w-6 h-6" /> },
+              { title: 'Purpose-Built', desc: 'Designed specifically for clinical education with role-specific workflows for students, preceptors, sites, and universities', icon: <Brain className="w-6 h-6" /> },
             ].map(item => (
               <div key={item.title} className="p-6 rounded-2xl bg-white/5 border border-white/10">
                 <div className="w-12 h-12 rounded-xl bg-primary-500/20 text-primary-400 flex items-center justify-center mx-auto mb-4">
@@ -347,13 +347,13 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid sm:grid-cols-3 gap-8">
             {[
-              { quote: "ClinicLink eliminated our 6-week placement scramble. Students find their own rotations now.", author: 'Dr. Lisa Thompson', title: 'University Coordinator, UMiami', icon: <BookOpen className="w-5 h-5" /> },
-              { quote: "I found 3 amazing rotations and got accepted within a week. The old process took months.", author: 'Sarah Chen', title: 'BSN Student', icon: <GraduationCap className="w-5 h-5" /> },
-              { quote: "Managing 8 rotation slots went from chaos to one clean dashboard. Game changer.", author: 'Maria Garcia', title: 'Site Manager, Mercy General', icon: <Building2 className="w-5 h-5" /> },
+              { quote: "Imagine eliminating your placement scramble. Students browse and apply for rotations themselves.", author: 'University Coordinator', title: 'Example use case', icon: <BookOpen className="w-5 h-5" /> },
+              { quote: "Search available rotations, apply with one click, and track your hours — all in one place.", author: 'Nursing Student', title: 'Example use case', icon: <GraduationCap className="w-5 h-5" /> },
+              { quote: "Manage all your rotation slots, review applications, and track student compliance from one dashboard.", author: 'Site Manager', title: 'Example use case', icon: <Building2 className="w-5 h-5" /> },
             ].map(item => (
               <Card key={item.author}>
                 <div className="flex gap-1 mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                  <Badge variant="default" size="sm">Demo Example</Badge>
                 </div>
                 <p className="text-sm text-stone-700 mb-4 italic">"{item.quote}"</p>
                 <div className="flex items-center gap-3">
@@ -410,7 +410,7 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-4xl font-bold mb-4">Ready to Transform Clinical Education?</h2>
           <p className="text-lg text-white/80 mb-8">
-            Join thousands of students, sites, and universities already using ClinicLink.
+            Join students, clinical sites, and universities building the future of clinical education.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="bg-white text-primary-600 hover:bg-white/90 w-full sm:w-auto" onClick={() => navigate('/register')}>
@@ -432,7 +432,7 @@ export function LandingPage() {
                 <Stethoscope className="w-5 h-5 text-primary-400" />
                 <span className="font-semibold text-white">ClinicLink</span>
               </div>
-              <p className="text-sm text-stone-500">The most advanced clinical rotation platform ever built.</p>
+              <p className="text-sm text-stone-500">The all-in-one clinical rotation platform.</p>
             </div>
             <div>
               <h4 className="font-medium text-white text-sm mb-3">Platform</h4>
