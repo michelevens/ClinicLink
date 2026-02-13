@@ -17,6 +17,7 @@ use App\Http\Controllers\RotationSiteController;
 use App\Http\Controllers\RotationSlotController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SiteInviteController;
+use App\Http\Controllers\SiteJoinRequestController;
 use App\Http\Controllers\CeCertificateController;
 use App\Http\Controllers\UniversityController;
 use Illuminate\Support\Facades\Route;
@@ -82,6 +83,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Notifications (all authenticated users)
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::get('/notifications/preferences', [NotificationController::class, 'getPreferences']);
+    Route::put('/notifications/preferences', [NotificationController::class, 'updatePreferences']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
 
@@ -212,6 +215,18 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);
     Route::get('/my-pending-invites', [SiteInviteController::class, 'myPendingInvites']);
+
+    // Site Join Requests (preceptor requests to join a site; manager/admin reviews)
+    Route::middleware('role:preceptor')->group(function () {
+        Route::post('/site-join-requests', [SiteJoinRequestController::class, 'store']);
+        Route::get('/site-join-requests/mine', [SiteJoinRequestController::class, 'myRequests']);
+        Route::put('/site-join-requests/{joinRequest}/withdraw', [SiteJoinRequestController::class, 'withdraw']);
+    });
+    Route::middleware('role:site_manager,admin')->group(function () {
+        Route::get('/site-join-requests', [SiteJoinRequestController::class, 'index']);
+        Route::put('/site-join-requests/{joinRequest}/approve', [SiteJoinRequestController::class, 'approve']);
+        Route::put('/site-join-requests/{joinRequest}/deny', [SiteJoinRequestController::class, 'deny']);
+    });
 
     // CE Certificates (preceptor, coordinator, admin) — download moved to public routes
     Route::middleware('role:preceptor,coordinator,admin')->group(function () {

@@ -5,7 +5,7 @@ import { Input } from '../components/ui/Input.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { authApi } from '../services/api.ts'
-import { useStudentProfile, useUpdateStudentProfile, useCredentials, useAddCredential, useDeleteCredential, useUploadCredentialFile, useUniversities, useMfaStatus, useMfaSetup, useMfaConfirm, useMfaDisable, useMfaBackupCodes } from '../hooks/useApi.ts'
+import { useStudentProfile, useUpdateStudentProfile, useCredentials, useAddCredential, useDeleteCredential, useUploadCredentialFile, useUniversities, useMfaStatus, useMfaSetup, useMfaConfirm, useMfaDisable, useMfaBackupCodes, useNotificationPreferences, useUpdateNotificationPreferences } from '../hooks/useApi.ts'
 import { universitiesApi } from '../services/api.ts'
 import type { ApiProgram } from '../services/api.ts'
 import { toast } from 'sonner'
@@ -929,35 +929,69 @@ function MfaSection() {
 }
 
 function NotificationsTab() {
-  const [prefs, setPrefs] = useState({
-    email_applications: true,
-    email_hours: true,
-    email_evaluations: true,
-    email_reminders: true,
-    email_marketing: false,
-  })
+  const { user } = useAuth()
+  const { data, isLoading } = useNotificationPreferences()
+  const updateMut = useUpdateNotificationPreferences()
+  const [localPrefs, setLocalPrefs] = useState<Record<string, boolean> | null>(null)
 
-  const togglePref = (key: keyof typeof prefs) => {
-    setPrefs(p => ({ ...p, [key]: !p[key] }))
+  const prefs = localPrefs ?? data?.preferences ?? {
+    application_updates: true,
+    hour_log_reviews: true,
+    evaluations: true,
+    site_join_requests: true,
+    reminders: true,
+    product_updates: false,
   }
 
-  const handleSave = () => {
-    toast.success('Notification preferences saved')
+  // Sync from API once loaded
+  if (data?.preferences && !localPrefs) {
+    setLocalPrefs({ ...data.preferences })
   }
 
-  const options: { key: keyof typeof prefs; label: string; desc: string }[] = [
-    { key: 'email_applications', label: 'Application Updates', desc: 'Get notified when your application status changes' },
-    { key: 'email_hours', label: 'Hour Log Reviews', desc: 'Get notified when your logged hours are reviewed' },
-    { key: 'email_evaluations', label: 'Evaluations', desc: 'Get notified when a new evaluation is submitted' },
-    { key: 'email_reminders', label: 'Reminders', desc: 'Receive reminders for upcoming deadlines and tasks' },
-    { key: 'email_marketing', label: 'Product Updates', desc: 'Hear about new features and improvements' },
+  const togglePref = (key: string) => {
+    setLocalPrefs(p => ({ ...p!, [key]: !p![key] }))
+  }
+
+  const handleSave = async () => {
+    if (!localPrefs) return
+    try {
+      await updateMut.mutateAsync(localPrefs as Record<string, boolean>)
+      toast.success('Notification preferences saved')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save preferences'
+      toast.error(message)
+    }
+  }
+
+  const role = user?.role || 'student'
+
+  const options: { key: string; label: string; desc: string; roles?: string[] }[] = [
+    { key: 'application_updates', label: 'Application Updates', desc: 'New applications, status changes, and review notifications' },
+    { key: 'hour_log_reviews', label: 'Hour Log Reviews', desc: 'Notifications when hour logs are submitted or reviewed' },
+    { key: 'evaluations', label: 'Evaluations', desc: 'Notifications about new evaluations' },
+    { key: 'site_join_requests', label: 'Site Join Requests', desc: 'Requests to join sites, approvals, and assignments' },
+    { key: 'reminders', label: 'Reminders', desc: 'Reminders for upcoming deadlines and tasks' },
+    { key: 'product_updates', label: 'Product Updates', desc: 'Hear about new features and improvements' },
   ]
+
+  // Filter by role if applicable (all options are relevant to all roles for now)
+  const visibleOptions = options.filter(o => !o.roles || o.roles.includes(role))
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold text-stone-900 mb-6">Email Notifications</h2>
+      <h2 className="text-lg font-semibold text-stone-900 mb-6">Notification Preferences</h2>
       <div className="space-y-4">
-        {options.map(opt => (
+        {visibleOptions.map(opt => (
           <div key={opt.key} className="flex items-center justify-between p-4 rounded-xl border border-stone-200">
             <div>
               <p className="font-medium text-stone-900 text-sm">{opt.label}</p>
@@ -966,18 +1000,18 @@ function NotificationsTab() {
             <button
               onClick={() => togglePref(opt.key)}
               className={`relative w-11 h-6 rounded-full transition-colors ${
-                prefs[opt.key] ? 'bg-primary-500' : 'bg-stone-300'
+                (prefs as Record<string, boolean>)[opt.key] ? 'bg-primary-500' : 'bg-stone-300'
               }`}
             >
               <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                prefs[opt.key] ? 'translate-x-5.5 left-0.5' : 'left-0.5'
+                (prefs as Record<string, boolean>)[opt.key] ? 'translate-x-5.5 left-0.5' : 'left-0.5'
               }`} />
             </button>
           </div>
         ))}
       </div>
       <div className="flex justify-end pt-4">
-        <Button onClick={handleSave}>
+        <Button onClick={handleSave} isLoading={updateMut.isPending}>
           <Save className="w-4 h-4" /> Save Preferences
         </Button>
       </div>

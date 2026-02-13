@@ -9,6 +9,7 @@ use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Notifications\PreceptorAssignedToSiteNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -445,6 +446,18 @@ class AdminController extends Controller
 
             $site = RotationSite::find($siteId);
             $assigned[] = $site?->name ?? $siteId;
+        }
+
+        // Notify preceptor about each new site assignment
+        foreach ($assigned as $siteName) {
+            try {
+                $site = RotationSite::where('name', $siteName)->first();
+                if ($site) {
+                    $user->notify(new PreceptorAssignedToSiteNotification($site));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send site assignment notification: ' . $e->getMessage());
+            }
         }
 
         $message = count($assigned) > 0

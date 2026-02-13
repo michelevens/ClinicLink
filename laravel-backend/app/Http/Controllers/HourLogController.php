@@ -7,8 +7,10 @@ use App\Models\Application;
 use App\Models\HourLog;
 use App\Models\StudentProfile;
 use App\Notifications\HourLogReviewedNotification;
+use App\Notifications\HourLogSubmittedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class HourLogController extends Controller
@@ -81,8 +83,19 @@ class HourLogController extends Controller
         $validated['student_id'] = $user->id;
 
         $log = HourLog::create($validated);
+        $log->load('slot.site', 'student');
 
-        return response()->json($log->load('slot.site'), 201);
+        // Notify the slot's preceptor about the new hour log
+        try {
+            if ($log->slot && $log->slot->preceptor_id) {
+                $preceptor = \App\Models\User::find($log->slot->preceptor_id);
+                $preceptor?->notify(new HourLogSubmittedNotification($log));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send hour-log submitted notification: ' . $e->getMessage());
+        }
+
+        return response()->json($log, 201);
     }
 
     public function update(Request $request, HourLog $hourLog): JsonResponse

@@ -1,17 +1,24 @@
 import { useState } from 'react'
-import { Building2, MapPin, Phone, Globe, Star, Users, CalendarDays, Plus, Pencil, Stethoscope } from 'lucide-react'
-import { useMySites, useCreateSite, useUpdateSite } from '../hooks/useApi.ts'
+import { Building2, MapPin, Phone, Globe, Star, Users, CalendarDays, Plus, Pencil, Stethoscope, Clock, XCircle, CheckCircle } from 'lucide-react'
+import { useMySites, useCreateSite, useUpdateSite, useMyJoinRequests, useWithdrawJoinRequest } from '../hooks/useApi.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
+import { toast } from 'sonner'
 import type { ApiSite } from '../services/api.ts'
 
 export function MySite() {
+  const { user } = useAuth()
+  const isPreceptor = user?.role === 'preceptor'
   const { data, isLoading } = useMySites()
   const sites = data?.sites || []
   const createSite = useCreateSite()
   const updateSite = useUpdateSite()
+  const { data: joinRequestsData } = useMyJoinRequests()
+  const withdrawJoinRequest = useWithdrawJoinRequest()
+  const myJoinRequests = joinRequestsData?.join_requests || []
 
   const [showForm, setShowForm] = useState(false)
   const [editSite, setEditSite] = useState<ApiSite | null>(null)
@@ -122,6 +129,68 @@ export function MySite() {
                     <span className="flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" /> {site.slots?.length || 0} slots</span>
                     <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {site.slots?.reduce((s, sl) => s + sl.filled, 0) || 0} students</span>
                   </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Preceptor: My Join Requests */}
+      {isPreceptor && myJoinRequests.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-stone-900">My Join Requests</h2>
+          {myJoinRequests.map(req => (
+            <Card key={req.id} className="!py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    req.status === 'pending' ? 'bg-amber-100 text-amber-600' :
+                    req.status === 'approved' ? 'bg-green-100 text-green-600' :
+                    req.status === 'denied' ? 'bg-red-100 text-red-600' :
+                    'bg-stone-100 text-stone-500'
+                  }`}>
+                    {req.status === 'pending' ? <Clock className="w-5 h-5" /> :
+                     req.status === 'approved' ? <CheckCircle className="w-5 h-5" /> :
+                     <XCircle className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-stone-900">{req.site?.name}</p>
+                    <p className="text-xs text-stone-500">
+                      {req.site?.city}, {req.site?.state}
+                      <span className="mx-1">&middot;</span>
+                      Submitted {new Date(req.created_at).toLocaleDateString()}
+                    </p>
+                    {req.review_notes && (
+                      <p className="text-xs text-stone-600 mt-0.5 italic">Note: {req.review_notes}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge
+                    variant={
+                      req.status === 'pending' ? 'warning' :
+                      req.status === 'approved' ? 'success' :
+                      req.status === 'denied' ? 'danger' : 'default'
+                    }
+                  >
+                    {req.status}
+                  </Badge>
+                  {req.status === 'pending' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await withdrawJoinRequest.mutateAsync(req.id)
+                          toast.success('Request withdrawn')
+                        } catch { toast.error('Failed to withdraw') }
+                      }}
+                      isLoading={withdrawJoinRequest.isPending}
+                    >
+                      Withdraw
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>

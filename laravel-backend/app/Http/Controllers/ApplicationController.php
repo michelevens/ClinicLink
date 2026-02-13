@@ -9,10 +9,12 @@ use App\Models\RotationSlot;
 use App\Models\StudentProfile;
 use App\Notifications\ApplicationReviewedNotification;
 use App\Notifications\NewApplicationNotification;
+use App\Notifications\StudentApplicationSubmittedNotification;
 use App\Services\CECertificateGenerator;
 use App\Services\CEEligibilityService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class ApplicationController extends Controller
@@ -104,6 +106,21 @@ class ApplicationController extends Controller
         // Notify site manager
         if ($slot->site && $slot->site->manager) {
             $slot->site->manager->notify(new NewApplicationNotification($application));
+        }
+
+        // Notify coordinator/professor at the student's university
+        try {
+            $studentUniId = $user->studentProfile?->university_id;
+            if ($studentUniId) {
+                $facultyUsers = User::whereIn('role', ['coordinator', 'professor'])
+                    ->whereHas('studentProfile', fn ($q) => $q->where('university_id', $studentUniId))
+                    ->get();
+                foreach ($facultyUsers as $faculty) {
+                    $faculty->notify(new StudentApplicationSubmittedNotification($application));
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send application notification to coordinators: ' . $e->getMessage());
         }
 
         return response()->json($application, 201);

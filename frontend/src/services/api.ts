@@ -489,6 +489,15 @@ export const onboardingTasksApi = {
 }
 
 // --- Notifications ---
+export interface NotificationPreferences {
+  application_updates: boolean
+  hour_log_reviews: boolean
+  evaluations: boolean
+  site_join_requests: boolean
+  reminders: boolean
+  product_updates: boolean
+}
+
 export const notificationsApi = {
   list: (params?: { page?: number }) => {
     const qs = new URLSearchParams()
@@ -498,6 +507,42 @@ export const notificationsApi = {
   unreadCount: () => api.get<{ count: number }>('/notifications/unread-count'),
   markAsRead: (id: string) => api.put<{ message: string }>(`/notifications/${id}/read`),
   markAllAsRead: () => api.put<{ message: string }>('/notifications/read-all'),
+  getPreferences: () => api.get<{ preferences: NotificationPreferences }>('/notifications/preferences'),
+  updatePreferences: (data: Partial<NotificationPreferences>) =>
+    api.put<{ preferences: NotificationPreferences }>('/notifications/preferences', data),
+}
+
+// --- Site Join Requests ---
+export interface ApiSiteJoinRequest {
+  id: string
+  site_id: string
+  preceptor_id: string
+  message: string | null
+  status: 'pending' | 'approved' | 'denied' | 'withdrawn'
+  reviewed_by: string | null
+  reviewed_at: string | null
+  review_notes: string | null
+  created_at: string
+  updated_at: string
+  site?: ApiSite
+  preceptor?: ApiUser
+  reviewer?: ApiUser
+}
+
+export const siteJoinRequestsApi = {
+  create: (data: { site_id: string; message?: string }) =>
+    api.post<{ join_request: ApiSiteJoinRequest; message: string }>('/site-join-requests', data),
+  mine: () => api.get<{ join_requests: ApiSiteJoinRequest[] }>('/site-join-requests/mine'),
+  list: (params?: { status?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.status) qs.set('status', params.status)
+    return api.get<{ join_requests: ApiSiteJoinRequest[] }>(`/site-join-requests?${qs}`)
+  },
+  withdraw: (id: string) => api.put<{ message: string }>(`/site-join-requests/${id}/withdraw`),
+  approve: (id: string, data?: { notes?: string }) =>
+    api.put<{ message: string }>(`/site-join-requests/${id}/approve`, data),
+  deny: (id: string, data?: { notes?: string }) =>
+    api.put<{ message: string }>(`/site-join-requests/${id}/deny`, data),
 }
 
 // --- API Types (match Laravel snake_case) ---

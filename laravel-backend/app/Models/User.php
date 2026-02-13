@@ -27,6 +27,7 @@ class User extends Authenticatable
         'mfa_secret',
         'mfa_confirmed_at',
         'mfa_backup_codes',
+        'notification_preferences',
     ];
 
     protected $hidden = [
@@ -45,7 +46,22 @@ class User extends Authenticatable
             'mfa_secret' => 'encrypted',
             'mfa_confirmed_at' => 'datetime',
             'mfa_backup_codes' => 'array',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    public function wantsNotification(string $type): bool
+    {
+        $defaults = [
+            'application_updates' => true,
+            'hour_log_reviews' => true,
+            'evaluations' => true,
+            'site_join_requests' => true,
+            'reminders' => true,
+            'product_updates' => false,
+        ];
+        $prefs = $this->notification_preferences ?? $defaults;
+        return $prefs[$type] ?? true;
     }
 
     // Relationships

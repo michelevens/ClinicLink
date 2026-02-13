@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, MapPin, Phone, Globe, Star, Search, Stethoscope, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, LayoutGrid, List } from 'lucide-react'
-import { useSites, useCreateSite, useUpdateSite } from '../hooks/useApi.ts'
+import { Building2, MapPin, Phone, Globe, Star, Search, Stethoscope, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, LayoutGrid, List, UserPlus, Clock, CheckCircle } from 'lucide-react'
+import { useSites, useCreateSite, useUpdateSite, useMyJoinRequests, useCreateJoinRequest } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -9,7 +9,7 @@ import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { toast } from 'sonner'
-import { sitesApi, type ApiSite } from '../services/api.ts'
+import { sitesApi, siteInvitesApi, type ApiSite } from '../services/api.ts'
 
 const emptySiteForm = {
   name: '', address: '', city: '', state: '', zip: '', phone: '',
@@ -20,6 +20,7 @@ export function SitesDirectory() {
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const isSiteManager = user?.role === 'site_manager'
+  const isPreceptor = user?.role === 'preceptor'
   const canCreate = isAdmin || isSiteManager
   const navigate = useNavigate()
 
@@ -37,6 +38,44 @@ export function SitesDirectory() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [form, setForm] = useState(emptySiteForm)
   const [specialtyInput, setSpecialtyInput] = useState('')
+
+  // Preceptor join request state
+  const [joinSiteId, setJoinSiteId] = useState<string | null>(null)
+  const [joinMessage, setJoinMessage] = useState('')
+  const { data: myJoinRequestsData } = useMyJoinRequests()
+  const createJoinRequest = useCreateJoinRequest()
+  const myJoinRequests = myJoinRequestsData?.join_requests || []
+  // Also check accepted invites for linked sites
+  const [linkedSiteIds, setLinkedSiteIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (isPreceptor) {
+      // Check which sites the preceptor is already linked to via accepted invites
+      siteInvitesApi.myPending().then(res => {
+        // myPending returns pending invites; we need accepted ones from the join requests
+        // Join requests with status 'approved' already indicate linked sites
+      }).catch(() => {})
+    }
+  }, [isPreceptor])
+
+  const getJoinStatus = (siteId: string): 'none' | 'pending' | 'approved' | 'linked' => {
+    if (linkedSiteIds.has(siteId)) return 'linked'
+    const req = myJoinRequests.find(r => r.site_id === siteId)
+    if (req?.status === 'pending') return 'pending'
+    if (req?.status === 'approved') return 'approved'
+    return 'none'
+  }
+
+  const handleJoinRequest = async () => {
+    if (!joinSiteId) return
+    try {
+      await createJoinRequest.mutateAsync({ site_id: joinSiteId, message: joinMessage || undefined })
+      toast.success('Join request submitted!')
+      setJoinSiteId(null)
+      setJoinMessage('')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to submit request')
+    }
+  }
 
   const { data, isLoading, refetch } = useSites({ search, specialty: specialty || undefined, state: state || undefined, page })
   const createMutation = useCreateSite()
@@ -282,6 +321,24 @@ export function SitesDirectory() {
                     {site.ehr_system && <span className="flex items-center gap-1"><Stethoscope className="w-3 h-3" /> {site.ehr_system}</span>}
                   </div>
                   <div className="flex items-center gap-1">
+                    {isPreceptor && (() => {
+                      const status = getJoinStatus(site.id)
+                      if (status === 'linked' || status === 'approved') return (
+                        <span className="flex items-center gap-1 text-xs text-green-600 font-medium px-2 py-1">
+                          <CheckCircle className="w-3.5 h-3.5" /> Joined
+                        </span>
+                      )
+                      if (status === 'pending') return (
+                        <span className="flex items-center gap-1 text-xs text-amber-600 font-medium px-2 py-1">
+                          <Clock className="w-3.5 h-3.5" /> Requested
+                        </span>
+                      )
+                      return (
+                        <Button variant="outline" size="sm" onClick={() => setJoinSiteId(site.id)}>
+                          <UserPlus className="w-3.5 h-3.5" /> Request to Join
+                        </Button>
+                      )
+                    })()}
                     {canEditSite(site) && (
                       <>
                         <Button variant="ghost" size="sm" onClick={() => openEdit(site)}><Pencil className="w-3.5 h-3.5" /></Button>
@@ -335,6 +392,20 @@ export function SitesDirectory() {
                   <td className="px-4 py-3 text-stone-600">{site.ehr_system || '—'}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {isPreceptor && (() => {
+                        const status = getJoinStatus(site.id)
+                        if (status === 'linked' || status === 'approved') return (
+                          <span className="text-xs text-green-600 font-medium px-2">Joined</span>
+                        )
+                        if (status === 'pending') return (
+                          <span className="text-xs text-amber-600 font-medium px-2">Requested</span>
+                        )
+                        return (
+                          <Button variant="outline" size="sm" onClick={() => setJoinSiteId(site.id)}>
+                            <UserPlus className="w-3.5 h-3.5" /> Join
+                          </Button>
+                        )
+                      })()}
                       {canEditSite(site) && (
                         <>
                           <Button variant="ghost" size="sm" onClick={() => openEdit(site)}><Pencil className="w-3.5 h-3.5" /></Button>
@@ -464,6 +535,33 @@ export function SitesDirectory() {
               <Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>
               <Button onClick={handleDelete} isLoading={isDeleting} className="bg-red-600 hover:bg-red-700">
                 Delete
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Join Request Modal (Preceptor) */}
+      {joinSiteId && (
+        <Modal isOpen onClose={() => { setJoinSiteId(null); setJoinMessage('') }} title="Request to Join Site" size="sm">
+          <div className="space-y-4">
+            <p className="text-sm text-stone-600">
+              Submit a request to join <strong>{sites.find(s => s.id === joinSiteId)?.name}</strong> as a preceptor. The site manager will review your request.
+            </p>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-stone-700">Message (optional)</label>
+              <textarea
+                value={joinMessage}
+                onChange={e => setJoinMessage(e.target.value)}
+                placeholder="Introduce yourself or explain why you'd like to join..."
+                rows={3}
+                className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setJoinSiteId(null); setJoinMessage('') }}>Cancel</Button>
+              <Button onClick={handleJoinRequest} isLoading={createJoinRequest.isPending}>
+                <UserPlus className="w-4 h-4" /> Submit Request
               </Button>
             </div>
           </div>

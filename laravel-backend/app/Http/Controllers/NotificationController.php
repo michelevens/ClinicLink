@@ -42,4 +42,41 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'All notifications marked as read.']);
     }
+
+    public function getPreferences(Request $request): JsonResponse
+    {
+        $defaults = [
+            'application_updates' => true,
+            'hour_log_reviews' => true,
+            'evaluations' => true,
+            'site_join_requests' => true,
+            'reminders' => true,
+            'product_updates' => false,
+        ];
+
+        return response()->json([
+            'preferences' => $request->user()->notification_preferences ?? $defaults,
+        ]);
+    }
+
+    public function updatePreferences(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'application_updates' => ['sometimes', 'boolean'],
+            'hour_log_reviews' => ['sometimes', 'boolean'],
+            'evaluations' => ['sometimes', 'boolean'],
+            'site_join_requests' => ['sometimes', 'boolean'],
+            'reminders' => ['sometimes', 'boolean'],
+            'product_updates' => ['sometimes', 'boolean'],
+        ]);
+
+        $current = $request->user()->notification_preferences ?? [];
+        $request->user()->update([
+            'notification_preferences' => array_merge($current, $validated),
+        ]);
+
+        return response()->json([
+            'preferences' => $request->user()->notification_preferences,
+        ]);
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Notifications\NewUserRegisteredNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,12 +64,13 @@ class AuthController extends Controller
             Log::error('Failed to send registration email to ' . $user->email . ': ' . $e->getMessage());
         }
 
-        // Notify all admin users about the new registration
+        // Notify all admin users about the new registration (email + in-app)
         try {
             $admins = User::where('role', 'admin')->where('is_active', true)->get();
             $reviewUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') . '/admin/users/' . $user->id;
             foreach ($admins as $admin) {
                 Mail::to($admin->email)->send(new NewUserRegistrationMail($user, $reviewUrl));
+                $admin->notify(new NewUserRegisteredNotification($user));
             }
         } catch (\Throwable $e) {
             Log::error('Failed to send admin notification for new user ' . $user->email . ': ' . $e->getMessage());

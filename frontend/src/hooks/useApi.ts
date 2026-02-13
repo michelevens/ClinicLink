@@ -3,7 +3,7 @@ import {
   dashboardApi, slotsApi, applicationsApi, hourLogsApi,
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
   onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
-  cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi,
+  cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -527,6 +527,80 @@ export function useMarkAllAsRead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] })
       qc.invalidateQueries({ queryKey: ['unread-count'] })
+    },
+  })
+}
+
+export function useNotificationPreferences() {
+  return useQuery({
+    queryKey: ['notification-preferences'],
+    queryFn: () => notificationsApi.getPreferences(),
+  })
+}
+
+export function useUpdateNotificationPreferences() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: notificationsApi.updatePreferences,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['notification-preferences'] }) },
+  })
+}
+
+// --- Site Join Requests ---
+export function useCreateJoinRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: siteJoinRequestsApi.create,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-join-requests'] })
+      qc.invalidateQueries({ queryKey: ['site-join-requests'] })
+    },
+  })
+}
+
+export function useMyJoinRequests() {
+  return useQuery({
+    queryKey: ['my-join-requests'],
+    queryFn: () => siteJoinRequestsApi.mine(),
+  })
+}
+
+export function useSiteJoinRequests(params?: { status?: string }) {
+  return useQuery({
+    queryKey: ['site-join-requests', params],
+    queryFn: () => siteJoinRequestsApi.list(params),
+  })
+}
+
+export function useWithdrawJoinRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: siteJoinRequestsApi.withdraw,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-join-requests'] })
+      qc.invalidateQueries({ queryKey: ['site-join-requests'] })
+    },
+  })
+}
+
+export function useApproveJoinRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) => siteJoinRequestsApi.approve(id, { notes }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['site-join-requests'] })
+      qc.invalidateQueries({ queryKey: ['site-preceptors'] })
+      qc.invalidateQueries({ queryKey: ['site-invites'] })
+    },
+  })
+}
+
+export function useDenyJoinRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) => siteJoinRequestsApi.deny(id, { notes }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['site-join-requests'] })
     },
   })
 }
