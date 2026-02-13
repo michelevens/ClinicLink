@@ -815,10 +815,11 @@ export interface ApiDashboardStats {
   total_students?: number
   active_placements?: number
   available_slots?: number
-  // Admin stats
+  // Site Manager + Admin stats
   total_users?: number
   total_universities?: number
   recent_applications?: number
+  pending_join_requests?: number
 }
 
 export interface HourSummary {

@@ -7,6 +7,7 @@ import {
   useDashboardStats, useApplications, useHourLogs,
   useEvaluations, useCredentials, useSlots, useMySites,
   useMyPendingInvites, useAcceptInvite,
+  useSiteJoinRequests, useCeCertificates,
 } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import {
@@ -64,6 +65,40 @@ function SectionHeader({ title, actionLabel, onAction }: { title: string; action
   )
 }
 
+// ─── Shared Action Required Banner ────────────────────────────
+function ActionRequiredBanner({ items }: {
+  items: { label: string; count: number; onClick: () => void; buttonLabel: string }[]
+}) {
+  const actionItems = items.filter(i => i.count > 0)
+  if (actionItems.length === 0) return null
+
+  return (
+    <Card className="border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+          <AlertTriangle className="w-5 h-5 text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-amber-800 text-lg">Action Required</p>
+          <div className="mt-2 space-y-2">
+            {actionItems.map((item, i) => (
+              <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-200 text-amber-800 text-xs font-bold flex-shrink-0">{item.count}</span>
+                  <span className="text-sm text-amber-700">{item.label}</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={item.onClick} className="flex-shrink-0 border-amber-300 text-amber-800 hover:bg-amber-100">
+                  {item.buttonLabel} <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // STUDENT DASHBOARD
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -113,6 +148,12 @@ function StudentDashboard() {
         <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Active Rotations" value={stats?.active_rotations || activeRotations.length} color="green" />
         <StatCard icon={<AlertCircle className="w-5 h-5" />} label="Pending Review" value={pendingCount} color="amber" />
       </div>
+
+      {/* Action Required */}
+      <ActionRequiredBanner items={[
+        { label: 'credential(s) expired or expiring', count: expiredCreds.length + expiringSoonCreds.length, onClick: () => navigate('/settings'), buttonLabel: 'Update' },
+        { label: 'hour log(s) pending review', count: pendingCount, onClick: () => navigate('/hours'), buttonLabel: 'View' },
+      ]} />
 
       {/* Hours Progress */}
       <Card>
@@ -264,6 +305,9 @@ function SiteManagerDashboard() {
   const { data: slotsData } = useSlots()
   const { data: sitesData } = useMySites()
 
+  const { data: joinReqData } = useSiteJoinRequests({ status: 'pending' })
+  const pendingJoinRequests = joinReqData?.join_requests || []
+
   const allApps = appsData?.data || []
   const pendingApps = allApps.filter(a => a.status === 'pending')
   const acceptedApps = allApps.filter(a => a.status === 'accepted')
@@ -288,6 +332,12 @@ function SiteManagerDashboard() {
         <StatCard icon={<Users className="w-5 h-5" />} label="Active Students" value={stats?.active_students || acceptedApps.length} color="green" />
         <StatCard icon={<Star className="w-5 h-5" />} label="Avg Rating" value={sites.length > 0 ? (sites.reduce((s, st) => s + (st.rating || 0), 0) / sites.length).toFixed(1) : '—'} color="accent" />
       </div>
+
+      {/* Action Required */}
+      <ActionRequiredBanner items={[
+        { label: 'application(s) to review', count: pendingApps.length, onClick: () => navigate('/site-applications'), buttonLabel: 'Review' },
+        { label: 'join request(s) to approve', count: pendingJoinRequests.length, onClick: () => navigate('/preceptors'), buttonLabel: 'Review' },
+      ]} />
 
       {/* Slot Occupancy */}
       {slots.length > 0 && (
@@ -432,6 +482,13 @@ function PreceptorDashboard() {
         <StatCard icon={<Award className="w-5 h-5" />} label="Total Hours Supervised" value={hours.filter(h => h.status === 'approved').reduce((s, h) => s + (Number(h.hours_worked) || 0), 0)} color="green" />
       </div>
 
+      {/* Action Required */}
+      <ActionRequiredBanner items={[
+        { label: 'hour log(s) to review', count: pendingHours.length, onClick: () => navigate('/hours'), buttonLabel: 'Review' },
+        { label: 'evaluation(s) to complete', count: pendingEvals.length, onClick: () => navigate('/evaluations'), buttonLabel: 'Complete' },
+        { label: 'site invite(s) pending', count: pendingInvites.length, onClick: () => { /* scroll handled by section below */ }, buttonLabel: 'View Below' },
+      ]} />
+
       {/* Pending Site Invites */}
       {pendingInvites.length > 0 && (
         <div className="space-y-3">
@@ -503,26 +560,6 @@ function PreceptorDashboard() {
                 </div>
               )
             })}
-          </div>
-        </Card>
-      )}
-
-      {/* Urgent Items Banner */}
-      {(pendingHours.length > 0 || pendingEvals.length > 0) && (
-        <Card className="border-amber-200 bg-amber-50">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="font-semibold text-amber-800">Items Needing Your Attention</p>
-              <p className="text-sm text-amber-700">
-                {pendingHours.length > 0 && `${pendingHours.length} hour log(s) to review`}
-                {pendingHours.length > 0 && pendingEvals.length > 0 && ' • '}
-                {pendingEvals.length > 0 && `${pendingEvals.length} evaluation(s) to complete`}
-              </p>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/hours')}>
-              Review Now <ArrowRight className="w-4 h-4" />
-            </Button>
           </div>
         </Card>
       )}
@@ -606,9 +643,12 @@ function CoordinatorDashboard() {
   const { data: stats, isLoading } = useDashboardStats()
   const { data: appsData } = useApplications()
   const { data: slotsData } = useSlots()
+  const { data: certsData } = useCeCertificates()
 
   const applications = appsData?.data || []
   const slots = slotsData?.data || []
+  const ceCerts = certsData?.ce_certificates || []
+  const pendingCerts = ceCerts.filter(c => c.status === 'pending')
 
   const pendingApps = applications.filter(a => a.status === 'pending')
   const acceptedApps = applications.filter(a => a.status === 'accepted')
@@ -634,6 +674,12 @@ function CoordinatorDashboard() {
         <StatCard icon={<FileText className="w-5 h-5" />} label="Pending Apps" value={stats?.pending_applications || pendingApps.length} color="secondary" />
         <StatCard icon={<CalendarDays className="w-5 h-5" />} label="Available Slots" value={stats?.available_slots || slots.filter(s => s.status === 'open').length} color="accent" />
       </div>
+
+      {/* Action Required */}
+      <ActionRequiredBanner items={[
+        { label: 'unplaced student(s)', count: unplacedStudents, onClick: () => navigate('/placements'), buttonLabel: 'Place' },
+        { label: 'CE certificate(s) to review', count: pendingCerts.length, onClick: () => navigate('/ce-credits'), buttonLabel: 'Review' },
+      ]} />
 
       {/* Placement Pipeline */}
       <Card>
@@ -723,6 +769,9 @@ function ProfessorDashboard() {
   const applications = appsData?.data || []
   const evaluations = evalsData?.data || []
   const activeStudents = applications.filter(a => a.status === 'accepted')
+  const totalStudents = stats?.total_students || 0
+  const placedStudents = stats?.active_placements || activeStudents.length
+  const unplacedStudents = Math.max(totalStudents - placedStudents, 0)
 
   if (isLoading) return <LoadingSpinner />
 
@@ -740,6 +789,11 @@ function ProfessorDashboard() {
         <StatCard icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations" value={evaluations.length} color="secondary" />
         <StatCard icon={<TrendingUp className="w-5 h-5" />} label="Available Slots" value={stats?.available_slots || 0} color="accent" />
       </div>
+
+      {/* Action Required */}
+      <ActionRequiredBanner items={[
+        { label: 'unplaced student(s)', count: unplacedStudents, onClick: () => navigate('/students'), buttonLabel: 'View' },
+      ]} />
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
@@ -824,10 +878,12 @@ function AdminDashboard() {
   const { data: slotsData } = useSlots()
   const { data: appsData } = useApplications()
   const { data: sitesData } = useMySites()
+  const { data: joinReqData } = useSiteJoinRequests({ status: 'pending' })
 
   const slots = slotsData?.data || []
   const applications = appsData?.data || []
   const sites = sitesData?.sites || []
+  const pendingJoinRequests = joinReqData?.join_requests || []
 
   const openSlots = slots.filter(s => s.status === 'open').length
   const pendingApps = applications.filter(a => a.status === 'pending').length
@@ -848,6 +904,12 @@ function AdminDashboard() {
         <StatCard icon={<BookOpen className="w-5 h-5" />} label="Universities" value={stats?.total_universities || 0} color="accent" />
         <StatCard icon={<CalendarDays className="w-5 h-5" />} label="Total Slots" value={stats?.total_slots || slots.length} color="green" />
       </div>
+
+      {/* Action Required */}
+      <ActionRequiredBanner items={[
+        { label: 'application(s) pending review', count: pendingApps, onClick: () => navigate('/site-applications'), buttonLabel: 'Review' },
+        { label: 'join request(s) pending', count: pendingJoinRequests.length, onClick: () => navigate('/preceptors'), buttonLabel: 'Review' },
+      ]} />
 
       {/* Platform Activity */}
       <Card>

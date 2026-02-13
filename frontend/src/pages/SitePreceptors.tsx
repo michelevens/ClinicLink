@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import {
   User, Mail, Phone, Calendar, Stethoscope, Loader2, UserX,
   Link2, Copy, Plus, Trash2, CheckCircle, Clock,
-  Building2, Send, Upload, X, Users, AlertCircle, Download
+  Building2, Send, Upload, X, Users, AlertCircle, Download, AlertTriangle
 } from 'lucide-react'
 
 const MESSAGE_TEMPLATES = [
@@ -230,6 +230,76 @@ export function SitePreceptors() {
           </Button>
         </div>
       </div>
+
+      {/* Pending Join Requests — Prominent Banner */}
+      {pendingJoinRequests.length > 0 && (
+        <Card className="border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-amber-800 text-lg">
+                {pendingJoinRequests.length} Pending Join Request{pendingJoinRequests.length !== 1 ? 's' : ''}
+              </p>
+              <p className="text-sm text-amber-700">Preceptors are requesting to join your site. Review and respond below.</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {pendingJoinRequests.map(req => (
+              <div key={req.id} className="flex items-start justify-between gap-4 p-3 bg-white/70 rounded-xl border border-amber-200">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-stone-900">
+                      {req.preceptor?.first_name} {req.preceptor?.last_name}
+                    </p>
+                    <p className="text-xs text-stone-500">
+                      {req.preceptor?.email}
+                      <span className="mx-1">&middot;</span>
+                      <Building2 className="w-3 h-3 inline" /> {req.site?.name}
+                      <span className="mx-1">&middot;</span>
+                      {new Date(req.created_at).toLocaleDateString()}
+                    </p>
+                    {req.message && (
+                      <p className="text-xs text-stone-600 mt-1 italic">"{req.message}"</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await approveJoinRequest.mutateAsync({ id: req.id })
+                        toast.success(`Approved ${req.preceptor?.first_name}'s request`)
+                      } catch { toast.error('Failed to approve') }
+                    }}
+                    isLoading={approveJoinRequest.isPending}
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" /> Approve
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await denyJoinRequest.mutateAsync({ id: req.id })
+                        toast.success('Request denied')
+                      } catch { toast.error('Failed to deny') }
+                    }}
+                    isLoading={denyJoinRequest.isPending}
+                  >
+                    Deny
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Single Invite Form */}
       {showInviteForm && (
@@ -466,68 +536,6 @@ export function SitePreceptors() {
             )}
           </div>
         </Card>
-      )}
-
-      {/* Pending Join Requests */}
-      {pendingJoinRequests.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wider flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-500" /> Pending Join Requests ({pendingJoinRequests.length})
-          </h2>
-          {pendingJoinRequests.map(req => (
-            <Card key={req.id} className="!py-3 border-amber-200 bg-amber-50/30">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-stone-900">
-                      {req.preceptor?.first_name} {req.preceptor?.last_name}
-                    </p>
-                    <p className="text-xs text-stone-500">
-                      {req.preceptor?.email}
-                      <span className="mx-1">&middot;</span>
-                      <Building2 className="w-3 h-3 inline" /> {req.site?.name}
-                      <span className="mx-1">&middot;</span>
-                      {new Date(req.created_at).toLocaleDateString()}
-                    </p>
-                    {req.message && (
-                      <p className="text-xs text-stone-600 mt-1 italic">"{req.message}"</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        await approveJoinRequest.mutateAsync({ id: req.id })
-                        toast.success(`Approved ${req.preceptor?.first_name}'s request`)
-                      } catch { toast.error('Failed to approve') }
-                    }}
-                    isLoading={approveJoinRequest.isPending}
-                  >
-                    <CheckCircle className="w-3.5 h-3.5" /> Approve
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        await denyJoinRequest.mutateAsync({ id: req.id })
-                        toast.success('Request denied')
-                      } catch { toast.error('Failed to deny') }
-                    }}
-                    isLoading={denyJoinRequest.isPending}
-                  >
-                    Deny
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
       )}
 
       {/* Pending Invites */}

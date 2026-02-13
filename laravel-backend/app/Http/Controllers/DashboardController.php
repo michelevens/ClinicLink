@@ -7,6 +7,7 @@ use App\Models\HourLog;
 use App\Models\RotationSite;
 use App\Models\RotationSlot;
 use App\Models\StudentProfile;
+use App\Models\SiteJoinRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -78,6 +79,8 @@ class DashboardController extends Controller
             'active_students' => Application::whereIn('slot_id', $slotIds)->accepted()
                 ->whereHas('slot', fn ($q) => $q->where('end_date', '>=', now()))
                 ->count(),
+            'pending_join_requests' => SiteJoinRequest::whereIn('site_id', $siteIds)
+                ->where('status', 'pending')->count(),
         ];
     }
 
@@ -115,6 +118,7 @@ class DashboardController extends Controller
             'total_applications' => Application::count(),
             'pending_applications' => Application::pending()->count(),
             'total_hours_logged' => HourLog::approved()->sum('hours_worked'),
+            'pending_join_requests' => SiteJoinRequest::where('status', 'pending')->count(),
         ];
     }
 }

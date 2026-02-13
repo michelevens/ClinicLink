@@ -99,7 +99,7 @@ export default function App() {
       <Route path="/hours" element={<ProtectedRoute roles={['student', 'preceptor']}><HourLog /></ProtectedRoute>} />
       <Route path="/evaluations" element={<ProtectedRoute roles={['student', 'preceptor']}><Evaluations /></ProtectedRoute>} />
       <Route path="/slots" element={<ProtectedRoute roles={['site_manager', 'admin']}><SlotManagement /></ProtectedRoute>} />
-      <Route path="/preceptors" element={<ProtectedRoute roles={['site_manager']}><SitePreceptors /></ProtectedRoute>} />
+      <Route path="/preceptors" element={<ProtectedRoute roles={['site_manager', 'admin']}><SitePreceptors /></ProtectedRoute>} />
       <Route path="/site-applications" element={<ProtectedRoute roles={['site_manager', 'admin']}><SiteApplications /></ProtectedRoute>} />
       <Route path="/certificates" element={<ProtectedRoute roles={['student', 'preceptor', 'coordinator', 'admin']}><Certificates /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
