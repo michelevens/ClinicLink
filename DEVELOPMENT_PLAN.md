@@ -126,6 +126,57 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
+## Phase 2.7: Security Hardening ✅ COMPLETE
+**Goal:** Address all security gaps from SECURITY_COMPLIANCE_PLAN.md
+
+### What Was Built
+
+#### Security Headers Middleware
+- Custom `SecurityHeaders` middleware applied globally to all responses
+- X-Content-Type-Options: nosniff, X-Frame-Options: DENY, X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy: camera=(), microphone=(), geolocation=()
+- Strict-Transport-Security: max-age=31536000 (production only)
+
+#### API Rate Limiting
+- Global rate limiter: 120 requests/min (authenticated), 60/min (guests)
+- Stricter auth endpoint limiter: 10 requests/min on login, register, forgot-password, MFA verify
+- Rate limit headers returned in all API responses
+
+#### Token Expiration & Lifecycle
+- Sanctum tokens expire after 24 hours (was: never expire)
+- Automated daily pruning of expired tokens (`sanctum:prune-expired --hours=48`)
+
+#### Account Lockout
+- 5 failed login attempts triggers 30-minute account lockout
+- `failed_login_attempts` + `locked_until` columns on users table
+- Auto-resets on successful login
+- Lockout attempts logged in audit trail with IP/user agent
+
+#### PHI Field Encryption
+- `mfa_backup_codes` cast changed from `array` to `encrypted:array`
+- Data migration to re-encrypt existing plain-text backup codes
+- Credential file content protected by Cloudflare R2 encryption at rest
+
+#### Platform-Wide Audit Logging
+- Immutable `AuditLog` model (same pattern as CE audit trail)
+- Polymorphic design: auditable_type + auditable_id (User, Credential, HourLog, etc.)
+- Sensitive field masking (password, mfa_secret, mfa_backup_codes → [REDACTED])
+- `record()` and `recordFromRequest()` static factories — never throw, always log errors
+- Override `save()` and `delete()` to enforce immutability
+
+#### Audit Events Covered
+- **Auth:** login, login_failed (with reason: invalid_credentials/locked), logout, registered
+- **Admin:** user created, updated (with old/new values), deleted, role_changed, password_reset
+- **Credentials:** created, updated, deleted, uploaded, downloaded (PHI access tracking)
+- **Hour Logs:** created, approved, rejected (with reason)
+- **CE Certificates:** issued, approved, rejected, revoked, verified, downloaded, policy_changed
+
+#### Admin Audit Log Viewer
+- `GET /api/admin/audit-logs` with filters: auditable_type, event_type, actor_id, date_from, date_to
+- Paginated, ordered by most recent, includes actor relationship
+
+---
+
 ## Phase 3: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system
