@@ -353,6 +353,22 @@
     </style>
 </head>
 <body>
+    @php
+        $preceptorName = ($certificate->preceptor->first_name ?? '') . ' ' . ($certificate->preceptor->last_name ?? '');
+        $slot = $certificate->application?->slot;
+        $site = $slot?->site;
+        $specialty = $slot?->specialty ?? 'Clinical';
+        $siteName = $site?->name ?? 'N/A';
+        $startDate = $slot?->start_date;
+        $endDate = $slot?->end_date;
+        $startDateFormatted = $startDate ? $startDate->format('M d, Y') : 'N/A';
+        $endDateFormatted = $endDate ? $endDate->format('M d, Y') : 'N/A';
+        $universityName = $certificate->university?->name ?? 'N/A';
+        $issuedAt = $certificate->issued_at ?? now();
+        $signerName = $policy?->signer_name ?? 'Program Director';
+        $signerCredentials = $policy?->signer_credentials ?? 'Authorized Signatory';
+    @endphp
+
     <div class="certificate">
         <!-- Subtle diagonal pattern -->
         <div class="pattern-overlay"></div>
@@ -394,16 +410,16 @@
 
             <div class="presented-to">This is to certify that</div>
 
-            <div class="preceptor-name">{{ $certificate->preceptor->first_name }} {{ $certificate->preceptor->last_name }}</div>
+            <div class="preceptor-name">{{ $preceptorName }}</div>
 
             <div class="description">
                 has been awarded <span class="hours-highlight">{{ number_format($certificate->contact_hours, 1) }} contact hours</span>
                 of continuing education credit for serving as clinical preceptor
-                for the {{ $certificate->application->slot->specialty }} rotation
-                at {{ $certificate->application->slot->site->name }},
+                for the {{ $specialty }} rotation
+                at {{ $siteName }},
                 during the period of
-                {{ $certificate->application->slot->start_date->format('M d, Y') }} &ndash;
-                {{ $certificate->application->slot->end_date->format('M d, Y') }}.
+                {{ $startDateFormatted }} &ndash;
+                {{ $endDateFormatted }}.
             </div>
 
             <!-- Details Row 1: 3 columns -->
@@ -415,11 +431,11 @@
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Clinical Site</div>
-                        <div class="detail-value">{{ $certificate->application->slot->site->name }}</div>
+                        <div class="detail-value">{{ $siteName }}</div>
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Specialty</div>
-                        <div class="detail-value">{{ $certificate->application->slot->specialty }}</div>
+                        <div class="detail-value">{{ $specialty }}</div>
                     </td>
                 </tr>
             </table>
@@ -429,23 +445,23 @@
                 <tr>
                     <td class="detail-item">
                         <div class="detail-label">Rotation Period</div>
-                        <div class="detail-value">{{ $certificate->application->slot->start_date->format('M d, Y') }} - {{ $certificate->application->slot->end_date->format('M d, Y') }}</div>
+                        <div class="detail-value">{{ $startDateFormatted }} - {{ $endDateFormatted }}</div>
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Issuing Institution</div>
-                        <div class="detail-value">{{ $certificate->university->name }}</div>
+                        <div class="detail-value">{{ $universityName }}</div>
                     </td>
                     <td class="detail-item">
                         <div class="detail-label">Issue Date</div>
-                        <div class="detail-value">{{ ($certificate->issued_at ?? now())->format('M d, Y') }}</div>
+                        <div class="detail-value">{{ $issuedAt->format('M d, Y') }}</div>
                     </td>
                 </tr>
             </table>
 
-            @if($policy && $policy->accrediting_body)
+            @if($policy?->accrediting_body)
             <div class="accreditation-info">
                 Accredited by {{ $policy->accrediting_body }}
-                &bull; {{ $certificate->university->name }}
+                &bull; {{ $universityName }}
             </div>
             @endif
         </div>
@@ -456,8 +472,8 @@
                 <tr>
                     <td class="sig-block">
                         <div class="sig-line">
-                            <div class="sig-name">{{ $policy->signer_name ?? 'Program Director' }}</div>
-                            <div class="sig-title">{{ $policy->signer_credentials ?? 'Authorized Signatory' }}</div>
+                            <div class="sig-name">{{ $signerName }}</div>
+                            <div class="sig-title">{{ $signerCredentials }}</div>
                         </div>
                     </td>
                     <td class="sig-block">
@@ -475,7 +491,7 @@
             <div class="footer-text">
                 Verification ID: <span class="cert-number">{{ $certificate->verification_uuid }}</span>
                 &nbsp;&bull;&nbsp;
-                Issued: {{ ($certificate->issued_at ?? now())->format('F j, Y') }}
+                Issued: {{ $issuedAt->format('F j, Y') }}
                 &nbsp;&bull;&nbsp;
                 Verify: {{ $verifyUrl }}
             </div>

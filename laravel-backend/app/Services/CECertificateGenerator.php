@@ -62,7 +62,7 @@ class CECertificateGenerator
         $qrSvg = QrCode::size(200)->margin(1)->generate($verifyUrl);
         $qrCode = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
 
-        $policy = $certificate->university->cePolicy;
+        $policy = $certificate->university?->cePolicy;
 
         $pdf = Pdf::loadView('certificates.ce-template', [
             'certificate' => $certificate,
