@@ -24,7 +24,14 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes (rate-limited auth endpoints)
+| All API routes — global rate limiter
+|--------------------------------------------------------------------------
+*/
+Route::middleware('throttle:api')->group(function () {
+
+/*
+|--------------------------------------------------------------------------
+| Public Routes (rate-limited auth endpoints — stricter limit)
 |--------------------------------------------------------------------------
 */
 
@@ -263,9 +270,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{user}/assign-sites', [AdminController::class, 'assignPreceptorToSites'])->whereUuid('user');
         Route::delete('/users/{user}/remove-site/{site}', [AdminController::class, 'removePreceptorFromSite'])->whereUuid('user');
         Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
+        Route::get('/audit-logs', [AdminController::class, 'auditLogs']);
 
         Route::post('/universities', [UniversityController::class, 'store']);
         Route::put('/universities/{university}', [UniversityController::class, 'update']);
         Route::delete('/universities/{university}', [UniversityController::class, 'destroy']);
     });
 });
+
+}); // end throttle:api

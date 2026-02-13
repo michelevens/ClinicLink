@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\HourLogReviewedMail;
 use App\Models\Application;
+use App\Models\AuditLog;
 use App\Models\HourLog;
 use App\Models\StudentProfile;
 use App\Notifications\HourLogReviewedNotification;
@@ -85,6 +86,12 @@ class HourLogController extends Controller
         $log = HourLog::create($validated);
         $log->load('slot.site', 'student');
 
+        AuditLog::recordFromRequest('HourLog', $log->id, 'created', $request, metadata: [
+            'hours' => $validated['hours_worked'],
+            'date' => $validated['date'],
+            'category' => $validated['category'],
+        ]);
+
         // Notify the slot's preceptor about the new hour log
         try {
             if ($log->slot && $log->slot->preceptor_id) {
@@ -139,6 +146,13 @@ class HourLogController extends Controller
             'approved_at' => now(),
             'rejection_reason' => $validated['rejection_reason'] ?? null,
         ]);
+
+        $auditEvent = $validated['status'] === 'approved' ? 'approved' : 'rejected';
+        $auditMeta = ['hours' => $hourLog->hours_worked];
+        if ($validated['status'] === 'rejected') {
+            $auditMeta['reason'] = $validated['rejection_reason'] ?? null;
+        }
+        AuditLog::recordFromRequest('HourLog', $hourLog->id, $auditEvent, $request, metadata: $auditMeta);
 
         if ($validated['status'] === 'approved') {
             $student = $hourLog->student;

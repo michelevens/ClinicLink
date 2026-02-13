@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\AccountApprovedMail;
 use App\Mail\PasswordResetMail;
 use App\Mail\WelcomeMail;
+use App\Models\AuditLog;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\StudentProfile;
@@ -104,6 +105,13 @@ class AdminController extends Controller
         }
 
         $user->load('studentProfile');
+
+        AuditLog::recordFromRequest('User', $user->id, 'created', $request, newValues: [
+            'email' => $user->email,
+            'role' => $user->role,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+        ]);
 
         $message = $emailSent
             ? 'User created and welcome email sent.'
@@ -212,7 +220,21 @@ class AdminController extends Controller
         $wasInactive = !$user->is_active;
         $beingActivated = isset($validated['is_active']) && $validated['is_active'] === true;
 
+        $oldValues = $user->only(array_keys($validated));
         $user->update($validated);
+
+        // Detect role change for specific audit event
+        if (isset($validated['role']) && $oldValues['role'] !== $validated['role']) {
+            AuditLog::recordFromRequest('User', $user->id, 'role_changed', $request, metadata: [
+                'old_role' => $oldValues['role'],
+                'new_role' => $validated['role'],
+            ]);
+        }
+
+        AuditLog::recordFromRequest('User', $user->id, 'updated', $request,
+            oldValues: $oldValues,
+            newValues: $user->only(array_keys($validated)),
+        );
 
         // Send approval email when user is activated
         if ($wasInactive && $beingActivated) {
@@ -254,6 +276,13 @@ class AdminController extends Controller
             return response()->json(['message' => 'Cannot delete your own account.'], 422);
         }
 
+        AuditLog::recordFromRequest('User', $user->id, 'deleted', $request, oldValues: [
+            'email' => $user->email,
+            'role' => $user->role,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+        ]);
+
         $user->delete();
 
         return response()->json(['message' => 'User deleted successfully.']);
@@ -274,6 +303,11 @@ class AdminController extends Controller
 
         // Revoke all existing tokens so the user must log in with the new password
         $user->tokens()->delete();
+
+        AuditLog::recordFromRequest('User', $user->id, 'password_reset', $request, metadata: [
+            'target_user_id' => $user->id,
+            'target_email' => $user->email,
+        ]);
 
         $emailSent = false;
         try {
@@ -488,6 +522,32 @@ class AdminController extends Controller
         }
 
         return response()->json(['message' => "Preceptor removed from {$site->name}."]);
+    }
+
+    public function auditLogs(Request $request): JsonResponse
+    {
+        $query = AuditLog::with('actor:id,first_name,last_name,role');
+
+        if ($request->filled('auditable_type')) {
+            $query->where('auditable_type', $request->input('auditable_type'));
+        }
+        if ($request->filled('event_type')) {
+            $query->where('event_type', $request->input('event_type'));
+        }
+        if ($request->filled('actor_id')) {
+            $query->where('actor_id', $request->input('actor_id'));
+        }
+        if ($request->filled('date_from')) {
+            $query->where('created_at', '>=', $request->input('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->where('created_at', '<=', $request->input('date_to'));
+        }
+
+        $logs = $query->orderBy('created_at', 'desc')
+            ->paginate($request->input('per_page', 50));
+
+        return response()->json($logs);
     }
 
     public function seedUniversities(Request $request): JsonResponse

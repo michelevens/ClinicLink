@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\AuditLog;
 use App\Models\Credential;
 use App\Models\HourLog;
 use App\Models\StudentProfile;
@@ -171,6 +172,11 @@ class StudentController extends Controller
 
         $credential = Credential::create($validated);
 
+        AuditLog::recordFromRequest('Credential', $credential->id, 'created', $request, metadata: [
+            'type' => $validated['type'],
+            'name' => $validated['name'],
+        ]);
+
         return response()->json($credential, 201);
     }
 
@@ -187,7 +193,13 @@ class StudentController extends Controller
             'document_url' => ['nullable', 'url', 'max:500'],
         ]);
 
+        $oldValues = $credential->only(array_keys($validated));
         $credential->update($validated);
+
+        AuditLog::recordFromRequest('Credential', $credential->id, 'updated', $request,
+            oldValues: $oldValues,
+            newValues: $credential->only(array_keys($validated)),
+        );
 
         return response()->json($credential);
     }
@@ -197,6 +209,11 @@ class StudentController extends Controller
         if ($credential->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
+
+        AuditLog::recordFromRequest('Credential', $credential->id, 'deleted', $request, metadata: [
+            'type' => $credential->type,
+            'name' => $credential->name,
+        ]);
 
         // Delete associated file if exists
         if ($credential->file_path && Storage::disk()->exists($credential->file_path)) {
@@ -234,6 +251,10 @@ class StudentController extends Controller
             'file_size' => $file->getSize(),
         ]);
 
+        AuditLog::recordFromRequest('Credential', $credential->id, 'uploaded', $request, metadata: [
+            'file_name' => $originalName,
+        ]);
+
         return response()->json([
             'credential' => $credential->fresh(),
             'message' => 'Document uploaded successfully.',
@@ -249,6 +270,10 @@ class StudentController extends Controller
         if (!$credential->file_path || !Storage::disk()->exists($credential->file_path)) {
             return response()->json(['message' => 'No file found.'], 404);
         }
+
+        AuditLog::recordFromRequest('Credential', $credential->id, 'downloaded', $request, metadata: [
+            'file_name' => $credential->file_name,
+        ]);
 
         $content = Storage::disk()->get($credential->file_path);
         $mimeType = Storage::disk()->mimeType($credential->file_path) ?? 'application/octet-stream';

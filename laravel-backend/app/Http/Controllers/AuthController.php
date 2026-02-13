@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\NewUserRegistrationMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
+use App\Models\AuditLog;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\StudentProfile;
@@ -76,6 +77,10 @@ class AuthController extends Controller
             Log::error('Failed to send admin notification for new user ' . $user->email . ': ' . $e->getMessage());
         }
 
+        AuditLog::recordFromRequest('User', $user->id, 'registered', $request, metadata: [
+            'role' => $validated['role'],
+        ]);
+
         return response()->json([
             'message' => 'Registration submitted successfully. Your account is pending admin approval.',
             'pending_approval' => true,
@@ -97,7 +102,27 @@ class AuthController extends Controller
             ->orWhere('phone', $loginField)
             ->first();
 
+        // Account lockout check
+        if ($user && $user->isLocked()) {
+            $minutesLeft = (int) now()->diffInMinutes($user->locked_until, false);
+            AuditLog::record('User', $user->id, 'login_failed', null, 'public', metadata: [
+                'login' => $loginField,
+                'reason' => 'locked',
+            ], ipAddress: $request->ip(), userAgent: substr((string) $request->userAgent(), 0, 500));
+            return response()->json([
+                'message' => "Account temporarily locked. Try again in {$minutesLeft} minutes.",
+                'locked_until' => $user->locked_until,
+            ], 429);
+        }
+
         if (!$user || !Hash::check($validated['password'], $user->password)) {
+            if ($user) {
+                $user->incrementFailedLogins();
+                AuditLog::record('User', $user->id, 'login_failed', null, 'public', metadata: [
+                    'login' => $loginField,
+                    'reason' => 'invalid_credentials',
+                ], ipAddress: $request->ip(), userAgent: substr((string) $request->userAgent(), 0, 500));
+            }
             return response()->json([
                 'message' => 'Invalid credentials.',
             ], 401);
@@ -109,6 +134,9 @@ class AuthController extends Controller
                 'pending_approval' => true,
             ], 403);
         }
+
+        // Successful password check — reset lockout counter
+        $user->resetFailedLogins();
 
         // MFA challenge: if user has MFA enabled, return a temporary token instead of a real session
         if ($user->mfa_enabled) {
@@ -150,6 +178,10 @@ class AuthController extends Controller
             }
         }
 
+        AuditLog::record('User', $user->id, 'login', $user->id, $user->role, metadata: [
+            'method' => filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : (preg_match('/^\d/', $loginField) ? 'phone' : 'username'),
+        ], ipAddress: $request->ip(), userAgent: substr((string) $request->userAgent(), 0, 500));
+
         $userData = $user->toArray();
         $userData['onboarding_completed'] = !is_null($user->onboarding_completed_at);
 
@@ -179,7 +211,10 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        AuditLog::recordFromRequest('User', $user->id, 'logout', $request);
 
         return response()->json(['message' => 'Logged out successfully.']);
     }

@@ -28,6 +28,8 @@ class User extends Authenticatable
         'mfa_confirmed_at',
         'mfa_backup_codes',
         'notification_preferences',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     protected $hidden = [
@@ -45,8 +47,9 @@ class User extends Authenticatable
             'mfa_enabled' => 'boolean',
             'mfa_secret' => 'encrypted',
             'mfa_confirmed_at' => 'datetime',
-            'mfa_backup_codes' => 'array',
+            'mfa_backup_codes' => 'encrypted:array',
             'notification_preferences' => 'array',
+            'locked_until' => 'datetime',
         ];
     }
 
@@ -153,5 +156,27 @@ class User extends Authenticatable
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    // Account lockout
+
+    public function isLocked(): bool
+    {
+        return $this->locked_until && $this->locked_until->isFuture();
+    }
+
+    public function incrementFailedLogins(): void
+    {
+        $this->increment('failed_login_attempts');
+        if ($this->failed_login_attempts >= 5) {
+            $this->update(['locked_until' => now()->addMinutes(30)]);
+        }
+    }
+
+    public function resetFailedLogins(): void
+    {
+        if ($this->failed_login_attempts > 0 || $this->locked_until) {
+            $this->update(['failed_login_attempts' => 0, 'locked_until' => null]);
+        }
     }
 }
