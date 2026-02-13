@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule) {
         $schedule->command('rotations:auto-complete')->dailyAt('02:00');
         $schedule->command('sanctum:prune-expired --hours=48')->dailyAt('03:00');
+        $schedule->command('reminders:credentials')->dailyAt('04:00');
+        $schedule->command('reminders:agreements')->dailyAt('04:30');
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [

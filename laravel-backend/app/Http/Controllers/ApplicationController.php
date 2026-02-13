@@ -175,13 +175,21 @@ class ApplicationController extends Controller
 
         $application->load(['student', 'slot.site']);
 
-        // Email the student about the decision
-        Mail::to($application->student->email)->send(
-            new ApplicationStatusMail($application, $validated['status'])
-        );
+        // Email the student about the decision (non-blocking)
+        try {
+            Mail::to($application->student->email)->send(
+                new ApplicationStatusMail($application, $validated['status'])
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send application status email: ' . $e->getMessage());
+        }
 
         // In-app notification for the student
-        $application->student->notify(new ApplicationReviewedNotification($application, $validated['status']));
+        try {
+            $application->student->notify(new ApplicationReviewedNotification($application, $validated['status']));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send application review notification: ' . $e->getMessage());
+        }
 
         return response()->json($application);
     }
