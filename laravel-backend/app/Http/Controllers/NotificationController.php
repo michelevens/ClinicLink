@@ -55,7 +55,7 @@ class NotificationController extends Controller
         ];
 
         return response()->json([
-            'preferences' => $request->user()->notification_preferences ?? $defaults,
+            'preferences' => array_merge($defaults, $request->user()->notification_preferences ?? []),
         ]);
     }
 
@@ -75,8 +75,17 @@ class NotificationController extends Controller
             'notification_preferences' => array_merge($current, $validated),
         ]);
 
+        $defaults = [
+            'application_updates' => true,
+            'hour_log_reviews' => true,
+            'evaluations' => true,
+            'site_join_requests' => true,
+            'reminders' => true,
+            'product_updates' => false,
+        ];
+
         return response()->json([
-            'preferences' => $request->user()->notification_preferences,
+            'preferences' => array_merge($defaults, $request->user()->notification_preferences ?? []),
         ]);
     }
 }
