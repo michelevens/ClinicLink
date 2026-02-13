@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Application;
 use App\Models\CeCertificate;
+use App\Models\Credential;
 use App\Models\Evaluation;
 use App\Models\HourLog;
 use App\Models\UniversityCePolicy;
@@ -93,6 +94,20 @@ class CEEligibilityService
             $contactHours = min($contactHours, $remaining);
         }
 
+        // Gather evidence data for audit snapshot
+        $evaluations = Evaluation::where('student_id', $studentId)
+            ->where('slot_id', $slot->id)
+            ->where('is_submitted', true)
+            ->get(['id', 'type', 'overall_score', 'is_submitted', 'created_at']);
+
+        $hourLogs = HourLog::where('student_id', $studentId)
+            ->where('slot_id', $slot->id)
+            ->where('status', 'approved')
+            ->get(['id', 'date', 'hours_worked', 'category', 'approved_by']);
+
+        $preceptorCredentials = Credential::where('user_id', $slot->preceptor_id)
+            ->get(['id', 'type', 'name', 'expiration_date', 'status']);
+
         return $this->result(true, 'Eligible for CE credit.', null, [
             'contact_hours' => (float) $contactHours,
             'university_id' => $universityId,
@@ -100,6 +115,14 @@ class CEEligibilityService
             'policy' => $policy,
             'approved_hours' => (float) $totalApprovedHours,
             'approval_required' => $policy->approval_required,
+            'evidence' => [
+                'policy' => $policy->toArray(),
+                'evaluations' => $evaluations->toArray(),
+                'hour_logs' => $hourLogs->toArray(),
+                'preceptor_credentials' => $preceptorCredentials->toArray(),
+                'total_approved_hours' => (float) $totalApprovedHours,
+                'contact_hours_awarded' => (float) $contactHours,
+            ],
         ]);
     }
 

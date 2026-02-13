@@ -24,6 +24,11 @@ class UniversityCePolicy extends Model
         'certificate_template_path',
         'signer_name',
         'signer_credentials',
+        'version',
+        'effective_from',
+        'effective_to',
+        'created_by',
+        'updated_by',
     ];
 
     protected function casts(): array
@@ -37,11 +42,24 @@ class UniversityCePolicy extends Model
             'requires_minimum_hours' => 'boolean',
             'minimum_hours_required' => 'decimal:2',
             'approval_required' => 'boolean',
+            'version' => 'integer',
+            'effective_from' => 'date',
+            'effective_to' => 'date',
         ];
     }
 
     public function university()
     {
         return $this->belongsTo(University::class);
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedByUser()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

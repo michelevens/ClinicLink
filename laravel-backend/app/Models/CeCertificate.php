@@ -21,6 +21,10 @@ class CeCertificate extends Model
         'certificate_path',
         'verification_uuid',
         'rejection_reason',
+        'revoked_at',
+        'revoked_by',
+        'revocation_reason',
+        'policy_version_id',
     ];
 
     protected function casts(): array
@@ -28,6 +32,7 @@ class CeCertificate extends Model
         return [
             'contact_hours' => 'decimal:2',
             'issued_at' => 'datetime',
+            'revoked_at' => 'datetime',
         ];
     }
 
@@ -59,5 +64,30 @@ class CeCertificate extends Model
     public function scopeIssued($query)
     {
         return $query->where('status', 'issued');
+    }
+
+    public function scopeRevoked($query)
+    {
+        return $query->where('status', 'revoked');
+    }
+
+    public function revokedByUser()
+    {
+        return $this->belongsTo(User::class, 'revoked_by');
+    }
+
+    public function auditEvents()
+    {
+        return $this->hasMany(CeAuditEvent::class)->orderBy('created_at');
+    }
+
+    public function evidenceSnapshot()
+    {
+        return $this->hasOne(CeEvidenceSnapshot::class);
+    }
+
+    public function isRevoked(): bool
+    {
+        return $this->status === 'revoked';
     }
 }

@@ -223,7 +223,15 @@ class ApplicationController extends Controller
 
         if ($eligibility['eligible']) {
             $generator = new CECertificateGenerator();
-            $ceCert = $generator->createFromEligibility($application, $eligibility);
+            $ceCert = $generator->createFromEligibility(
+                $application,
+                $eligibility,
+                null,
+                $user->id,
+                $user->role,
+                $request->ip(),
+                substr((string) $request->userAgent(), 0, 500),
+            );
             $ceResult = [
                 'ce_certificate_created' => true,
                 'ce_status' => $ceCert->status,

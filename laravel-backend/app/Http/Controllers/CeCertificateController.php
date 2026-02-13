@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\CeAuditEvent;
 use App\Models\CeCertificate;
 use App\Models\StudentProfile;
 use App\Models\UniversityCePolicy;
@@ -44,12 +45,42 @@ class CeCertificateController extends Controller
             'approval_required' => ['boolean'],
             'signer_name' => ['nullable', 'string', 'max:255'],
             'signer_credentials' => ['nullable', 'string', 'max:255'],
+            'effective_from' => ['nullable', 'date'],
+            'effective_to' => ['nullable', 'date', 'after_or_equal:effective_from'],
         ]);
 
-        $policy = UniversityCePolicy::updateOrCreate(
-            ['university_id' => $universityId],
-            $validated
-        );
+        $existing = UniversityCePolicy::where('university_id', $universityId)->first();
+        $oldValues = $existing ? $existing->toArray() : null;
+
+        if ($existing) {
+            $validated['version'] = ($existing->version ?? 1) + 1;
+            $validated['updated_by'] = $user->id;
+            $existing->update($validated);
+            $policy = $existing->fresh();
+        } else {
+            $validated['university_id'] = $universityId;
+            $validated['version'] = 1;
+            $validated['created_by'] = $user->id;
+            $validated['updated_by'] = $user->id;
+            $policy = UniversityCePolicy::create($validated);
+        }
+
+        // Record policy_changed audit event anchored to most recent cert
+        $latestCert = CeCertificate::where('university_id', $universityId)->latest()->first();
+        if ($latestCert) {
+            CeAuditEvent::recordFromRequest(
+                $latestCert->id,
+                'policy_changed',
+                $request,
+                [
+                    'university_id' => $universityId,
+                    'old_version' => $oldValues['version'] ?? null,
+                    'new_version' => $policy->version,
+                    'old_values' => $oldValues,
+                    'new_values' => $policy->toArray(),
+                ],
+            );
+        }
 
         return response()->json(['policy' => $policy]);
     }
@@ -128,6 +159,19 @@ class CeCertificateController extends Controller
             // Certificate stays as 'approved'; PDF will be generated on-demand at download time
         }
 
+        // Record audit events
+        CeAuditEvent::recordFromRequest(
+            $ceCertificate->id, 'approved', $request,
+            ['approved_by' => $user->id],
+        );
+
+        if ($ceCertificate->status === 'issued') {
+            CeAuditEvent::recordFromRequest(
+                $ceCertificate->id, 'issued', $request,
+                ['approved_by' => $user->id, 'pdf_generated' => true],
+            );
+        }
+
         $ceCertificate->load(['university', 'preceptor', 'application.slot.site', 'application.student', 'approvedByUser']);
 
         // Notify the preceptor about their CE certificate
@@ -158,6 +202,11 @@ class CeCertificateController extends Controller
             'status' => 'rejected',
             'rejection_reason' => $validated['rejection_reason'],
         ]);
+
+        CeAuditEvent::recordFromRequest(
+            $ceCertificate->id, 'rejected', $request,
+            ['rejection_reason' => $validated['rejection_reason']],
+        );
 
         $ceCertificate->load(['university', 'preceptor', 'application.slot.site']);
 
@@ -234,6 +283,11 @@ class CeCertificateController extends Controller
 
             $filename = 'CE-Certificate-' . substr($ceCertificate->verification_uuid, 0, 8) . '.pdf';
 
+            CeAuditEvent::recordFromRequest(
+                $ceCertificate->id, 'downloaded', $request,
+                ['user_id' => $user->id],
+            );
+
             return $pdf->download($filename);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('CE certificate download error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
@@ -246,7 +300,7 @@ class CeCertificateController extends Controller
 
     // ─── Public verification ──────────────────────────────────────
 
-    public function publicVerify(string $uuid): JsonResponse
+    public function publicVerify(Request $request, string $uuid): JsonResponse
     {
         $certificate = CeCertificate::where('verification_uuid', $uuid)
             ->with(['university', 'preceptor', 'application.slot.site'])
@@ -256,8 +310,18 @@ class CeCertificateController extends Controller
             return response()->json(['message' => 'Certificate not found.', 'valid' => false], 404);
         }
 
-        return response()->json([
-            'valid' => $certificate->status === 'issued',
+        // Record verification event
+        CeAuditEvent::record(
+            $certificate->id, 'verified', null, 'public',
+            ['verification_uuid' => $uuid],
+            $request->ip(),
+            substr((string) $request->userAgent(), 0, 500),
+        );
+
+        $isValid = $certificate->status === 'issued' && !$certificate->isRevoked();
+
+        $response = [
+            'valid' => $isValid,
             'status' => $certificate->status,
             'verification_uuid' => $certificate->verification_uuid,
             'preceptor_name' => $certificate->preceptor->first_name . ' ' . $certificate->preceptor->last_name,
@@ -267,7 +331,15 @@ class CeCertificateController extends Controller
             'site_name' => $certificate->application->slot->site->name,
             'rotation_period' => $certificate->application->slot->start_date . ' to ' . $certificate->application->slot->end_date,
             'issued_at' => $certificate->issued_at?->format('Y-m-d'),
-        ]);
+        ];
+
+        if ($certificate->isRevoked()) {
+            $response['revoked'] = true;
+            $response['revoked_at'] = $certificate->revoked_at?->format('Y-m-d');
+            $response['revocation_reason'] = $certificate->revocation_reason;
+        }
+
+        return response()->json($response);
     }
 
     // ─── Eligibility check ───────────────────────────────────────
@@ -292,7 +364,77 @@ class CeCertificateController extends Controller
         $service = new CEEligibilityService();
         $result = $service->check($application);
 
+        // Record eligibility check if a certificate already exists for this application
+        $existingCert = CeCertificate::where('application_id', $application->id)->first();
+        if ($existingCert) {
+            CeAuditEvent::recordFromRequest(
+                $existingCert->id, 'eligibility_checked', $request,
+                ['eligible' => $result['eligible'], 'reason' => $result['reason']],
+            );
+        }
+
         return response()->json($result);
+    }
+
+    // ─── Revocation ──────────────────────────────────────────────
+
+    public function revoke(Request $request, CeCertificate $ceCertificate): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user->isCoordinator() && !$user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($ceCertificate->status === 'revoked') {
+            return response()->json(['message' => 'Certificate is already revoked.'], 422);
+        }
+
+        if (!in_array($ceCertificate->status, ['approved', 'issued'])) {
+            return response()->json(['message' => 'Only approved or issued certificates can be revoked.'], 422);
+        }
+
+        $validated = $request->validate([
+            'revocation_reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $previousStatus = $ceCertificate->status;
+
+        $ceCertificate->update([
+            'status' => 'revoked',
+            'revoked_at' => now(),
+            'revoked_by' => $user->id,
+            'revocation_reason' => $validated['revocation_reason'],
+        ]);
+
+        CeAuditEvent::recordFromRequest(
+            $ceCertificate->id, 'revoked', $request,
+            [
+                'revocation_reason' => $validated['revocation_reason'],
+                'previous_status' => $previousStatus,
+            ],
+        );
+
+        $ceCertificate->load(['university', 'preceptor', 'application.slot.site', 'revokedByUser']);
+
+        return response()->json(['ce_certificate' => $ceCertificate]);
+    }
+
+    // ─── Audit Trail ─────────────────────────────────────────────
+
+    public function auditTrail(Request $request, CeCertificate $ceCertificate): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$this->canAccessCeCertificate($user, $ceCertificate)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $events = $ceCertificate->auditEvents()
+            ->with('actor:id,first_name,last_name,role')
+            ->orderBy('created_at')
+            ->get();
+
+        return response()->json(['audit_trail' => $events]);
     }
 
     private function canAccessCeCertificate($user, CeCertificate $ceCertificate): bool

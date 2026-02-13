@@ -232,10 +232,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:preceptor,coordinator,admin')->group(function () {
         Route::get('/ce-certificates', [CeCertificateController::class, 'index']);
         Route::get('/ce-certificates/{ceCertificate}', [CeCertificateController::class, 'show']);
+        Route::get('/ce-certificates/{ceCertificate}/audit-trail', [CeCertificateController::class, 'auditTrail']);
     });
     Route::middleware('role:coordinator,admin')->group(function () {
         Route::put('/ce-certificates/{ceCertificate}/approve', [CeCertificateController::class, 'approve']);
         Route::put('/ce-certificates/{ceCertificate}/reject', [CeCertificateController::class, 'reject']);
+        Route::put('/ce-certificates/{ceCertificate}/revoke', [CeCertificateController::class, 'revoke']);
     });
     Route::get('/ce-eligibility/{application}', [CeCertificateController::class, 'checkEligibility']);
 

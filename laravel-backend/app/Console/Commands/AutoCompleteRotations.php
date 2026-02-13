@@ -81,7 +81,13 @@ class AutoCompleteRotations extends Command
 
             if ($eligibility['eligible']) {
                 $generator = new CECertificateGenerator();
-                $ceCert = $generator->createFromEligibility($application, $eligibility);
+                $ceCert = $generator->createFromEligibility(
+                    $application,
+                    $eligibility,
+                    null,     // approvedBy
+                    null,     // actorId (system)
+                    'system', // actorRole
+                );
                 $ceCreated++;
 
                 $this->info("    CE cert created: {$ceCert->contact_hours}h — status: {$ceCert->status}");
