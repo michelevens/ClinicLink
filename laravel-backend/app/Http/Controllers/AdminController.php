@@ -6,6 +6,7 @@ use App\Mail\AccountApprovedMail;
 use App\Mail\PasswordResetMail;
 use App\Mail\WelcomeMail;
 use App\Models\RotationSite;
+use App\Models\SiteInvite;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -190,6 +191,27 @@ class AdminController extends Controller
                 Mail::to($user->email)->send(new AccountApprovedMail($user, $loginUrl));
             } catch (\Throwable $e) {
                 Log::error('Failed to send approval email to ' . $user->email . ': ' . $e->getMessage());
+            }
+
+            // Auto-accept any pending site invites matching this user's email
+            $pendingInvites = SiteInvite::where('email', strtolower($user->email))
+                ->where('status', 'pending')
+                ->where('expires_at', '>', now())
+                ->get();
+
+            foreach ($pendingInvites as $invite) {
+                $alreadyAccepted = SiteInvite::where('site_id', $invite->site_id)
+                    ->where('accepted_by', $user->id)
+                    ->where('status', 'accepted')
+                    ->exists();
+
+                if (!$alreadyAccepted) {
+                    $invite->update([
+                        'status' => 'accepted',
+                        'accepted_by' => $user->id,
+                        'accepted_at' => now(),
+                    ]);
+                }
             }
         }
 

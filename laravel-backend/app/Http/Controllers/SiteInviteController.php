@@ -237,7 +237,11 @@ class SiteInviteController extends Controller
         }
 
         if ($invite->status === 'accepted') {
-            return response()->json(['message' => 'This invite has already been used.'], 410);
+            return response()->json([
+                'message' => 'This invite has already been accepted.',
+                'already_accepted' => true,
+                'site_name' => $invite->site->name ?? null,
+            ], 200);
         }
 
         if ($invite->expires_at->isPast()) {

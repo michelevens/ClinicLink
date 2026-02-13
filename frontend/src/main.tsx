@@ -19,7 +19,24 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
-          <Toaster position="top-right" richColors closeButton />
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                borderRadius: '16px',
+                padding: '16px',
+                fontSize: '14px',
+                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.06)',
+              },
+              classNames: {
+                title: 'font-semibold',
+                description: 'text-xs opacity-80',
+              },
+            }}
+          />
         </AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>

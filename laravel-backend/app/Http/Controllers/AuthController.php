@@ -6,6 +6,7 @@ use App\Mail\NewUserRegistrationMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
 use App\Models\RotationSite;
+use App\Models\SiteInvite;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -108,13 +109,47 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        // Auto-accept any pending site invites matching this user's email
+        $acceptedInvites = [];
+        $pendingInvites = SiteInvite::where('email', strtolower($user->email))
+            ->where('status', 'pending')
+            ->where('expires_at', '>', now())
+            ->with('site:id,name')
+            ->get();
+
+        foreach ($pendingInvites as $invite) {
+            // Skip if user already accepted an invite for this site
+            $alreadyAccepted = SiteInvite::where('site_id', $invite->site_id)
+                ->where('accepted_by', $user->id)
+                ->where('status', 'accepted')
+                ->exists();
+
+            if (!$alreadyAccepted) {
+                $invite->update([
+                    'status' => 'accepted',
+                    'accepted_by' => $user->id,
+                    'accepted_at' => now(),
+                ]);
+                $acceptedInvites[] = [
+                    'site_id' => $invite->site->id,
+                    'site_name' => $invite->site->name,
+                ];
+            }
+        }
+
         $userData = $user->toArray();
         $userData['onboarding_completed'] = !is_null($user->onboarding_completed_at);
 
-        return response()->json([
+        $response = [
             'user' => $userData,
             'token' => $token,
-        ]);
+        ];
+
+        if (!empty($acceptedInvites)) {
+            $response['accepted_invites'] = $acceptedInvites;
+        }
+
+        return response()->json($response);
     }
 
     public function me(Request $request): JsonResponse

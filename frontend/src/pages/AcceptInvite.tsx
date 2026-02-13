@@ -19,11 +19,19 @@ export function AcceptInvite() {
   const [error, setError] = useState('')
   const [accepting, setAccepting] = useState(false)
   const [accepted, setAccepted] = useState(false)
+  const [alreadyAcceptedSite, setAlreadyAcceptedSite] = useState<string | null>(null)
 
   useEffect(() => {
     if (!token) return
     siteInvitesApi.validate(token)
-      .then(res => { setInvite(res.invite); setLoading(false) })
+      .then(res => {
+        if (res.already_accepted) {
+          setAlreadyAcceptedSite(res.site_name || 'the site')
+        } else {
+          setInvite(res.invite)
+        }
+        setLoading(false)
+      })
       .catch(err => { setError(err.message || 'Invalid invite link'); setLoading(false) })
   }, [token])
 
@@ -66,16 +74,19 @@ export function AcceptInvite() {
     )
   }
 
-  if (accepted) {
+  if (accepted || alreadyAcceptedSite) {
+    const siteName = accepted ? invite?.site.name : alreadyAcceptedSite
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-green-100 text-green-500 flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8" />
           </div>
-          <h1 className="text-xl font-bold text-stone-900 mb-2">You've Joined!</h1>
+          <h1 className="text-xl font-bold text-stone-900 mb-2">
+            {alreadyAcceptedSite ? "You're Already a Member!" : "You've Joined!"}
+          </h1>
           <p className="text-stone-500 mb-2">
-            You are now affiliated with <strong>{invite?.site.name}</strong>.
+            You are now affiliated with <strong>{siteName}</strong>.
           </p>
           <p className="text-sm text-stone-400 mb-6">
             The site manager can now assign you to rotation slots.

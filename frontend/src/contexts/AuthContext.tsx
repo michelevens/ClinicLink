@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { User, UserRole } from '../types/index.ts'
 import { authApi, type ApiUser } from '../services/api.ts'
+import { toast } from 'sonner'
 
 interface AuthState {
   user: User | null
@@ -94,6 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('cliniclink_token', res.token)
       localStorage.setItem('cliniclink_user', JSON.stringify(user))
       setState({ user, token: res.token, isAuthenticated: true, isLoading: false })
+
+      // Notify user about auto-accepted site invites
+      if (res.accepted_invites?.length) {
+        const count = res.accepted_invites.length
+        const names = res.accepted_invites.map(i => i.site_name).join(', ')
+        toast.success(
+          count === 1
+            ? `Welcome to ${names}! You've been linked as a preceptor.`
+            : `You've been linked to ${count} clinical sites: ${names}`,
+          { duration: 6000, description: 'Your pending site invitations were automatically accepted.' }
+        )
+      }
     } catch (err) {
       setState(s => ({ ...s, isLoading: false }))
       throw err

@@ -116,7 +116,7 @@ export const authApi = {
     api.post<{ message: string; pending_approval: boolean }>('/auth/register', data),
 
   login: (data: { login: string; password: string }) =>
-    api.post<{ user: ApiUser; token: string }>('/auth/login', data),
+    api.post<{ user: ApiUser; token: string; accepted_invites?: { site_id: string; site_name: string }[] }>('/auth/login', data),
 
   me: () => api.get<ApiUser>('/auth/me'),
 
@@ -240,7 +240,7 @@ export const siteInvitesApi = {
     api.post<{ invite: { id: string; token: string; url: string; email: string | null; site_name: string; expires_at: string; email_sent: boolean } }>('/site-invites', data),
   bulkCreate: (data: { site_id: string; emails: string[]; message?: string; expires_in_days?: number }) =>
     api.post<{ message: string; summary: { sent: number; skipped: number; failed: number; total: number }; results: BulkInviteResult[] }>('/site-invites/bulk', data),
-  validate: (token: string) => api.get<{ invite: ApiInviteDetail }>(`/invite/${token}`),
+  validate: (token: string) => api.get<{ invite: ApiInviteDetail; already_accepted?: boolean; site_name?: string; message?: string }>(`/invite/${token}`),
   accept: (token: string) => api.post<{ message: string; site: { id: string; name: string } }>(`/invite/${token}/accept`),
   resend: (id: string) => api.post<{ message: string }>(`/site-invites/${id}/resend`, {}),
   revoke: (id: string) => api.delete(`/site-invites/${id}`),
