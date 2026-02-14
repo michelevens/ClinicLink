@@ -150,11 +150,11 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Bottom */}
-      <div className="border-t border-stone-200 p-2">
+      {/* Bottom - pinned below scroll */}
+      <div className="border-t border-stone-200 p-2 shrink-0">
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-red-50 hover:text-red-600 transition-all w-full"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition-all w-full"
         >
           <LogOut className="w-5 h-5" />
           <span>Logout</span>
@@ -184,14 +184,15 @@ export function Sidebar() {
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <NotificationBell />
           <button
             onClick={logout}
-            className="p-2 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors text-xs font-medium"
             aria-label="Logout"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
