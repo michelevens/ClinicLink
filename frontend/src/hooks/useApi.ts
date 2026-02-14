@@ -5,7 +5,7 @@ import {
   onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
-  preceptorReviewsApi,
+  preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1142,5 +1142,191 @@ export function useCreatePreceptorReview() {
       qc.invalidateQueries({ queryKey: ['preceptor-reviews'] })
       qc.invalidateQueries({ queryKey: ['preceptor-review-stats'] })
     },
+  })
+}
+
+// --- Payments (Stripe Connect) ---
+export function useCreateConnectAccount() {
+  return useMutation({
+    mutationFn: paymentsApi.createConnectAccount,
+  })
+}
+
+export function useConnectStatus() {
+  return useQuery({
+    queryKey: ['connect-status'],
+    queryFn: () => paymentsApi.connectStatus(),
+  })
+}
+
+export function useRefreshConnectLink() {
+  return useMutation({
+    mutationFn: paymentsApi.refreshConnectLink,
+  })
+}
+
+export function useCreateCheckout() {
+  return useMutation({
+    mutationFn: paymentsApi.createCheckout,
+  })
+}
+
+export function usePaymentHistory(params?: { page?: number }) {
+  return useQuery({
+    queryKey: ['payment-history', params],
+    queryFn: () => paymentsApi.history(params),
+  })
+}
+
+export function useRefundPayment() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: paymentsApi.refund,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['payment-history'] }) },
+  })
+}
+
+// --- Preceptor Profiles ---
+export function usePreceptorDirectory(params?: { search?: string; specialty?: string; availability?: string; page?: number }) {
+  return useQuery({
+    queryKey: ['preceptor-directory', params],
+    queryFn: () => preceptorProfilesApi.directory(params),
+  })
+}
+
+export function usePreceptorProfile(userId: string | null) {
+  return useQuery({
+    queryKey: ['preceptor-profile', userId],
+    queryFn: () => preceptorProfilesApi.show(userId!),
+    enabled: !!userId,
+  })
+}
+
+export function useUpdatePreceptorProfile() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: preceptorProfilesApi.update,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['preceptor-profile'] })
+      qc.invalidateQueries({ queryKey: ['preceptor-directory'] })
+    },
+  })
+}
+
+export function useRefreshBadges() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: preceptorProfilesApi.refreshBadges,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['preceptor-profile'] }) },
+  })
+}
+
+export function usePreceptorLeaderboard() {
+  return useQuery({
+    queryKey: ['preceptor-leaderboard'],
+    queryFn: () => preceptorProfilesApi.leaderboard(),
+  })
+}
+
+// --- Smart Matching ---
+export function useMatchingPreferences() {
+  return useQuery({
+    queryKey: ['matching-preferences'],
+    queryFn: () => matchingApi.getPreferences(),
+  })
+}
+
+export function useUpdateMatchingPreferences() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: matchingApi.updatePreferences,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['matching-preferences'] })
+      qc.invalidateQueries({ queryKey: ['matching-results'] })
+    },
+  })
+}
+
+export function useMatchingResults(limit?: number) {
+  return useQuery({
+    queryKey: ['matching-results', limit],
+    queryFn: () => matchingApi.getResults(limit),
+  })
+}
+
+// --- Analytics ---
+export function useAnalyticsSummary() {
+  return useQuery({
+    queryKey: ['analytics-summary'],
+    queryFn: () => analyticsApi.summary(),
+  })
+}
+
+export function usePlatformAnalytics(params?: { period?: string; from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['platform-analytics', params],
+    queryFn: () => analyticsApi.platform(params),
+  })
+}
+
+export function useUniversityAnalytics(universityId: string | null, params?: { period?: string; from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['university-analytics', universityId, params],
+    queryFn: () => analyticsApi.university(universityId!, params),
+    enabled: !!universityId,
+  })
+}
+
+export function useSiteAnalytics(siteId: string | null, params?: { period?: string; from?: string; to?: string }) {
+  return useQuery({
+    queryKey: ['site-analytics', siteId, params],
+    queryFn: () => analyticsApi.site(siteId!, params),
+    enabled: !!siteId,
+  })
+}
+
+export function useDemandHeatMap() {
+  return useQuery({
+    queryKey: ['demand-heat-map'],
+    queryFn: () => analyticsApi.demandHeatMap(),
+  })
+}
+
+export function useSpecialtyDemand() {
+  return useQuery({
+    queryKey: ['specialty-demand'],
+    queryFn: () => analyticsApi.specialtyDemand(),
+  })
+}
+
+// --- Accreditation Reports ---
+export function useAccreditationReports(params?: { university_id?: string; page?: number }) {
+  return useQuery({
+    queryKey: ['accreditation-reports', params],
+    queryFn: () => accreditationReportsApi.list(params),
+  })
+}
+
+export function useGenerateReport() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: accreditationReportsApi.generate,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['accreditation-reports'] }) },
+  })
+}
+
+export function useReportPreview(id: string | null) {
+  return useQuery({
+    queryKey: ['report-preview', id],
+    queryFn: () => accreditationReportsApi.preview(id!),
+    enabled: !!id,
+  })
+}
+
+export function useDeleteReport() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: accreditationReportsApi.delete,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['accreditation-reports'] }) },
   })
 }

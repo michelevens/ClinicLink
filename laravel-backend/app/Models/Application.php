@@ -19,6 +19,8 @@ class Application extends Model
         'reviewed_at',
         'reviewed_by',
         'notes',
+        'payment_status',
+        'payment_id',
     ];
 
     protected function casts(): array
@@ -67,5 +69,10 @@ class Application extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class);
     }
 }

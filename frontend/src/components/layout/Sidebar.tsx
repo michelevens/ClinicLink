@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Settings, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
-  MessageSquare, Calendar
+  MessageSquare, Calendar, BarChart3, FileBarChart, UserSearch
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
@@ -42,6 +42,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
   { label: 'Universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['admin'] },
   { label: 'All Users', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'] },
+  { label: 'Preceptor Directory', path: '/preceptor-directory', icon: <UserSearch className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'admin'] },
+  { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
+  { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
   { label: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
 ]
 

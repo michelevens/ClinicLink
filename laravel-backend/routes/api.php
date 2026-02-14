@@ -28,6 +28,11 @@ use App\Http\Controllers\SavedSearchController;
 use App\Http\Controllers\EvaluationTemplateController;
 use App\Http\Controllers\AgreementTemplateController;
 use App\Http\Controllers\PreceptorReviewController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PreceptorProfileController;
+use App\Http\Controllers\MatchingController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AccreditationReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -70,6 +75,10 @@ Route::get('/exports/evaluations/csv', [ExportController::class, 'evaluationsCsv
 Route::get('/exports/evaluations/pdf', [ExportController::class, 'evaluationsPdf']);
 Route::get('/exports/compliance/csv', [ExportController::class, 'complianceCsv']);
 Route::get('/exports/compliance/pdf', [ExportController::class, 'compliancePdf']);
+Route::get('/accreditation-reports/{report}/download', [AccreditationReportController::class, 'download']);
+
+// Stripe webhook (no auth — signature verified in controller)
+Route::post('/stripe/webhook', [PaymentController::class, 'webhook']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -319,6 +328,48 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:student')->post('/preceptor-reviews', [PreceptorReviewController::class, 'store']);
     Route::get('/preceptor-reviews/{preceptor}', [PreceptorReviewController::class, 'index']);
     Route::get('/preceptor-reviews/{preceptor}/stats', [PreceptorReviewController::class, 'stats']);
+
+    // Payments (Stripe Connect)
+    Route::middleware('role:site_manager')->group(function () {
+        Route::post('/payments/connect-account', [PaymentController::class, 'createConnectAccount']);
+        Route::get('/payments/connect-status', [PaymentController::class, 'connectAccountStatus']);
+        Route::post('/payments/connect-refresh', [PaymentController::class, 'refreshConnectLink']);
+    });
+    Route::middleware('role:student')->post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
+    Route::get('/payments/history', [PaymentController::class, 'paymentHistory']);
+    Route::middleware('role:site_manager,admin')->post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+
+    // Preceptor Profiles
+    Route::get('/preceptor-profiles', [PreceptorProfileController::class, 'directory']);
+    Route::get('/preceptor-profiles/leaderboard', [PreceptorProfileController::class, 'leaderboard']);
+    Route::get('/preceptor-profiles/{user}', [PreceptorProfileController::class, 'show']);
+    Route::middleware('role:preceptor')->put('/preceptor-profiles', [PreceptorProfileController::class, 'update']);
+    Route::middleware('role:admin')->post('/preceptor-profiles/{user}/refresh-badges', [PreceptorProfileController::class, 'refreshBadges']);
+
+    // Smart Matching (student only)
+    Route::middleware('role:student')->group(function () {
+        Route::get('/matching/preferences', [MatchingController::class, 'preferences']);
+        Route::put('/matching/preferences', [MatchingController::class, 'updatePreferences']);
+        Route::get('/matching/results', [MatchingController::class, 'match']);
+    });
+
+    // Analytics (role-scoped)
+    Route::get('/analytics/summary', [AnalyticsController::class, 'summary']);
+    Route::get('/analytics/specialty-demand', [AnalyticsController::class, 'specialtyDemand']);
+    Route::middleware('role:admin')->get('/analytics/platform', [AnalyticsController::class, 'platform']);
+    Route::middleware('role:coordinator,admin')->group(function () {
+        Route::get('/analytics/university/{university}', [AnalyticsController::class, 'university']);
+        Route::get('/analytics/demand-map', [AnalyticsController::class, 'demandHeatMap']);
+    });
+    Route::middleware('role:site_manager,admin')->get('/analytics/site/{site}', [AnalyticsController::class, 'site']);
+
+    // Accreditation Reports (coordinator, admin)
+    Route::middleware('role:coordinator,admin')->group(function () {
+        Route::get('/accreditation-reports', [AccreditationReportController::class, 'index']);
+        Route::post('/accreditation-reports', [AccreditationReportController::class, 'generate']);
+        Route::get('/accreditation-reports/{report}/preview', [AccreditationReportController::class, 'preview']);
+        Route::delete('/accreditation-reports/{report}', [AccreditationReportController::class, 'destroy']);
+    });
 
     // Calendar (all authenticated users — controller scopes by role)
     Route::get('/calendar/events', [CalendarController::class, 'events']);

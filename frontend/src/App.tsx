@@ -38,6 +38,9 @@ import { ResetPassword } from './pages/ResetPassword.tsx'
 import { Messages } from './pages/Messages.tsx'
 import { Calendar } from './pages/Calendar.tsx'
 import { EvaluationTemplates } from './pages/EvaluationTemplates.tsx'
+import { PreceptorDirectory } from './pages/PreceptorDirectory.tsx'
+import { Analytics } from './pages/Analytics.tsx'
+import { AccreditationReports } from './pages/AccreditationReports.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
@@ -125,6 +128,9 @@ export default function App() {
       <Route path="/ce-credits" element={<ProtectedRoute roles={['preceptor', 'coordinator', 'admin']}><CeCredits /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
       <Route path="/admin/users/:id" element={<ProtectedRoute roles={['admin']}><UserDetail /></ProtectedRoute>} />
+      <Route path="/preceptor-directory" element={<ProtectedRoute><PreceptorDirectory /></ProtectedRoute>} />
+      <Route path="/analytics" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Analytics /></ProtectedRoute>} />
+      <Route path="/accreditation-reports" element={<ProtectedRoute roles={['coordinator', 'admin']}><AccreditationReports /></ProtectedRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

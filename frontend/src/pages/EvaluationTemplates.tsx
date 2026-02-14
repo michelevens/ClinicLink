@@ -8,6 +8,34 @@ import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Loader2, GripVertical, X, FileCheck } from 'lucide-react'
 import type { ApiEvaluationTemplate } from '../services/api.ts'
 
+const PRESET_CATEGORIES = [
+  'Clinical Skills',
+  'Professionalism',
+  'Communication',
+  'Critical Thinking',
+  'Patient Care',
+  'Medical Knowledge',
+  'Practice-Based Learning',
+  'Systems-Based Practice',
+  'Interpersonal Skills',
+  'Documentation',
+  'Clinical Judgment',
+  'Time Management',
+  'Teamwork & Collaboration',
+  'Ethics & Integrity',
+  'Patient Safety',
+  'Cultural Competency',
+  'Leadership',
+  'Problem Solving',
+  'Evidence-Based Practice',
+  'Self-Directed Learning',
+  'Technical Competence',
+  'Empathy & Compassion',
+  'Adaptability',
+  'Accountability',
+  'Initiative',
+]
+
 const typeLabels: Record<string, string> = {
   mid_rotation: 'Mid-Rotation',
   final: 'Final',
@@ -265,12 +293,45 @@ export function EvaluationTemplates() {
                 <div key={idx} className="flex items-start gap-2 bg-stone-50 rounded-xl p-3">
                   <GripVertical className="w-4 h-4 text-stone-400 mt-2.5 shrink-0" />
                   <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input
-                      value={cat.label}
-                      onChange={e => updateCategory(idx, 'label', e.target.value)}
-                      placeholder="Category name *"
-                      className="rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
-                    />
+                    {PRESET_CATEGORIES.includes(cat.label) || cat.label === '' ? (
+                      <select
+                        value={cat.label}
+                        onChange={e => {
+                          if (e.target.value === '__other__') {
+                            updateCategory(idx, 'label', '')
+                            // Mark as custom by setting a temporary flag via key
+                            setFormCategories(prev => prev.map((c, i) => i === idx ? { ...c, key: '__custom__', label: '' } : c))
+                          } else {
+                            updateCategory(idx, 'label', e.target.value)
+                          }
+                        }}
+                        className="rounded-lg border border-stone-200 px-3 py-2 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                      >
+                        <option value="">Select category...</option>
+                        {PRESET_CATEGORIES.filter(p => p === cat.label || !formCategories.some(fc => fc.label === p)).map(p => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                        <option value="__other__">Other (custom)...</option>
+                      </select>
+                    ) : (
+                      <div className="flex gap-1">
+                        <input
+                          value={cat.label}
+                          onChange={e => updateCategory(idx, 'label', e.target.value)}
+                          placeholder="Custom category name *"
+                          className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateCategory(idx, 'label', '')}
+                          className="px-2 py-1 text-xs text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors shrink-0"
+                          title="Switch back to preset list"
+                        >
+                          Presets
+                        </button>
+                      </div>
+                    )}
                     <input
                       value={cat.description}
                       onChange={e => updateCategory(idx, 'description', e.target.value)}

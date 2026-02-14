@@ -1282,6 +1282,250 @@ export const preceptorReviewsApi = {
   stats: (preceptorId: string) => api.get<PreceptorReviewStats>(`/preceptor-reviews/${preceptorId}/stats`),
 }
 
+// --- Payments (Stripe Connect) ---
+export interface ApiPayment {
+  id: string
+  payer_id: string
+  payee_id: string
+  application_id: string
+  slot_id: string
+  amount: number
+  platform_fee: number
+  currency: string
+  stripe_payment_intent_id: string | null
+  stripe_transfer_id: string | null
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded'
+  paid_at: string | null
+  refunded_at: string | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+  updated_at: string
+  payer?: ApiUser
+  payee?: ApiUser
+  application?: ApiApplication
+  slot?: ApiSlot
+}
+
+export interface ConnectStatus {
+  stripe_account_id: string | null
+  stripe_onboarded: boolean
+  details_submitted?: boolean
+  charges_enabled?: boolean
+  payouts_enabled?: boolean
+}
+
+export const paymentsApi = {
+  createConnectAccount: () =>
+    api.post<{ url: string; account_id: string }>('/payments/connect-account'),
+  connectStatus: () =>
+    api.get<ConnectStatus>('/payments/connect-status'),
+  refreshConnectLink: () =>
+    api.post<{ url: string }>('/payments/connect-refresh'),
+  createCheckout: (data: { application_id: string }) =>
+    api.post<{ client_secret: string; payment_id: string; amount: number; platform_fee: number }>('/payments/checkout', data),
+  history: (params?: { page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiPayment>>(`/payments/history?${qs}`)
+  },
+  refund: (paymentId: string) =>
+    api.post<{ payment: ApiPayment; message: string }>(`/payments/${paymentId}/refund`),
+}
+
+// --- Preceptor Profiles ---
+export interface ApiPreceptorProfile {
+  id: string
+  user_id: string
+  specialties: string[]
+  years_experience: number | null
+  bio: string | null
+  credentials: { type: string; name: string; issuer: string; year: number | null }[]
+  availability_status: 'available' | 'limited' | 'unavailable'
+  max_students: number
+  preferred_schedule: string | null
+  teaching_philosophy: string | null
+  badges: string[]
+  total_students_mentored: number
+  total_hours_supervised: number
+  profile_visibility: 'public' | 'university_only' | 'private'
+  created_at: string
+  updated_at: string
+  user?: ApiUser
+  review_stats?: PreceptorReviewStats
+}
+
+export interface PreceptorDirectoryEntry {
+  id: string
+  user_id: string
+  first_name: string
+  last_name: string
+  specialties: string[]
+  bio: string | null
+  availability_status: 'available' | 'limited' | 'unavailable'
+  badges: string[]
+  total_students_mentored: number
+  years_experience: number | null
+  average_rating: number | null
+  review_count: number
+}
+
+export const preceptorProfilesApi = {
+  directory: (params?: { search?: string; specialty?: string; availability?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.search) qs.set('search', params.search)
+    if (params?.specialty) qs.set('specialty', params.specialty)
+    if (params?.availability) qs.set('availability', params.availability)
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<PreceptorDirectoryEntry>>(`/preceptor-profiles?${qs}`)
+  },
+  show: (userId: string) =>
+    api.get<{ profile: ApiPreceptorProfile }>(`/preceptor-profiles/${userId}`),
+  update: (data: Partial<ApiPreceptorProfile>) =>
+    api.put<{ profile: ApiPreceptorProfile }>('/preceptor-profiles', data),
+  refreshBadges: (userId: string) =>
+    api.post<{ badges: string[]; message: string }>(`/preceptor-profiles/${userId}/refresh-badges`),
+  leaderboard: () =>
+    api.get<{ leaderboard: PreceptorDirectoryEntry[] }>('/preceptor-profiles/leaderboard'),
+}
+
+// --- Smart Matching ---
+export interface ApiMatchingPreference {
+  id: string
+  user_id: string
+  preferred_specialties: string[]
+  preferred_states: string[]
+  preferred_cities: string[]
+  max_distance_miles: number | null
+  preferred_schedule: string | null
+  cost_preference: 'any' | 'free_only' | 'paid_ok'
+  min_preceptor_rating: number | null
+  preferred_start_after: string | null
+  preferred_start_before: string | null
+  exclude_applied: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface MatchingResult {
+  slot: ApiSlot
+  score: number
+  breakdown: {
+    specialty: number
+    location: number
+    cost: number
+    schedule: number
+    rating: number
+    date_range: number
+    availability: number
+  }
+}
+
+export const matchingApi = {
+  getPreferences: () =>
+    api.get<{ preferences: ApiMatchingPreference | null }>('/matching/preferences'),
+  updatePreferences: (data: Partial<ApiMatchingPreference>) =>
+    api.put<{ preferences: ApiMatchingPreference }>('/matching/preferences', data),
+  getResults: (limit?: number) => {
+    const qs = new URLSearchParams()
+    if (limit) qs.set('limit', String(limit))
+    return api.get<{ matches: MatchingResult[] }>(`/matching/results?${qs}`)
+  },
+}
+
+// --- Analytics ---
+export interface AnalyticsSummary {
+  total_placements?: number
+  placement_rate?: number
+  avg_time_to_place?: number
+  active_students?: number
+  total_hours?: number
+  slot_fill_rate?: number
+  revenue?: number
+  platform_fees?: number
+  [key: string]: unknown
+}
+
+export interface AnalyticsTimeSeries {
+  labels: string[]
+  datasets: { label: string; data: number[]; color?: string }[]
+}
+
+export interface AnalyticsMetrics {
+  summary: AnalyticsSummary
+  time_series?: AnalyticsTimeSeries
+  specialty_demand?: { specialty: string; count: number }[]
+  top_sites?: { site_id: string; site_name: string; placements: number; fill_rate: number }[]
+  top_programs?: { program_id: string; program_name: string; students: number; placement_rate: number }[]
+  [key: string]: unknown
+}
+
+export const analyticsApi = {
+  summary: () =>
+    api.get<AnalyticsSummary>('/analytics/summary'),
+  platform: (params?: { period?: string; from?: string; to?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.period) qs.set('period', params.period)
+    if (params?.from) qs.set('from', params.from)
+    if (params?.to) qs.set('to', params.to)
+    return api.get<AnalyticsMetrics>(`/analytics/platform?${qs}`)
+  },
+  university: (universityId: string, params?: { period?: string; from?: string; to?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.period) qs.set('period', params.period)
+    if (params?.from) qs.set('from', params.from)
+    if (params?.to) qs.set('to', params.to)
+    return api.get<AnalyticsMetrics>(`/analytics/university/${universityId}?${qs}`)
+  },
+  site: (siteId: string, params?: { period?: string; from?: string; to?: string }) => {
+    const qs = new URLSearchParams()
+    if (params?.period) qs.set('period', params.period)
+    if (params?.from) qs.set('from', params.from)
+    if (params?.to) qs.set('to', params.to)
+    return api.get<AnalyticsMetrics>(`/analytics/site/${siteId}?${qs}`)
+  },
+  demandHeatMap: () =>
+    api.get<{ states: { state: string; count: number }[] }>('/analytics/demand-map'),
+  specialtyDemand: () =>
+    api.get<{ specialties: { specialty: string; count: number }[] }>('/analytics/specialty-demand'),
+}
+
+// --- Accreditation Reports ---
+export interface ApiAccreditationReport {
+  id: string
+  university_id: string
+  generated_by: string
+  report_type: 'annual_summary' | 'program_review' | 'site_evaluation' | 'student_outcomes' | 'clinical_hours'
+  title: string
+  parameters: { date_from?: string; date_to?: string; program_id?: string; site_id?: string; [key: string]: unknown }
+  file_path: string | null
+  file_name: string | null
+  file_size: number | null
+  status: 'generating' | 'completed' | 'failed'
+  generated_at: string | null
+  created_at: string
+  updated_at: string
+  university?: ApiUniversity
+  generated_by_user?: ApiUser
+}
+
+export const accreditationReportsApi = {
+  list: (params?: { university_id?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.university_id) qs.set('university_id', params.university_id)
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiAccreditationReport>>(`/accreditation-reports?${qs}`)
+  },
+  generate: (data: { report_type: string; title?: string; university_id: string; parameters: Record<string, unknown> }) =>
+    api.post<{ report: ApiAccreditationReport }>('/accreditation-reports', data),
+  preview: (id: string) =>
+    api.get<{ data: Record<string, unknown> }>(`/accreditation-reports/${id}/preview`),
+  downloadUrl: (id: string) => {
+    const token = localStorage.getItem('cliniclink_token')
+    return `${API_URL}/accreditation-reports/${id}/download?token=${token}`
+  },
+  delete: (id: string) => api.delete(`/accreditation-reports/${id}`),
+}
+
 // --- Exports ---
 export const exportsApi = {
   hourLogsCsvUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {

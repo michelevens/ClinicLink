@@ -30,6 +30,8 @@ class User extends Authenticatable
         'notification_preferences',
         'failed_login_attempts',
         'locked_until',
+        'stripe_account_id',
+        'stripe_onboarded',
     ];
 
     protected $hidden = [
@@ -50,6 +52,7 @@ class User extends Authenticatable
             'mfa_backup_codes' => 'encrypted:array',
             'notification_preferences' => 'array',
             'locked_until' => 'datetime',
+            'stripe_onboarded' => 'boolean',
         ];
     }
 
@@ -135,6 +138,26 @@ class User extends Authenticatable
     public function preceptorReviewsGiven()
     {
         return $this->hasMany(PreceptorReview::class, 'student_id');
+    }
+
+    public function preceptorProfile()
+    {
+        return $this->hasOne(PreceptorProfile::class);
+    }
+
+    public function matchingPreferences()
+    {
+        return $this->hasOne(MatchingPreference::class);
+    }
+
+    public function paymentsAsPayer()
+    {
+        return $this->hasMany(Payment::class, 'payer_id');
+    }
+
+    public function paymentsAsPayee()
+    {
+        return $this->hasMany(Payment::class, 'payee_id');
     }
 
     // Scopes

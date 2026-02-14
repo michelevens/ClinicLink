@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('reminders:agreements')->dailyAt('04:30');
         $schedule->command('reminders:evaluations')->dailyAt('05:00');
         $schedule->command('alerts:saved-searches')->dailyAt('06:00');
+        $schedule->command('analytics:cache')->dailyAt('01:00');
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [
