@@ -43,8 +43,8 @@ export function LandingPage() {
             <a href="#demo" className="hover:text-primary-600 transition-colors">Demo</a>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>Sign In</Button>
-            <Button size="sm" onClick={() => navigate('/register')}>Get Started</Button>
+            <button className="inline-flex items-center justify-center font-medium rounded-xl px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100 transition-all duration-300" onClick={() => navigate('/login')}>Sign In</button>
+            <button className="inline-flex items-center justify-center font-medium rounded-xl px-3 py-1.5 text-sm bg-primary-500 text-white hover:bg-primary-600 shadow-sm hover:-translate-y-0.5 transition-all duration-300" onClick={() => navigate('/register')}>Get Started</button>
           </div>
         </div>
       </nav>
@@ -81,12 +81,12 @@ export function LandingPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-8">
-              <Button size="lg" className="bg-white text-primary-600 hover:bg-white/90 w-full sm:w-auto" onClick={() => navigate('/register')}>
+              <button className="inline-flex items-center justify-center font-medium rounded-xl px-7 py-3 text-base gap-2.5 bg-white text-primary-600 hover:bg-white/90 shadow-lg hover:-translate-y-0.5 transition-all duration-300 w-full sm:w-auto" onClick={() => navigate('/register')}>
                 Start Free Today <ArrowRight className="w-5 h-5" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/10 w-full sm:w-auto" onClick={() => navigate('/rotations')}>
+              </button>
+              <button className="inline-flex items-center justify-center font-medium rounded-xl px-7 py-3 text-base gap-2.5 border-2 border-white/50 text-white hover:bg-white/10 transition-all duration-300 w-full sm:w-auto" onClick={() => navigate('/rotations')}>
                 Browse Open Rotations
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -413,12 +413,12 @@ export function LandingPage() {
             Join students, clinical sites, and universities building the future of clinical education.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="bg-white text-primary-600 hover:bg-white/90 w-full sm:w-auto" onClick={() => navigate('/register')}>
+            <button className="inline-flex items-center justify-center font-medium rounded-xl px-7 py-3 text-base gap-2.5 bg-white text-primary-600 hover:bg-white/90 shadow-lg hover:-translate-y-0.5 transition-all duration-300 w-full sm:w-auto" onClick={() => navigate('/register')}>
               Create Free Account <ArrowRight className="w-5 h-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="border-white/50 text-white hover:bg-white/10 w-full sm:w-auto" onClick={() => navigate('/login')}>
+            </button>
+            <button className="inline-flex items-center justify-center font-medium rounded-xl px-7 py-3 text-base gap-2.5 border-2 border-white/50 text-white hover:bg-white/10 transition-all duration-300 w-full sm:w-auto" onClick={() => navigate('/login')}>
               Sign In
-            </Button>
+            </button>
           </div>
         </div>
       </section>
