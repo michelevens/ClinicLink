@@ -13,7 +13,7 @@
 - [x] Role-based access (Student, Preceptor, Site Manager, University Coordinator, Professor, Admin)
 - [x] Profile setup per role (credentials, program, facility)
 - [ ] University affiliation verification
-- [ ] Email verification and identity confirmation
+- [x] Email verification and identity confirmation
 - [x] MFA option for all users (TOTP + backup codes)
 - [x] NIST 800-63B password policy (min 12, mixed case, numbers, symbols, HaveIBeenPwned)
 - [x] Account lockout (5 failed attempts → 30min lock)
@@ -23,8 +23,8 @@
 - [x] Credential upload (CPR, background check, immunizations, liability insurance)
 - [x] Rotation search with filters (specialty, location, dates, cost, availability)
 - [ ] Map-based search (clinics near me / near school)
-- [ ] Saved searches and alerts (notify when new matching slots open)
-- [ ] Rotation bookmarking/favorites
+- [x] Saved searches and alerts (notify when new matching slots open)
+- [x] Rotation bookmarking/favorites
 - [x] Application submission (cover letter, preferences)
 - [x] Application status tracking
 
@@ -68,7 +68,7 @@
 - [x] Final rotation evaluation (preceptor → student)
 - [x] Student feedback evaluation
 - [x] Standardized rubrics (1-5 scale scoring)
-- [ ] Custom evaluation templates per university
+- [x] Custom evaluation templates per university (rubric builder with criteria + scoring scales)
 - [x] Evaluation reminders and deadlines (daily scheduled command + email + in-app notification)
 - [x] Evaluation history and trends
 
@@ -82,9 +82,9 @@
 - [x] Agreement expiration email reminders
 
 ### Affiliation Agreements
-- [ ] Agreement template library
+- [x] Agreement template library
 - [x] Agreement creation between university and site (CRUD)
-- [ ] E-signature integration
+- [x] E-signature integration (canvas-based, request/sign/reject/cancel/resend workflow)
 - [x] Agreement status tracking (draft → pending review → active → expired/terminated)
 - [x] Renewal reminders (scheduled email alerts)
 - [x] Agreement document storage (upload/download)
@@ -98,7 +98,7 @@
 - [x] In-app notifications (bell icon, mark read/unread)
 - [x] Email notifications (11 mail classes for applications, hours, credentials, agreements, onboarding)
 - [x] New message database notifications
-- [ ] Message templates for common communications
+- [x] Message templates for common communications
 
 ### Calendar
 - [x] FullCalendar integration (month grid, week time grid, week list views)
@@ -125,16 +125,16 @@
 ## Phase 3: Payments & Advanced Features (Weeks 17-24)
 
 ### Payment System
-- [ ] Paid rotation listing with Stripe Connect
-- [ ] Student payment for rotation fees (if applicable)
-- [ ] University payment on behalf of students (batch)
-- [ ] Platform fee processing (10% marketplace fee)
-- [ ] Payment receipts and invoices
+- [x] Paid rotation listing with Stripe Connect
+- [x] Student payment for rotation fees (if applicable)
+- [x] University payment on behalf of students (batch)
+- [x] Platform fee processing (10% marketplace fee)
+- [x] Payment receipts and invoices
 - [ ] Refund management
-- [ ] Financial reporting for sites
+- [x] Financial reporting for sites
 
 ### Preceptor Management
-- [ ] Preceptor profiles (credentials, specialties, CE credits, teaching history)
+- [x] Preceptor profiles (credentials, specialties, CE credits, teaching history)
 - [ ] Availability calendar
 - [ ] Student capacity management
 - [ ] Teaching portfolio (evaluations received, students mentored)
@@ -143,20 +143,20 @@
 - [x] CE policy versioning with effective date ranges
 - [x] Immutable CE audit events (CeAuditEvent model)
 - [x] CE evidence snapshots and public certificate verification
-- [ ] Preceptor ratings and reviews (from students)
+- [x] Preceptor ratings and reviews (from students)
 - [ ] Preceptor recognition program
 
 ### Advanced Analytics
-- [ ] University reports: placement rates, time-to-place, site utilization
-- [ ] Site reports: application volume, acceptance rates, student satisfaction
-- [ ] Program accreditation data export
+- [x] University reports: placement rates, time-to-place, site utilization
+- [x] Site reports: application volume, acceptance rates, student satisfaction
+- [x] Program accreditation data export
 - [ ] Preceptor effectiveness metrics
 - [ ] Geographic demand heat maps
 - [ ] Specialty availability trends
 
 ### Matching Algorithm
-- [ ] Smart matching (student preferences + site requirements + availability)
-- [ ] Match score and recommendations
+- [x] Smart matching (student preferences + site requirements + availability)
+- [x] Match score and recommendations
 - [ ] Automated waitlist management
 - [ ] Priority matching for underserved specialties/locations
 
