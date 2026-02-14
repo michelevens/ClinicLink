@@ -121,6 +121,22 @@ class User extends Authenticatable
         return $this->hasMany(Message::class, 'sender_id');
     }
 
+    public function bookmarkedSlots()
+    {
+        return $this->belongsToMany(RotationSlot::class, 'slot_bookmarks', 'user_id', 'slot_id')
+            ->withTimestamps();
+    }
+
+    public function preceptorReviewsReceived()
+    {
+        return $this->hasMany(PreceptorReview::class, 'preceptor_id');
+    }
+
+    public function preceptorReviewsGiven()
+    {
+        return $this->hasMany(PreceptorReview::class, 'student_id');
+    }
+
     // Scopes
 
     public function scopeRole($query, string $role)

@@ -37,6 +37,7 @@ import { ForgotPassword } from './pages/ForgotPassword.tsx'
 import { ResetPassword } from './pages/ResetPassword.tsx'
 import { Messages } from './pages/Messages.tsx'
 import { Calendar } from './pages/Calendar.tsx'
+import { EvaluationTemplates } from './pages/EvaluationTemplates.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
@@ -116,6 +117,7 @@ export default function App() {
       <Route path="/universities/:id" element={<ProtectedRoute roles={['coordinator', 'admin']}><UniversityDetail /></ProtectedRoute>} />
       <Route path="/onboarding-checklists" element={<ProtectedRoute roles={['student', 'site_manager']}><OnboardingChecklists /></ProtectedRoute>} />
       <Route path="/agreements" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Agreements /></ProtectedRoute>} />
+      <Route path="/evaluation-templates" element={<ProtectedRoute roles={['coordinator', 'admin']}><EvaluationTemplates /></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
       <Route path="/messages/:id" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
       <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />

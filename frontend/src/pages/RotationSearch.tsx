@@ -5,20 +5,21 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useSlots, useCreateApplication } from '../hooks/useApi.ts'
+import { useSlots, useCreateApplication, useToggleBookmark, useBookmarkedSlots, useCreateSavedSearch } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
 import type { ApiSlot } from '../services/api.ts'
+import { SavedSearchesPanel } from '../components/student/SavedSearchesPanel.tsx'
 import {
-  Search, MapPin, Calendar, Star,
+  Search, MapPin, Calendar, Star, Heart,
   Building2, Clock, Users, Send, Loader2,
   Globe, Phone, Stethoscope, DollarSign,
   ChevronRight, Shield, BookOpen, CheckCircle2,
-  ArrowLeft, ExternalLink, LogIn
+  ArrowLeft, ExternalLink, LogIn, Bookmark, Save
 } from 'lucide-react'
 
 export function RotationSearch() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSpecialty, setSelectedSpecialty] = useState('')
@@ -29,6 +30,16 @@ export function RotationSearch() {
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [coverLetter, setCoverLetter] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all')
+  const [showSaveSearch, setShowSaveSearch] = useState(false)
+  const [saveSearchName, setSaveSearchName] = useState('')
+  const [showSavedSearches, setShowSavedSearches] = useState(false)
+
+  const isStudent = user?.role === 'student'
+  const toggleBookmark = useToggleBookmark()
+  const { data: bookmarkedData } = useBookmarkedSlots()
+  const bookmarkedIds = new Set((bookmarkedData?.data || []).map(s => s.id))
+  const createSavedSearch = useCreateSavedSearch()
 
   const { data, isLoading } = useSlots({
     search: searchQuery || undefined,
@@ -38,7 +49,43 @@ export function RotationSearch() {
   })
   const applyMutation = useCreateApplication()
 
+  const handleBookmark = (slotId: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    if (!isAuthenticated) { navigate('/login?redirect=/rotations'); return }
+    toggleBookmark.mutate(slotId, {
+      onSuccess: (res) => toast.success(res.bookmarked ? 'Bookmarked!' : 'Removed bookmark'),
+    })
+  }
+
+  const handleSaveSearch = () => {
+    if (!saveSearchName.trim()) return
+    createSavedSearch.mutate(
+      {
+        name: saveSearchName,
+        filters: {
+          ...(searchQuery ? { search: searchQuery } : {}),
+          ...(selectedSpecialty ? { specialty: selectedSpecialty } : {}),
+          ...(costFilter !== 'all' ? { cost_type: costFilter } : {}),
+        },
+        alerts_enabled: true,
+      },
+      {
+        onSuccess: () => { toast.success('Search saved!'); setShowSaveSearch(false); setSaveSearchName('') },
+        onError: (err: Error) => toast.error(err.message),
+      }
+    )
+  }
+
+  const loadSavedFilters = (filters: { search?: string; specialty?: string; status?: string; cost_type?: string }) => {
+    setSearchQuery(filters.search || '')
+    setSelectedSpecialty(filters.specialty || '')
+    setCostFilter(filters.cost_type || 'all')
+    setStatusFilter(filters.status || 'all')
+    setActiveTab('all')
+  }
+
   const slots = data?.data || []
+  const displaySlots = activeTab === 'saved' ? slots.filter(s => bookmarkedIds.has(s.id)) : slots
 
   const specialties = useMemo(() => {
     const set = new Set(slots.map(s => s.specialty))
@@ -137,10 +184,65 @@ export function RotationSearch() {
           </div>
         </div>
         <div className="flex items-center justify-between mt-3">
-          <p className="text-sm text-stone-500">
-            {isLoading ? 'Searching...' : `${slots.length} rotation${slots.length !== 1 ? 's' : ''} found`}
-          </p>
-          <div className="flex gap-1">
+          <div className="flex items-center gap-3">
+            {isAuthenticated && isStudent && (
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${activeTab === 'all' ? 'bg-primary-100 text-primary-700' : 'text-stone-500 hover:bg-stone-100'}`}
+                >
+                  All ({slots.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('saved')}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 ${activeTab === 'saved' ? 'bg-primary-100 text-primary-700' : 'text-stone-500 hover:bg-stone-100'}`}
+                >
+                  <Heart className="w-3 h-3" /> Saved ({bookmarkedIds.size})
+                </button>
+              </div>
+            )}
+            <p className="text-sm text-stone-500">
+              {isLoading ? 'Searching...' : `${displaySlots.length} rotation${displaySlots.length !== 1 ? 's' : ''} found`}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && isStudent && (
+              <>
+                <div className="relative">
+                  <Button size="sm" variant="outline" onClick={() => setShowSavedSearches(!showSavedSearches)}>
+                    <Bookmark className="w-3.5 h-3.5" /> Saved Searches
+                  </Button>
+                  {showSavedSearches && (
+                    <div className="absolute right-0 top-full mt-2 z-30">
+                      <SavedSearchesPanel onClose={() => setShowSavedSearches(false)} onLoadSearch={loadSavedFilters} />
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <Button size="sm" variant="outline" onClick={() => setShowSaveSearch(!showSaveSearch)}>
+                    <Save className="w-3.5 h-3.5" /> Save Search
+                  </Button>
+                  {showSaveSearch && (
+                    <div className="absolute right-0 top-full mt-2 z-30 bg-white rounded-xl shadow-xl border border-stone-200 p-4 w-72">
+                      <p className="text-sm font-medium text-stone-900 mb-2">Save Current Search</p>
+                      <input
+                        type="text"
+                        value={saveSearchName}
+                        onChange={e => setSaveSearchName(e.target.value)}
+                        placeholder="Name this search..."
+                        className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm mb-3 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                        onKeyDown={e => e.key === 'Enter' && handleSaveSearch()}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button size="sm" variant="ghost" onClick={() => { setShowSaveSearch(false); setSaveSearchName('') }}>Cancel</Button>
+                        <Button size="sm" onClick={handleSaveSearch} disabled={!saveSearchName.trim() || createSavedSearch.isPending}>Save</Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+            <div className="flex gap-1">
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-stone-400 hover:text-stone-600'}`}
@@ -153,6 +255,7 @@ export function RotationSearch() {
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
             </button>
+          </div>
           </div>
         </div>
       </Card>
@@ -167,7 +270,7 @@ export function RotationSearch() {
       {/* Results - List View */}
       {!isLoading && viewMode === 'list' && (
         <div className="space-y-4">
-          {slots.map(slot => {
+          {displaySlots.map(slot => {
             const daysUntil = getDaysUntilStart(slot.start_date)
             const weeks = getRotationDuration(slot.start_date, slot.end_date)
             return (
@@ -209,6 +312,15 @@ export function RotationSearch() {
                     </div>
                   </div>
                   <div className="flex lg:flex-col gap-2 shrink-0">
+                    {isAuthenticated && isStudent && (
+                      <button
+                        onClick={e => handleBookmark(slot.id, e)}
+                        className="p-2 rounded-xl hover:bg-stone-100 transition-colors self-end"
+                        title={bookmarkedIds.has(slot.id) ? 'Remove bookmark' : 'Bookmark'}
+                      >
+                        <Heart className={`w-5 h-5 ${bookmarkedIds.has(slot.id) ? 'text-red-500 fill-red-500' : 'text-stone-400'}`} />
+                      </button>
+                    )}
                     <Button
                       size="sm"
                       disabled={slot.status !== 'open'}
@@ -234,7 +346,7 @@ export function RotationSearch() {
       {/* Results - Grid View */}
       {!isLoading && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {slots.map(slot => {
+          {displaySlots.map(slot => {
             const weeks = getRotationDuration(slot.start_date, slot.end_date)
             const spotsLeft = slot.capacity - slot.filled
             return (
@@ -245,9 +357,19 @@ export function RotationSearch() {
                     <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
                       <Stethoscope className="w-5 h-5" />
                     </div>
-                    <Badge variant={slot.status === 'open' ? 'success' : 'danger'} size="sm">
-                      {slot.status === 'open' ? `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left` : 'Filled'}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      {isAuthenticated && isStudent && (
+                        <button
+                          onClick={e => handleBookmark(slot.id, e)}
+                          className="p-1 rounded-lg hover:bg-stone-100 transition-colors"
+                        >
+                          <Heart className={`w-4 h-4 ${bookmarkedIds.has(slot.id) ? 'text-red-500 fill-red-500' : 'text-stone-400'}`} />
+                        </button>
+                      )}
+                      <Badge variant={slot.status === 'open' ? 'success' : 'danger'} size="sm">
+                        {slot.status === 'open' ? `${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left` : 'Filled'}
+                      </Badge>
+                    </div>
                   </div>
 
                   <h3 className="font-semibold text-stone-900 mb-1 line-clamp-1">{slot.title}</h3>
@@ -291,7 +413,7 @@ export function RotationSearch() {
       )}
 
       {/* Empty State */}
-      {slots.length === 0 && !isLoading && (
+      {displaySlots.length === 0 && !isLoading && (
         <Card className="text-center py-12">
           <Search className="w-12 h-12 text-stone-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-stone-700 mb-2">No rotations found</h3>

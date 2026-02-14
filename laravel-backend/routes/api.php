@@ -23,6 +23,11 @@ use App\Http\Controllers\CeCertificateController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UniversityController;
+use App\Http\Controllers\BookmarkController;
+use App\Http\Controllers\SavedSearchController;
+use App\Http\Controllers\EvaluationTemplateController;
+use App\Http\Controllers\AgreementTemplateController;
+use App\Http\Controllers\PreceptorReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -277,6 +282,43 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages/users', [MessageController::class, 'searchUsers']);
     Route::middleware('role:coordinator,admin')
         ->post('/messages/broadcast', [MessageController::class, 'broadcast']);
+
+    // Bookmarks (students only)
+    Route::middleware('role:student')->group(function () {
+        Route::post('/slots/{slot}/bookmark', [BookmarkController::class, 'toggle']);
+        Route::get('/slots/bookmarks', [BookmarkController::class, 'index']);
+    });
+
+    // Saved Searches (students only)
+    Route::middleware('role:student')->group(function () {
+        Route::get('/saved-searches', [SavedSearchController::class, 'index']);
+        Route::post('/saved-searches', [SavedSearchController::class, 'store']);
+        Route::put('/saved-searches/{savedSearch}', [SavedSearchController::class, 'update']);
+        Route::delete('/saved-searches/{savedSearch}', [SavedSearchController::class, 'destroy']);
+    });
+
+    // Evaluation Templates (any auth can read; coordinator/admin can write)
+    Route::get('/evaluation-templates', [EvaluationTemplateController::class, 'index']);
+    Route::middleware('role:coordinator,admin')->group(function () {
+        Route::post('/evaluation-templates', [EvaluationTemplateController::class, 'store']);
+        Route::put('/evaluation-templates/{template}', [EvaluationTemplateController::class, 'update']);
+        Route::delete('/evaluation-templates/{template}', [EvaluationTemplateController::class, 'destroy']);
+    });
+
+    // Agreement Templates (coordinator, site_manager, admin)
+    Route::middleware('role:coordinator,site_manager,admin')->group(function () {
+        Route::get('/agreement-templates', [AgreementTemplateController::class, 'index']);
+        Route::post('/agreement-templates', [AgreementTemplateController::class, 'store']);
+        Route::put('/agreement-templates/{template}', [AgreementTemplateController::class, 'update']);
+        Route::delete('/agreement-templates/{template}', [AgreementTemplateController::class, 'destroy']);
+        Route::post('/agreement-templates/{template}/upload', [AgreementTemplateController::class, 'uploadDocument']);
+        Route::get('/agreement-templates/{template}/download', [AgreementTemplateController::class, 'downloadDocument']);
+    });
+
+    // Preceptor Reviews
+    Route::middleware('role:student')->post('/preceptor-reviews', [PreceptorReviewController::class, 'store']);
+    Route::get('/preceptor-reviews/{preceptor}', [PreceptorReviewController::class, 'index']);
+    Route::get('/preceptor-reviews/{preceptor}/stats', [PreceptorReviewController::class, 'stats']);
 
     // Calendar (all authenticated users — controller scopes by role)
     Route::get('/calendar/events', [CalendarController::class, 'events']);

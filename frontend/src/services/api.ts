@@ -162,12 +162,13 @@ export const sitesApi = {
 
 // --- Rotation Slots ---
 export const slotsApi = {
-  list: (params?: { search?: string; specialty?: string; status?: string; cost_type?: string; page?: number }) => {
+  list: (params?: { search?: string; specialty?: string; status?: string; cost_type?: string; site_id?: string; page?: number }) => {
     const qs = new URLSearchParams()
     if (params?.search) qs.set('search', params.search)
     if (params?.specialty) qs.set('specialty', params.specialty)
     if (params?.status) qs.set('status', params.status)
     if (params?.cost_type) qs.set('cost_type', params.cost_type)
+    if (params?.site_id) qs.set('site_id', params.site_id)
     if (params?.page) qs.set('page', String(params.page))
     return api.get<PaginatedResponse<ApiSlot>>(`/slots?${qs}`)
   },
@@ -1157,6 +1158,128 @@ export interface CalendarEvent {
 export const calendarApi = {
   events: (start: string, end: string) =>
     api.get<CalendarEvent[]>(`/calendar/events?start=${start}&end=${end}`),
+}
+
+// --- Bookmarks ---
+export const bookmarksApi = {
+  toggle: (slotId: string) => api.post<{ bookmarked: boolean }>(`/slots/${slotId}/bookmark`),
+  list: (params?: { page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiSlot>>(`/slots/bookmarks?${qs}`)
+  },
+}
+
+// --- Saved Searches ---
+export interface ApiSavedSearch {
+  id: string
+  user_id: string
+  name: string
+  filters: { search?: string; specialty?: string; status?: string; cost_type?: string }
+  alerts_enabled: boolean
+  last_checked_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export const savedSearchesApi = {
+  list: () => api.get<ApiSavedSearch[]>('/saved-searches'),
+  create: (data: { name: string; filters: Record<string, string>; alerts_enabled?: boolean }) =>
+    api.post<ApiSavedSearch>('/saved-searches', data),
+  update: (id: string, data: { name?: string; alerts_enabled?: boolean }) =>
+    api.put<ApiSavedSearch>(`/saved-searches/${id}`, data),
+  delete: (id: string) => api.delete(`/saved-searches/${id}`),
+}
+
+// --- Evaluation Templates ---
+export interface ApiEvaluationTemplate {
+  id: string
+  university_id: string
+  type: 'mid_rotation' | 'final' | 'student_feedback'
+  name: string
+  categories: { key: string; label: string; description?: string; weight?: number }[]
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  university?: ApiUniversity
+}
+
+export const evaluationTemplatesApi = {
+  list: (params?: { university_id?: string; type?: string; active_only?: boolean }) => {
+    const qs = new URLSearchParams()
+    if (params?.university_id) qs.set('university_id', params.university_id)
+    if (params?.type) qs.set('type', params.type)
+    if (params?.active_only) qs.set('active_only', '1')
+    return api.get<ApiEvaluationTemplate[]>(`/evaluation-templates?${qs}`)
+  },
+  create: (data: { university_id: string; type: string; name: string; categories: { key: string; label: string; description?: string; weight?: number }[] }) =>
+    api.post<ApiEvaluationTemplate>('/evaluation-templates', data),
+  update: (id: string, data: { name?: string; categories?: { key: string; label: string; description?: string; weight?: number }[]; is_active?: boolean }) =>
+    api.put<ApiEvaluationTemplate>(`/evaluation-templates/${id}`, data),
+  delete: (id: string) => api.delete(`/evaluation-templates/${id}`),
+}
+
+// --- Agreement Templates ---
+export interface ApiAgreementTemplate {
+  id: string
+  university_id: string | null
+  name: string
+  description: string | null
+  default_notes: string | null
+  file_path: string | null
+  file_name: string | null
+  file_size: number | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  university?: ApiUniversity
+}
+
+export const agreementTemplatesApi = {
+  list: () => api.get<ApiAgreementTemplate[]>('/agreement-templates'),
+  create: (data: { university_id?: string | null; name: string; description?: string; default_notes?: string }) =>
+    api.post<ApiAgreementTemplate>('/agreement-templates', data),
+  update: (id: string, data: { name?: string; description?: string; default_notes?: string }) =>
+    api.put<ApiAgreementTemplate>(`/agreement-templates/${id}`, data),
+  delete: (id: string) => api.delete(`/agreement-templates/${id}`),
+  uploadDocument: (id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.upload<ApiAgreementTemplate>(`/agreement-templates/${id}/upload`, formData)
+  },
+  downloadUrl: (id: string) => `${API_URL}/agreement-templates/${id}/download`,
+}
+
+// --- Preceptor Reviews ---
+export interface ApiPreceptorReview {
+  id: string
+  student_id: string | null
+  preceptor_id: string
+  slot_id: string
+  ratings: Record<string, number>
+  comments: string | null
+  overall_score: number
+  is_anonymous: boolean
+  created_at: string
+  student?: { id: string; first_name: string; last_name: string } | null
+  slot?: ApiSlot
+}
+
+export interface PreceptorReviewStats {
+  average_score: number | null
+  review_count: number
+  category_averages: Record<string, number | null> | null
+}
+
+export const preceptorReviewsApi = {
+  create: (data: {
+    preceptor_id: string; slot_id: string;
+    ratings: Record<string, number>; comments?: string;
+    overall_score: number; is_anonymous?: boolean
+  }) => api.post<ApiPreceptorReview>('/preceptor-reviews', data),
+  list: (preceptorId: string) => api.get<ApiPreceptorReview[]>(`/preceptor-reviews/${preceptorId}`),
+  stats: (preceptorId: string) => api.get<PreceptorReviewStats>(`/preceptor-reviews/${preceptorId}/stats`),
 }
 
 // --- Exports ---

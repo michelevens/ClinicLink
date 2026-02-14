@@ -4,7 +4,8 @@ import {
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
   onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
-  messagesApi, calendarApi,
+  messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
+  preceptorReviewsApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -16,7 +17,7 @@ export function useDashboardStats() {
 }
 
 // --- Rotation Slots ---
-export function useSlots(params?: { search?: string; specialty?: string; status?: string; cost_type?: string; page?: number }) {
+export function useSlots(params?: { search?: string; specialty?: string; status?: string; cost_type?: string; page?: number; site_id?: string }) {
   return useQuery({
     queryKey: ['slots', params],
     queryFn: () => slotsApi.list(params),
@@ -987,5 +988,159 @@ export function useCalendarEvents(start: string | null, end: string | null) {
     queryKey: ['calendar-events', start, end],
     queryFn: () => calendarApi.events(start!, end!),
     enabled: !!start && !!end,
+  })
+}
+
+// --- Bookmarks ---
+export function useBookmarkedSlots(params?: { page?: number }) {
+  return useQuery({
+    queryKey: ['bookmarked-slots', params],
+    queryFn: () => bookmarksApi.list(params),
+  })
+}
+
+export function useToggleBookmark() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: bookmarksApi.toggle,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['bookmarked-slots'] })
+      qc.invalidateQueries({ queryKey: ['slots'] })
+    },
+  })
+}
+
+// --- Saved Searches ---
+export function useSavedSearches() {
+  return useQuery({
+    queryKey: ['saved-searches'],
+    queryFn: () => savedSearchesApi.list(),
+  })
+}
+
+export function useCreateSavedSearch() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: savedSearchesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['saved-searches'] }) },
+  })
+}
+
+export function useUpdateSavedSearch() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof savedSearchesApi.update>[1] }) =>
+      savedSearchesApi.update(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['saved-searches'] }) },
+  })
+}
+
+export function useDeleteSavedSearch() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: savedSearchesApi.delete,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['saved-searches'] }) },
+  })
+}
+
+// --- Evaluation Templates ---
+export function useEvaluationTemplates(params?: { university_id?: string; type?: string; active_only?: boolean }) {
+  return useQuery({
+    queryKey: ['evaluation-templates', params],
+    queryFn: () => evaluationTemplatesApi.list(params),
+  })
+}
+
+export function useCreateEvaluationTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: evaluationTemplatesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['evaluation-templates'] }) },
+  })
+}
+
+export function useUpdateEvaluationTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof evaluationTemplatesApi.update>[1] }) =>
+      evaluationTemplatesApi.update(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['evaluation-templates'] }) },
+  })
+}
+
+export function useDeleteEvaluationTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: evaluationTemplatesApi.delete,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['evaluation-templates'] }) },
+  })
+}
+
+// --- Agreement Templates ---
+export function useAgreementTemplates() {
+  return useQuery({
+    queryKey: ['agreement-templates'],
+    queryFn: () => agreementTemplatesApi.list(),
+  })
+}
+
+export function useCreateAgreementTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: agreementTemplatesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreement-templates'] }) },
+  })
+}
+
+export function useUpdateAgreementTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof agreementTemplatesApi.update>[1] }) =>
+      agreementTemplatesApi.update(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreement-templates'] }) },
+  })
+}
+
+export function useDeleteAgreementTemplate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: agreementTemplatesApi.delete,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreement-templates'] }) },
+  })
+}
+
+export function useUploadAgreementTemplateDoc() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => agreementTemplatesApi.uploadDocument(id, file),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['agreement-templates'] }) },
+  })
+}
+
+// --- Preceptor Reviews ---
+export function usePreceptorReviews(preceptorId: string | null) {
+  return useQuery({
+    queryKey: ['preceptor-reviews', preceptorId],
+    queryFn: () => preceptorReviewsApi.list(preceptorId!),
+    enabled: !!preceptorId,
+  })
+}
+
+export function usePreceptorReviewStats(preceptorId: string | null) {
+  return useQuery({
+    queryKey: ['preceptor-review-stats', preceptorId],
+    queryFn: () => preceptorReviewsApi.stats(preceptorId!),
+    enabled: !!preceptorId,
+  })
+}
+
+export function useCreatePreceptorReview() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: preceptorReviewsApi.create,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['preceptor-reviews'] })
+      qc.invalidateQueries({ queryKey: ['preceptor-review-stats'] })
+    },
   })
 }

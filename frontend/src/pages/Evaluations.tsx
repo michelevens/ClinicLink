@@ -3,7 +3,7 @@ import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useEvaluations, useCreateEvaluation, useApplications } from '../hooks/useApi.ts'
+import { useEvaluations, useCreateEvaluation, useApplications, useEvaluationTemplates } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { exportsApi } from '../services/api.ts'
 import { toast } from 'sonner'
@@ -47,12 +47,34 @@ export function Evaluations() {
   const { data, isLoading } = useEvaluations()
   const { data: appsData } = useApplications()
   const createMutation = useCreateEvaluation()
+  const { data: evalTemplatesData } = useEvaluationTemplates()
 
   const evaluations = data?.data || []
   const acceptedApps = (appsData?.data || []).filter(a => a.status === 'accepted')
 
   const isPreceptor = user?.role === 'preceptor'
   const isStudent = user?.role === 'student'
+
+  const activeCategories = useMemo(() => {
+    const templates = evalTemplatesData || []
+    const template = templates.find((t: { type: string; is_active: boolean }) => t.type === form.type && t.is_active)
+    if (template) {
+      return template.categories.map((c: { key: string; label: string }) => ({ key: c.key, label: c.label }))
+    }
+    if (isStudent) {
+      return [
+        { key: 'clinical_environment', label: 'Clinical Environment' },
+        { key: 'preceptor_teaching', label: 'Preceptor Teaching Quality' },
+        { key: 'learning_opportunities', label: 'Learning Opportunities' },
+        { key: 'support_mentorship', label: 'Support & Mentorship' },
+        { key: 'organization', label: 'Site Organization' },
+        { key: 'communication', label: 'Communication' },
+        { key: 'work_life_balance', label: 'Work-Life Balance' },
+        { key: 'overall_experience', label: 'Overall Experience' },
+      ]
+    }
+    return RATING_CATEGORIES
+  }, [evalTemplatesData, form.type, isStudent])
 
   // Filter evaluations
   const filteredEvals = typeFilter === 'all' ? evaluations : evaluations.filter(e => e.type === typeFilter)
@@ -659,16 +681,7 @@ export function Evaluations() {
               )}
             </div>
             <div className="space-y-3">
-              {(isStudent ? [
-                { key: 'clinical_environment', label: 'Clinical Environment' },
-                { key: 'preceptor_teaching', label: 'Preceptor Teaching Quality' },
-                { key: 'learning_opportunities', label: 'Learning Opportunities' },
-                { key: 'support_mentorship', label: 'Support & Mentorship' },
-                { key: 'organization', label: 'Site Organization' },
-                { key: 'communication', label: 'Communication' },
-                { key: 'work_life_balance', label: 'Work-Life Balance' },
-                { key: 'overall_experience', label: 'Overall Experience' },
-              ] : RATING_CATEGORIES).map(cat => (
+              {activeCategories.map(cat => (
                 <div key={cat.key} className="flex items-center justify-between p-3 rounded-xl border border-stone-200 bg-white">
                   <span className="text-sm text-stone-700">{cat.label}</span>
                   {renderInteractiveStars(cat.key)}

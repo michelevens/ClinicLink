@@ -6,6 +6,7 @@ import { Input } from '../components/ui/Input.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { useSlots, useCreateSlot, useUpdateSlot, useDeleteSlot, useMySites, usePreceptors } from '../hooks/useApi.ts'
 import type { ApiSlot } from '../services/api.ts'
+import { SlotAvailabilityCalendar } from '../components/calendar/SlotAvailabilityCalendar.tsx'
 import { toast } from 'sonner'
 import {
   Plus, Pencil, Trash2, Calendar, Users,
@@ -302,6 +303,14 @@ export function SlotManagement() {
               onChange={e => setForm({ ...form, end_date: e.target.value })}
             />
           </div>
+
+          {form.site_id && (
+            <SlotAvailabilityCalendar
+              siteId={form.site_id}
+              selectedStartDate={form.start_date}
+              selectedEndDate={form.end_date}
+            />
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <Input

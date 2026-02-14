@@ -1,9 +1,9 @@
 import { useState, useMemo, useRef } from 'react'
-import { FileText, Plus, Search, Building2, GraduationCap, Calendar, Upload, Download, Paperclip, Filter } from 'lucide-react'
+import { FileText, Plus, Search, Building2, GraduationCap, Calendar, Upload, Download, Paperclip, Filter, Trash2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import { useAgreements, useCreateAgreement, useUpdateAgreement, useUploadAgreementDocument, useMySites, useSites, useUniversities } from '../hooks/useApi.ts'
+import { useAgreements, useCreateAgreement, useUpdateAgreement, useUploadAgreementDocument, useMySites, useSites, useUniversities, useAgreementTemplates, useCreateAgreementTemplate, useDeleteAgreementTemplate } from '../hooks/useApi.ts'
 import { agreementsApi } from '../services/api.ts'
-import type { ApiAgreement } from '../services/api.ts'
+import type { ApiAgreement, ApiAgreementTemplate } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
@@ -38,6 +38,14 @@ export function Agreements() {
   const createMutation = useCreateAgreement()
   const updateMutation = useUpdateAgreement()
   const uploadMutation = useUploadAgreementDocument()
+
+  const { data: templatesData } = useAgreementTemplates()
+  const templates = (templatesData || []) as ApiAgreementTemplate[]
+  const createTemplateMutation = useCreateAgreementTemplate()
+  const deleteTemplateMutation = useDeleteAgreementTemplate()
+
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false)
+  const [templateForm, setTemplateForm] = useState({ name: '', description: '', default_notes: '' })
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -168,10 +176,16 @@ export function Agreements() {
           <p className="text-stone-500 mt-1">Manage university-site affiliation agreements and documentation</p>
         </div>
         {canCreate && (
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            New Agreement
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowTemplatesModal(true)}>
+              <FileText className="w-4 h-4 mr-2" />
+              Templates
+            </Button>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              New Agreement
+            </Button>
+          </div>
         )}
       </div>
 
@@ -330,6 +344,23 @@ export function Agreements() {
                 />
               </div>
             </div>
+
+            {templates.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Use Template</label>
+                <select
+                  onChange={e => {
+                    const tpl = templates.find(t => t.id === e.target.value)
+                    if (tpl) setFormData(f => ({ ...f, notes: tpl.default_notes || '' }))
+                  }}
+                  className="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                  defaultValue=""
+                >
+                  <option value="">Select a template to prefill notes...</option>
+                  {templates.map(t => <option key={t.id} value={t.id}>{t.name}{t.description ? ` — ${t.description}` : ''}</option>)}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">Notes</label>
@@ -494,6 +525,70 @@ export function Agreements() {
             )}
           </div>}
         </Modal>
+
+      {/* Templates Management Modal */}
+      <Modal isOpen={showTemplatesModal} title="Agreement Templates" onClose={() => setShowTemplatesModal(false)}>
+        <div className="space-y-4">
+          <div className="bg-stone-50 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-medium text-stone-900">Create Template</p>
+            <input
+              type="text"
+              value={templateForm.name}
+              onChange={e => setTemplateForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="Template name..."
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            />
+            <input
+              type="text"
+              value={templateForm.description}
+              onChange={e => setTemplateForm(f => ({ ...f, description: e.target.value }))}
+              placeholder="Description (optional)..."
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            />
+            <textarea
+              value={templateForm.default_notes}
+              onChange={e => setTemplateForm(f => ({ ...f, default_notes: e.target.value }))}
+              placeholder="Default notes to prefill when using this template..."
+              rows={3}
+              className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            />
+            <Button
+              size="sm"
+              onClick={() => {
+                if (!templateForm.name) { toast.error('Template name is required'); return }
+                createTemplateMutation.mutate(templateForm, {
+                  onSuccess: () => { toast.success('Template created'); setTemplateForm({ name: '', description: '', default_notes: '' }) },
+                  onError: (err: Error) => toast.error(err.message),
+                })
+              }}
+              disabled={createTemplateMutation.isPending}
+            >
+              <Plus className="w-4 h-4" /> Create Template
+            </Button>
+          </div>
+
+          <div className="divide-y divide-stone-100">
+            {templates.length === 0 ? (
+              <p className="text-sm text-stone-400 py-4 text-center">No templates yet. Create one above.</p>
+            ) : templates.map(t => (
+              <div key={t.id} className="py-3 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-stone-900">{t.name}</p>
+                  {t.description && <p className="text-xs text-stone-500">{t.description}</p>}
+                  {t.default_notes && <p className="text-xs text-stone-400 mt-1 line-clamp-2">{t.default_notes}</p>}
+                </div>
+                <button
+                  onClick={() => deleteTemplateMutation.mutate(t.id, { onSuccess: () => toast.success('Template deleted') })}
+                  className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
+                  title="Delete template"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

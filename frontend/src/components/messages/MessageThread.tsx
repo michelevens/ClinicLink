@@ -3,6 +3,7 @@ import { ArrowLeft, Send } from 'lucide-react'
 import { useConversation, useSendMessage } from '../../hooks/useApi.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { MessageBubble } from './MessageBubble.tsx'
+import { MessageTemplateSelector } from './MessageTemplateSelector.tsx'
 
 interface Props {
   conversationId: string
@@ -110,6 +111,7 @@ export function MessageThread({ conversationId, onBack }: Props) {
       {/* Send input */}
       <div className="border-t border-stone-200 bg-white px-4 py-3">
         <div className="flex items-end gap-2">
+          <MessageTemplateSelector onSelect={text => setBody(prev => prev ? prev + '\n' + text : text)} />
           <textarea
             value={body}
             onChange={e => setBody(e.target.value)}

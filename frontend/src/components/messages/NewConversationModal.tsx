@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Search, Send, Loader2 } from 'lucide-react'
 import { useSearchMessageableUsers, useCreateConversation } from '../../hooks/useApi.ts'
+import { MessageTemplateSelector } from './MessageTemplateSelector.tsx'
 
 interface Props {
   onClose: () => void
@@ -111,14 +112,20 @@ export function NewConversationModal({ onClose, onCreated }: Props) {
               </div>
 
               {/* Message input */}
-              <textarea
-                value={body}
-                onChange={e => setBody(e.target.value)}
-                placeholder="Type your message..."
-                rows={3}
-                autoFocus
-                className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
-              />
+              <div>
+                <div className="flex items-center gap-1 mb-1">
+                  <MessageTemplateSelector onSelect={text => setBody(prev => prev ? prev + '\n' + text : text)} />
+                  <span className="text-xs text-stone-400">Insert a template</span>
+                </div>
+                <textarea
+                  value={body}
+                  onChange={e => setBody(e.target.value)}
+                  placeholder="Type your message..."
+                  rows={3}
+                  autoFocus
+                  className="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
+                />
+              </div>
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 

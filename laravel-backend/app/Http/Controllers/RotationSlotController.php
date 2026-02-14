@@ -39,6 +39,10 @@ class RotationSlotController extends Controller
             $query->where('cost_type', $request->input('cost_type'));
         }
 
+        if ($request->filled('site_id')) {
+            $query->where('site_id', $request->input('site_id'));
+        }
+
         $slots = $query->orderBy('start_date', 'asc')
             ->paginate($request->input('per_page', 20));
 

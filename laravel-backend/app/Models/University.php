@@ -52,4 +52,14 @@ class University extends Model
     {
         return $this->hasMany(CeCertificate::class);
     }
+
+    public function evaluationTemplates()
+    {
+        return $this->hasMany(EvaluationTemplate::class);
+    }
+
+    public function agreementTemplates()
+    {
+        return $this->hasMany(AgreementTemplate::class);
+    }
 }
