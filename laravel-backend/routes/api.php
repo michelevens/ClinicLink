@@ -20,6 +20,7 @@ use App\Http\Controllers\SiteInviteController;
 use App\Http\Controllers\SiteJoinRequestController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CeCertificateController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UniversityController;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,14 @@ Route::get('/invite/{token}', [SiteInviteController::class, 'show']);
 Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
 Route::get('/ce-certificates/{ceCertificate}/download', [CeCertificateController::class, 'download']);
 Route::get('/student/credentials/{credential}/download', [StudentController::class, 'downloadCredentialFile']);
+
+// Export downloads (auth handled via query token in controller for window.open() browser tabs)
+Route::get('/exports/hour-logs/csv', [ExportController::class, 'hourLogsCsv']);
+Route::get('/exports/hour-logs/pdf', [ExportController::class, 'hourLogsPdf']);
+Route::get('/exports/evaluations/csv', [ExportController::class, 'evaluationsCsv']);
+Route::get('/exports/evaluations/pdf', [ExportController::class, 'evaluationsPdf']);
+Route::get('/exports/compliance/csv', [ExportController::class, 'complianceCsv']);
+Route::get('/exports/compliance/pdf', [ExportController::class, 'compliancePdf']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -144,11 +153,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:preceptor,site_manager,coordinator,professor,admin')
         ->get('/my-students', [StudentController::class, 'myStudents']);
 
-    // Prior Hours & Program Management (coordinator, admin)
+    // Prior Hours, Program Management & Bulk Import (coordinator, admin)
     Route::middleware('role:coordinator,admin')->group(function () {
         Route::put('/students/{student}/prior-hours', [StudentController::class, 'setPriorHours']);
         Route::post('/students/assign-program', [StudentController::class, 'assignProgram']);
         Route::post('/students/bulk-prior-hours', [StudentController::class, 'bulkSetPriorHours']);
+        Route::get('/students/import-template', [StudentController::class, 'importTemplate']);
+        Route::post('/students/bulk-import', [StudentController::class, 'bulkImport']);
         Route::put('/programs/{program}', [UniversityController::class, 'updateProgram']);
         Route::post('/universities/{university}/programs', [UniversityController::class, 'storeProgram']);
     });
@@ -264,6 +275,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages/conversations', [MessageController::class, 'createConversation']);
     Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
     Route::get('/messages/users', [MessageController::class, 'searchUsers']);
+    Route::middleware('role:coordinator,admin')
+        ->post('/messages/broadcast', [MessageController::class, 'broadcast']);
 
     // Calendar (all authenticated users — controller scopes by role)
     Route::get('/calendar/events', [CalendarController::class, 'events']);

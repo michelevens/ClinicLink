@@ -1081,6 +1081,8 @@ export interface ApiConversation {
   id: string
   subject: string | null
   is_group: boolean
+  is_broadcast?: boolean
+  broadcast_by?: string | null
   unread_count: number
   created_at: string
   updated_at: string
@@ -1132,6 +1134,8 @@ export const messagesApi = {
     api.post<{ conversation: ApiConversation; message: ApiMessage }>('/messages/conversations', data),
   unreadCount: () => api.get<{ count: number }>('/messages/unread-count'),
   searchUsers: (search: string) => api.get<ApiSearchableUser[]>(`/messages/users?search=${encodeURIComponent(search)}`),
+  broadcast: (data: { subject: string; body: string; audience: string; program_id?: string; role?: string }) =>
+    api.post<{ conversation: ApiConversation; message: ApiMessage; recipients_count: number }>('/messages/broadcast', data),
 }
 
 // --- Calendar ---
@@ -1153,4 +1157,56 @@ export interface CalendarEvent {
 export const calendarApi = {
   events: (start: string, end: string) =>
     api.get<CalendarEvent[]>(`/calendar/events?start=${start}&end=${end}`),
+}
+
+// --- Exports ---
+export const exportsApi = {
+  hourLogsCsvUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {
+    const token = localStorage.getItem('cliniclink_token')
+    const qs = new URLSearchParams()
+    if (token) qs.set('token', token)
+    if (params?.status) qs.set('status', params.status)
+    if (params?.slot_id) qs.set('slot_id', params.slot_id)
+    if (params?.date_from) qs.set('date_from', params.date_from)
+    if (params?.date_to) qs.set('date_to', params.date_to)
+    return `${API_URL}/exports/hour-logs/csv?${qs}`
+  },
+  hourLogsPdfUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {
+    const token = localStorage.getItem('cliniclink_token')
+    const qs = new URLSearchParams()
+    if (token) qs.set('token', token)
+    if (params?.status) qs.set('status', params.status)
+    if (params?.slot_id) qs.set('slot_id', params.slot_id)
+    if (params?.date_from) qs.set('date_from', params.date_from)
+    if (params?.date_to) qs.set('date_to', params.date_to)
+    return `${API_URL}/exports/hour-logs/pdf?${qs}`
+  },
+  evaluationsCsvUrl: (params?: { type?: string }) => {
+    const token = localStorage.getItem('cliniclink_token')
+    const qs = new URLSearchParams()
+    if (token) qs.set('token', token)
+    if (params?.type) qs.set('type', params.type)
+    return `${API_URL}/exports/evaluations/csv?${qs}`
+  },
+  evaluationsPdfUrl: (params?: { type?: string }) => {
+    const token = localStorage.getItem('cliniclink_token')
+    const qs = new URLSearchParams()
+    if (token) qs.set('token', token)
+    if (params?.type) qs.set('type', params.type)
+    return `${API_URL}/exports/evaluations/pdf?${qs}`
+  },
+  complianceCsvUrl: (params?: { site_id?: string }) => {
+    const token = localStorage.getItem('cliniclink_token')
+    const qs = new URLSearchParams()
+    if (token) qs.set('token', token)
+    if (params?.site_id) qs.set('site_id', params.site_id)
+    return `${API_URL}/exports/compliance/csv?${qs}`
+  },
+  compliancePdfUrl: (params?: { site_id?: string }) => {
+    const token = localStorage.getItem('cliniclink_token')
+    const qs = new URLSearchParams()
+    if (token) qs.set('token', token)
+    if (params?.site_id) qs.set('site_id', params.site_id)
+    return `${API_URL}/exports/compliance/pdf?${qs}`
+  },
 }

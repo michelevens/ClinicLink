@@ -971,6 +971,16 @@ export function useSearchMessageableUsers(search: string) {
   })
 }
 
+export function useBroadcastMessage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: messagesApi.broadcast,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}
+
 // --- Calendar ---
 export function useCalendarEvents(start: string | null, end: string | null) {
   return useQuery({

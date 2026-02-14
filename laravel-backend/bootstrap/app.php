@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('sanctum:prune-expired --hours=48')->dailyAt('03:00');
         $schedule->command('reminders:credentials')->dailyAt('04:00');
         $schedule->command('reminders:agreements')->dailyAt('04:30');
+        $schedule->command('reminders:evaluations')->dailyAt('05:00');
     })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->validateCsrfTokens(except: [

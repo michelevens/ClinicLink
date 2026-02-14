@@ -225,7 +225,89 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
-## Phase 3: Payments & Intelligence — NEXT
+## Phase 3.0: In-App Messaging & Calendar ✅ COMPLETE
+**Goal:** Thread-based messaging between all user roles and a calendar view for rotations, hours, evaluations, and deadlines
+
+### What Was Built
+
+#### In-App Messaging System
+- Thread-based conversations (1-on-1 and group)
+- Relationship-based authorization (students ↔ preceptors from accepted rotations, coordinators ↔ site managers with affiliations, etc.)
+- Two-panel responsive layout: conversation list (left) + message thread (right)
+- Conversation search and filtering
+- New conversation modal with user search (only messageable users shown)
+- Unread message count with sidebar badge
+- Polling-based updates (10s for active threads, 30s for unread count)
+- Mobile-friendly single-panel mode (`/messages/:id`)
+- Database notifications for new messages
+
+#### Calendar View (FullCalendar)
+- FullCalendar integration with 3 views: month grid, week time grid, week list
+- Role-scoped event loading (each role sees relevant events)
+- Color-coded event types: rotations (blue), hour logs (green), evaluations (orange), deadlines (red), completed (muted)
+- Filter toggles to show/hide event types (client-side)
+- Event click navigation to related pages
+- Event detail popover
+- Responsive: mobile defaults to list view, desktop to month grid
+- Date range–based API fetching via `datesSet` callback
+
+#### Backend
+- 3 new migrations: conversations, conversation_participants, messages tables (UUID PKs)
+- 3 new models: Conversation, ConversationParticipant, Message
+- MessageController: 6 endpoints (conversations list, messages, send, create, unread count, user search)
+- CalendarController: role-scoped event aggregation across rotations, hour logs, evaluations, deadlines
+- NewMessageNotification for database notifications
+- User model updated with `conversations()` and `sentMessages()` relations
+
+#### Frontend
+- Messages page with ConversationList, MessageThread, MessageBubble, NewConversationModal components
+- Calendar page with EventDetailPopover, filter toggles, color legend
+- 6 FullCalendar packages installed
+- 7 new React Query hooks + API service methods
+- Sidebar navigation updated with Messages (unread badge) and Calendar items
+- 3 new routes: `/messages`, `/messages/:id`, `/calendar`
+
+---
+
+## Phase 3.1: CE Credits Frontend Enhancement ✅ COMPLETE
+**Goal:** Expose all backend CE audit trail, revocation, and policy versioning features in the frontend
+
+### What Was Built
+
+#### Audit & Compliance Tab
+- New "Audit & Compliance" tab for coordinators and admins
+- Summary stat cards (total certificates, revoked count, active count, avg hours)
+- Immutability notice explaining audit trail integrity
+- Expandable certificate rows with full detail (verification UUID, dates, approved/revoked by)
+
+#### Certificate Revocation UI
+- Revoke button with confirmation form
+- Permanent action warning with reason input
+- Revoked status badge with ring styling
+- Revoked certificate detail (revoked_at, revoked_by, revocation_reason)
+
+#### Audit Trail Viewer
+- On-demand per-certificate audit trail loading
+- Timeline-based display with icons per event type
+- Event metadata display (old/new values for policy changes, certificate details, etc.)
+- Actor info, IP address, and timestamp for each event
+- Immutable record indicator
+
+#### Policy Version Display
+- Version info bar on CE Policy editor (version number, effective dates, last updated by)
+- Effective date range fields (effective_from / effective_to)
+- Audit trail notice on policy save
+
+#### API Integration
+- `revoke()` and `auditTrail()` methods added to ceCertificatesApi
+- `useRevokeCeCertificate()` and `useCeAuditTrail()` React Query hooks
+- `ApiCeAuditEvent` type definition
+- `ApiCeCertificate` updated with revoked status and revocation fields
+- `ApiCePolicy` updated with version and effective date fields
+
+---
+
+## Phase 3.2: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system
 - Smart matching algorithm (student prefs × site requirements)
@@ -241,7 +323,6 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 - React Native mobile app
 - LMS integration (Canvas, Blackboard)
 - Background check provider integration
-- In-app messaging between all parties
 
 ---
 
@@ -262,14 +343,15 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Search | Algolia / Meilisearch | Planned |
 | Maps | Google Maps / Mapbox | Planned |
 | Payments | Stripe Connect | Planned |
-| Calendar | FullCalendar | Planned |
+| Calendar | FullCalendar (6 packages) | ✅ |
+| Real-time | Polling (10s threads, 30s notifications) | ✅ |
 | Mobile | React Native | Planned |
 
 ---
 
 ## Architecture
 
-### Frontend Pages (19+ routes)
+### Frontend Pages (25+ routes)
 | Page | Route | Roles |
 |------|-------|-------|
 | Landing | `/` | Public |
@@ -297,9 +379,13 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Onboarding Checklists | `/onboarding-checklists` | Site Manager |
 | Agreements | `/agreements` | Coordinator, Site Manager, Admin |
 | Compliance Dashboard | `/compliance` | Student, Site Manager, Coordinator, Professor, Admin |
+| Messages | `/messages` | All authenticated roles |
+| Message Thread | `/messages/:id` | All authenticated roles |
+| Calendar | `/calendar` | All authenticated roles |
+| CE Credits | `/ce-credits` | Preceptor, Coordinator, Admin |
 | Admin Users | `/admin/users` | Admin |
 
-### Backend API Endpoints (50+)
+### Backend API Endpoints (65+)
 - **Auth:** register, login, logout, me, forgot-password, reset-password, mfa/setup, mfa/confirm, mfa/disable, mfa/verify, mfa/backup-codes, mfa/status
 - **Students:** profile, credentials (CRUD + file upload/download), hour logs, evaluations
 - **Slots:** CRUD with search/filter, preceptor assignment
@@ -310,8 +396,11 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 - **Agreements:** CRUD + document upload/download + status workflow
 - **Compliance:** site aggregation, student checklist, coordinator overview
 - **Universities:** CRUD, programs
-- **Admin:** user management, dashboard stats
+- **Admin:** user management, dashboard stats, audit logs
 - **Certificates:** generation with QR, public verification
+- **CE Credits:** policy CRUD, certificate approve/reject/revoke, download, audit trail, eligibility check
+- **Messages:** conversations (list, create), messages (list, send), unread count, user search
+- **Calendar:** role-scoped events with date range filtering
 
 ---
 

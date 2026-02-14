@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, Search, GraduationCap, Clock, BookOpen, ChevronRight } from 'lucide-react'
+import { Users, Search, GraduationCap, Clock, BookOpen, ChevronRight, Upload } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useMyStudents } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { BulkImportModal } from '../components/student/BulkImportModal.tsx'
 import type { ApiMyStudent } from '../services/api.ts'
 
 export function MyStudents() {
@@ -18,6 +19,8 @@ export function MyStudents() {
 
   const [search, setSearch] = useState('')
   const [programFilter, setProgramFilter] = useState<string>('all')
+  const [showImport, setShowImport] = useState(false)
+  const canImport = user?.role === 'coordinator' || user?.role === 'admin'
 
   // Get unique programs for filter
   const programs = useMemo(() => {
@@ -50,11 +53,19 @@ export function MyStudents() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900">My Students</h1>
-        <p className="text-stone-500 mt-1">
-          {isPreceptor ? 'Students assigned to your rotations' : 'All students in the system'}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">My Students</h1>
+          <p className="text-stone-500 mt-1">
+            {isPreceptor ? 'Students assigned to your rotations' : 'All students in the system'}
+          </p>
+        </div>
+        {canImport && (
+          <Button onClick={() => setShowImport(true)}>
+            <Upload className="w-4 h-4 mr-1.5" />
+            Import Students
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -154,6 +165,12 @@ export function MyStudents() {
         </div>
       )}
 
+      {showImport && (
+        <BulkImportModal
+          open={showImport}
+          onClose={() => setShowImport(false)}
+        />
+      )}
     </div>
   )
 }

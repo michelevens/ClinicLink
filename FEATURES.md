@@ -31,7 +31,6 @@
 ### Clinic/Site Listings
 - [x] Facility profile (name, address, specialties, size, EHR system used)
 - [x] Rotation slot creation (specialty, dates, capacity, requirements, cost)
-- [ ] Slot availability calendar
 - [x] Requirements checklist per slot (onboarding templates)
 - [x] Application review dashboard
 - [x] Accept/decline/waitlist applicants
@@ -91,11 +90,23 @@
 - [x] Agreement document storage (upload/download)
 
 ### Communication
-- [ ] In-app messaging (student ↔ preceptor, coordinator ↔ site manager)
+- [x] In-app messaging (thread-based, 1-on-1 and group, all roles)
+- [x] Relationship-based messaging authorization (students ↔ accepted preceptors, coordinators ↔ affiliated sites, etc.)
+- [x] Conversation search and new conversation creation with user search
+- [x] Unread message count with sidebar badge and polling
 - [ ] Announcement broadcasts (university → all students)
 - [x] In-app notifications (bell icon, mark read/unread)
 - [x] Email notifications (11 mail classes for applications, hours, credentials, agreements, onboarding)
+- [x] New message database notifications
 - [ ] Message templates for common communications
+
+### Calendar
+- [x] FullCalendar integration (month grid, week time grid, week list views)
+- [x] Role-scoped events (rotations, hour logs, evaluations, deadlines)
+- [x] Color-coded event types with filter toggles
+- [x] Event click navigation and detail popover
+- [x] Responsive layout (mobile: list view, desktop: month grid)
+- [ ] Slot availability calendar (embedded in slot creation)
 
 ### Security & Compliance
 - [x] TOTP Two-Factor Authentication with backup codes
@@ -127,7 +138,11 @@
 - [ ] Availability calendar
 - [ ] Student capacity management
 - [ ] Teaching portfolio (evaluations received, students mentored)
-- [ ] CE credit tracking for precepting
+- [x] CE credit tracking for precepting (policy config, certificate lifecycle, audit trail)
+- [x] CE certificate issuance, approval, rejection, revocation with audit trail
+- [x] CE policy versioning with effective date ranges
+- [x] Immutable CE audit events (CeAuditEvent model)
+- [x] CE evidence snapshots and public certificate verification
 - [ ] Preceptor ratings and reviews (from students)
 - [ ] Preceptor recognition program
 

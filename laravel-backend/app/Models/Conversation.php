@@ -13,13 +13,21 @@ class Conversation extends Model
     protected $fillable = [
         'subject',
         'is_group',
+        'is_broadcast',
+        'broadcast_by',
     ];
 
     protected function casts(): array
     {
         return [
             'is_group' => 'boolean',
+            'is_broadcast' => 'boolean',
         ];
+    }
+
+    public function broadcaster()
+    {
+        return $this->belongsTo(User::class, 'broadcast_by');
     }
 
     public function participants()

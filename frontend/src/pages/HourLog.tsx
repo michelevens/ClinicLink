@@ -8,11 +8,12 @@ import { useHourLogs, useHourSummary, useCreateHourLog, useDeleteHourLog, useRev
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
 import type { ApiHourLog } from '../services/api.ts'
+import { exportsApi } from '../services/api.ts'
 import {
   Clock, Plus, CheckCircle, AlertCircle, Calendar, Loader2,
   Trash2, Building2, ChevronDown, ChevronUp, Target,
   TrendingUp, Eye, Filter, BarChart3, XCircle, User,
-  ClipboardCheck
+  ClipboardCheck, Download
 } from 'lucide-react'
 
 type ViewTab = 'all' | 'by-rotation' | 'summary'
@@ -32,6 +33,7 @@ export function HourLog() {
   const [viewTab, setViewTab] = useState<ViewTab>('all')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(isPreceptor ? 'pending' : 'all')
   const [expandedRotation, setExpandedRotation] = useState<string | null>(null)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const [newEntry, setNewEntry] = useState({
     slot_id: '',
     date: new Date().toISOString().split('T')[0],
@@ -242,11 +244,27 @@ export function HourLog() {
             {isPreceptor ? 'Review and approve student clinical hours' : 'Track and manage your clinical hours'}
           </p>
         </div>
-        {!isPreceptor && (
-          <Button onClick={() => setShowAddModal(true)}>
-            <Plus className="w-4 h-4" /> Log Hours
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Button variant="secondary" onClick={() => setShowExportMenu(!showExportMenu)}>
+              <Download className="w-4 h-4" /> Export
+            </Button>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-20">
+                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50" onClick={() => { window.open(exportsApi.hourLogsCsvUrl()); setShowExportMenu(false) }}>Download CSV</button>
+                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50" onClick={() => { window.open(exportsApi.hourLogsPdfUrl()); setShowExportMenu(false) }}>Download PDF</button>
+                </div>
+              </>
+            )}
+          </div>
+          {!isPreceptor && (
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="w-4 h-4" /> Log Hours
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Overall Progress - Student only */}

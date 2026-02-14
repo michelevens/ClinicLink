@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
-import { ShieldCheck, ShieldX, Search, ChevronDown, ChevronRight, FileText, CheckCircle, XCircle, Clock, AlertTriangle, Building2, GraduationCap, Paperclip } from 'lucide-react'
+import { ShieldCheck, ShieldX, Search, ChevronDown, ChevronRight, FileText, CheckCircle, XCircle, Clock, AlertTriangle, Building2, GraduationCap, Paperclip, Download } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useComplianceSite, useComplianceStudent, useComplianceOverview, useMySites, useApplications } from '../hooks/useApi.ts'
 import type { ComplianceStudent } from '../services/api.ts'
+import { exportsApi } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
+import { Button } from '../components/ui/Button.tsx'
 
 const STATUS_ICONS = {
   compliant: { icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50', label: 'Compliant' },
@@ -519,6 +521,7 @@ function StudentView() {
 // --- Main Component ---
 export function ComplianceDashboard() {
   const { user } = useAuth()
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   const isSiteManager = user?.role === 'site_manager'
   const isCoordinator = user?.role === 'coordinator' || user?.role === 'professor' || user?.role === 'admin'
@@ -526,13 +529,31 @@ export function ComplianceDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-stone-900">Compliance Dashboard</h1>
-        <p className="text-stone-500 mt-1">
-          {isSiteManager && 'Track student documentation and compliance status for your site.'}
-          {isCoordinator && 'Monitor compliance across all your student placements.'}
-          {isStudent && 'View your documentation status for active rotations.'}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-stone-900">Compliance Dashboard</h1>
+          <p className="text-stone-500 mt-1">
+            {isSiteManager && 'Track student documentation and compliance status for your site.'}
+            {isCoordinator && 'Monitor compliance across all your student placements.'}
+            {isStudent && 'View your documentation status for active rotations.'}
+          </p>
+        </div>
+        {(isSiteManager || isCoordinator) && (
+          <div className="relative">
+            <Button variant="secondary" onClick={() => setShowExportMenu(!showExportMenu)}>
+              <Download className="w-4 h-4" /> Export
+            </Button>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-20">
+                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50" onClick={() => { window.open(exportsApi.complianceCsvUrl()); setShowExportMenu(false) }}>Download CSV</button>
+                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50" onClick={() => { window.open(exportsApi.compliancePdfUrl()); setShowExportMenu(false) }}>Download PDF</button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {isSiteManager && <SiteManagerView />}

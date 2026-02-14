@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeMail;
 use App\Models\Application;
 use App\Models\AuditLog;
 use App\Models\Credential;
@@ -11,6 +12,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -440,5 +444,147 @@ class StudentController extends Controller
             'updated' => $updated,
             'errors' => $errors,
         ]);
+    }
+
+    /**
+     * Download CSV template for bulk student import.
+     */
+    public function importTemplate(): \Symfony\Component\HttpFoundation\Response
+    {
+        $handle = fopen('php://temp', 'r+');
+        fputcsv($handle, ['first_name', 'last_name', 'email', 'program_id', 'graduation_date', 'gpa']);
+        fputcsv($handle, ['Jane', 'Doe', 'jane.doe@university.edu', '', '2026-05-15', '3.8']);
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="student-import-template.csv"',
+        ]);
+    }
+
+    /**
+     * Bulk import students from CSV (coordinator/admin only).
+     */
+    public function bulkImport(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+            'program_id' => ['nullable', 'uuid', 'exists:programs,id'],
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+
+        // Parse header row
+        $headers = fgetcsv($handle);
+        if (!$headers) {
+            fclose($handle);
+            return response()->json(['message' => 'CSV file is empty.'], 422);
+        }
+
+        $headers = array_map(fn($h) => strtolower(trim($h)), $headers);
+        $requiredHeaders = ['first_name', 'last_name', 'email'];
+        $missing = array_diff($requiredHeaders, $headers);
+        if (!empty($missing)) {
+            fclose($handle);
+            return response()->json(['message' => 'Missing required columns: ' . implode(', ', $missing)], 422);
+        }
+
+        $universityId = $user->isCoordinator()
+            ? $user->studentProfile?->university_id
+            : ($request->input('university_id') ?? null);
+
+        $defaultProgramId = $request->input('program_id');
+        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+
+        $created = [];
+        $skipped = [];
+        $errors = [];
+        $rowNumber = 1;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowNumber++;
+            $data = array_combine($headers, array_pad($row, count($headers), ''));
+
+            $email = strtolower(trim($data['email'] ?? ''));
+            $firstName = trim($data['first_name'] ?? '');
+            $lastName = trim($data['last_name'] ?? '');
+
+            if (!$email || !$firstName || !$lastName) {
+                $errors[] = ['row' => $rowNumber, 'email' => $email, 'error' => 'Missing required fields'];
+                continue;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = ['row' => $rowNumber, 'email' => $email, 'error' => 'Invalid email format'];
+                continue;
+            }
+
+            if (User::where('email', $email)->exists()) {
+                $skipped[] = ['row' => $rowNumber, 'email' => $email, 'reason' => 'User already exists'];
+                continue;
+            }
+
+            try {
+                $tempPassword = Str::random(16);
+
+                $student = User::create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $email,
+                    'password' => Hash::make($tempPassword),
+                    'role' => 'student',
+                    'is_active' => true,
+                ]);
+
+                $programId = !empty($data['program_id']) ? $data['program_id'] : $defaultProgramId;
+                $graduationDate = !empty($data['graduation_date']) ? $data['graduation_date'] : null;
+                $gpa = !empty($data['gpa']) ? (float) $data['gpa'] : null;
+
+                StudentProfile::create([
+                    'user_id' => $student->id,
+                    'university_id' => $universityId,
+                    'program_id' => $programId,
+                    'graduation_date' => $graduationDate,
+                    'gpa' => $gpa,
+                ]);
+
+                // Send welcome email with password reset link
+                $resetToken = Str::random(64);
+                DB::table('password_reset_tokens')->updateOrInsert(
+                    ['email' => $student->email],
+                    ['token' => Hash::make($resetToken), 'created_at' => now()],
+                );
+                $resetUrl = $frontendUrl . '/reset-password?token=' . $resetToken . '&email=' . urlencode($student->email);
+
+                Mail::to($email)->send(new WelcomeMail($student, $resetUrl));
+
+                AuditLog::recordFromRequest('User', $student->id, 'bulk_imported', $request, metadata: [
+                    'imported_by' => $user->id,
+                ]);
+
+                $created[] = ['row' => $rowNumber, 'email' => $email, 'name' => "{$firstName} {$lastName}"];
+            } catch (\Throwable $e) {
+                Log::error("Bulk import failed for row {$rowNumber} ({$email}): " . $e->getMessage());
+                $errors[] = ['row' => $rowNumber, 'email' => $email, 'error' => 'Failed to create student'];
+            }
+        }
+
+        fclose($handle);
+
+        return response()->json([
+            'summary' => [
+                'created' => count($created),
+                'skipped' => count($skipped),
+                'errors' => count($errors),
+            ],
+            'created' => $created,
+            'skipped' => $skipped,
+            'errors' => $errors,
+        ], 201);
     }
 }

@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MessageSquare, Plus } from 'lucide-react'
+import { MessageSquare, Plus, Megaphone } from 'lucide-react'
 import { ConversationList } from '../components/messages/ConversationList.tsx'
 import { MessageThread } from '../components/messages/MessageThread.tsx'
 import { NewConversationModal } from '../components/messages/NewConversationModal.tsx'
+import { BroadcastModal } from '../components/messages/BroadcastModal.tsx'
+import { useAuth } from '../contexts/AuthContext.tsx'
 
 export function Messages() {
   const { id: conversationId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [showNewModal, setShowNewModal] = useState(false)
+  const [showBroadcast, setShowBroadcast] = useState(false)
+  const canBroadcast = user?.role === 'coordinator' || user?.role === 'admin'
 
   return (
     <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-0rem)] flex flex-col">
@@ -18,13 +23,24 @@ export function Messages() {
           <MessageSquare className="w-6 h-6 text-primary-600" />
           <h1 className="text-xl font-bold text-stone-900">Messages</h1>
         </div>
-        <button
-          onClick={() => setShowNewModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">New Message</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {canBroadcast && (
+            <button
+              onClick={() => setShowBroadcast(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl text-sm font-medium hover:bg-amber-600 transition-colors"
+            >
+              <Megaphone className="w-4 h-4" />
+              <span className="hidden sm:inline">Broadcast</span>
+            </button>
+          )}
+          <button
+            onClick={() => setShowNewModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Message</span>
+          </button>
+        </div>
       </div>
 
       {/* Two-panel layout */}
@@ -61,6 +77,17 @@ export function Messages() {
           onClose={() => setShowNewModal(false)}
           onCreated={(id) => {
             setShowNewModal(false)
+            navigate(`/messages/${id}`)
+          }}
+        />
+      )}
+
+      {showBroadcast && (
+        <BroadcastModal
+          open={showBroadcast}
+          onClose={() => setShowBroadcast(false)}
+          onSent={(id) => {
+            setShowBroadcast(false)
             navigate(`/messages/${id}`)
           }}
         />

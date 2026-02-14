@@ -237,6 +237,114 @@ class MessageController extends Controller
     }
 
     /**
+     * Send a broadcast announcement (coordinator/admin only).
+     */
+    public function broadcast(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string', 'max:10000'],
+            'audience' => ['required', 'in:all_students,program,role'],
+            'program_id' => ['required_if:audience,program', 'nullable', 'uuid', 'exists:programs,id'],
+            'role' => ['required_if:audience,role', 'nullable', 'in:student,preceptor,site_manager,coordinator,professor'],
+        ]);
+
+        // Resolve audience
+        $recipientIds = $this->resolveAudienceIds($user, $validated);
+
+        if ($recipientIds->isEmpty()) {
+            return response()->json(['message' => 'No recipients found for the selected audience.'], 422);
+        }
+
+        // Create broadcast conversation
+        $conversation = Conversation::create([
+            'subject' => $validated['subject'],
+            'is_group' => true,
+            'is_broadcast' => true,
+            'broadcast_by' => $user->id,
+        ]);
+
+        // Add sender as participant
+        ConversationParticipant::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $user->id,
+            'last_read_at' => now(),
+        ]);
+
+        // Add recipients (chunked for large audiences)
+        foreach ($recipientIds->chunk(100) as $chunk) {
+            $rows = $chunk->map(fn ($id) => [
+                'id' => \Illuminate\Support\Str::uuid(),
+                'conversation_id' => $conversation->id,
+                'user_id' => $id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ])->toArray();
+            ConversationParticipant::insert($rows);
+        }
+
+        // Create the initial message
+        $message = Message::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => $user->id,
+            'body' => $validated['body'],
+        ]);
+
+        // Notify recipients (chunked)
+        foreach ($recipientIds->chunk(50) as $chunk) {
+            $recipients = User::whereIn('id', $chunk)->get();
+            foreach ($recipients as $recipient) {
+                $recipient->notify(new NewMessageNotification($message, $user));
+            }
+        }
+
+        $conversation->load('users:id,first_name,last_name,role,avatar_url');
+
+        return response()->json([
+            'conversation' => $conversation,
+            'message' => $message->load('sender:id,first_name,last_name,role,avatar_url'),
+            'recipients_count' => $recipientIds->count(),
+        ], 201);
+    }
+
+    /**
+     * Resolve recipient IDs based on audience type and user scope.
+     */
+    private function resolveAudienceIds(User $user, array $validated): \Illuminate\Support\Collection
+    {
+        $audience = $validated['audience'];
+
+        if ($user->isAdmin()) {
+            return match ($audience) {
+                'all_students' => User::where('role', 'student')->where('is_active', true)->pluck('id'),
+                'program' => User::where('role', 'student')->where('is_active', true)
+                    ->whereHas('studentProfile', fn ($q) => $q->where('program_id', $validated['program_id']))
+                    ->pluck('id'),
+                'role' => User::where('role', $validated['role'])->where('is_active', true)
+                    ->where('id', '!=', $user->id)->pluck('id'),
+                default => collect(),
+            };
+        }
+
+        // Coordinator: scoped to their university
+        $universityId = $user->studentProfile?->university_id;
+        if (!$universityId) return collect();
+
+        $baseQuery = User::where('role', 'student')
+            ->where('is_active', true)
+            ->whereHas('studentProfile', fn ($q) => $q->where('university_id', $universityId));
+
+        return match ($audience) {
+            'all_students' => $baseQuery->pluck('id'),
+            'program' => $baseQuery->whereHas('studentProfile', fn ($q) => $q->where('program_id', $validated['program_id']))
+                ->pluck('id'),
+            default => collect(),
+        };
+    }
+
+    /**
      * Check if a user can message another user.
      */
     private function canMessage(User $sender, User $target): bool

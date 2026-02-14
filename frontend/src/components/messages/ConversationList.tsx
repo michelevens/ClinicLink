@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Megaphone, Users } from 'lucide-react'
 import { useConversations } from '../../hooks/useApi.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import type { ApiConversation } from '../../services/api.ts'
@@ -77,6 +77,7 @@ export function ConversationList({ selectedId, onSelect }: Props) {
             const other = getOtherUser(conv)
             const isSelected = conv.id === selectedId
             const hasUnread = conv.unread_count > 0
+            const isBroadcast = conv.is_broadcast
 
             return (
               <button
@@ -87,16 +88,33 @@ export function ConversationList({ selectedId, onSelect }: Props) {
                 }`}
               >
                 {/* Avatar */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${roleColors[other?.role || 'student']}`}>
-                  {other?.first_name?.[0]}{other?.last_name?.[0]}
-                </div>
+                {isBroadcast ? (
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 bg-amber-100 text-amber-700">
+                    <Megaphone className="w-5 h-5" />
+                  </div>
+                ) : conv.is_group ? (
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 bg-purple-100 text-purple-700">
+                    <Users className="w-5 h-5" />
+                  </div>
+                ) : (
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${roleColors[other?.role || 'student']}`}>
+                    {other?.first_name?.[0]}{other?.last_name?.[0]}
+                  </div>
+                )}
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <span className={`text-sm truncate ${hasUnread ? 'font-semibold text-stone-900' : 'font-medium text-stone-700'}`}>
-                      {other?.first_name} {other?.last_name}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={`text-sm truncate ${hasUnread ? 'font-semibold text-stone-900' : 'font-medium text-stone-700'}`}>
+                        {isBroadcast ? (conv.subject || 'Broadcast') : `${other?.first_name} ${other?.last_name}`}
+                      </span>
+                      {isBroadcast && (
+                        <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                          Broadcast
+                        </span>
+                      )}
+                    </div>
                     {conv.latest_message && (
                       <span className="text-xs text-stone-400 shrink-0 ml-2">
                         {formatTime(conv.latest_message.created_at)}

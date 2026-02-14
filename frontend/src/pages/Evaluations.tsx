@@ -5,11 +5,12 @@ import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { useEvaluations, useCreateEvaluation, useApplications } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { exportsApi } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
   Star, Plus, ClipboardCheck, User, Calendar,
   Building2, Loader2, ChevronDown, ChevronUp,
-  TrendingUp, Award, BarChart3, MessageSquare, Filter
+  TrendingUp, Award, BarChart3, MessageSquare, Filter, Download
 } from 'lucide-react'
 
 const RATING_CATEGORIES = [
@@ -32,6 +33,7 @@ export function Evaluations() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [viewTab, setViewTab] = useState<ViewTab>('list')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const [form, setForm] = useState({
     type: (user?.role === 'preceptor' ? 'mid_rotation' : 'student_feedback') as 'mid_rotation' | 'final' | 'student_feedback',
     student_id: '',
@@ -215,11 +217,27 @@ export function Evaluations() {
              'Clinical evaluations overview'}
           </p>
         </div>
-        {(isPreceptor || isStudent || user?.role === 'coordinator') && (
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="w-4 h-4" /> {isStudent ? 'Give Site Feedback' : 'New Evaluation'}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Button variant="secondary" onClick={() => setShowExportMenu(!showExportMenu)}>
+              <Download className="w-4 h-4" /> Export
+            </Button>
+            {showExportMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg border border-stone-200 py-1 z-20">
+                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50" onClick={() => { window.open(exportsApi.evaluationsCsvUrl()); setShowExportMenu(false) }}>Download CSV</button>
+                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-stone-50" onClick={() => { window.open(exportsApi.evaluationsPdfUrl()); setShowExportMenu(false) }}>Download PDF</button>
+                </div>
+              </>
+            )}
+          </div>
+          {(isPreceptor || isStudent || user?.role === 'coordinator') && (
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="w-4 h-4" /> {isStudent ? 'Give Site Feedback' : 'New Evaluation'}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Score Summary Banner */}
