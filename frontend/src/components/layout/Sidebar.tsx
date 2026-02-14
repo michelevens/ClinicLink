@@ -184,7 +184,16 @@ export function Sidebar() {
             </span>
           </div>
         </div>
-        <NotificationBell />
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={logout}
+            className="p-2 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            aria-label="Logout"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile overlay */}
