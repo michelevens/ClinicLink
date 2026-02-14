@@ -68,6 +68,7 @@ class EvaluationController extends Controller
 
         $validated = $request->validate([
             'type' => ['required', 'in:mid_rotation,final,student_feedback'],
+            'template_id' => ['nullable', 'uuid', 'exists:evaluation_templates,id'],
             'student_id' => ['required', 'uuid', 'exists:users,id'],
             'slot_id' => ['required', 'uuid', 'exists:rotation_slots,id'],
             'ratings' => ['required', 'array'],

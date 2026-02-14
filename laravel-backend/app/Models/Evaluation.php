@@ -12,6 +12,7 @@ class Evaluation extends Model
 
     protected $fillable = [
         'type',
+        'template_id',
         'student_id',
         'preceptor_id',
         'slot_id',
@@ -40,6 +41,11 @@ class Evaluation extends Model
     public function preceptor()
     {
         return $this->belongsTo(User::class, 'preceptor_id');
+    }
+
+    public function template()
+    {
+        return $this->belongsTo(EvaluationTemplate::class, 'template_id');
     }
 
     public function slot()

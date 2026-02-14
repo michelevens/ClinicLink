@@ -29,6 +29,11 @@ class EvaluationTemplateController extends Controller
         return response()->json($templates);
     }
 
+    public function show(EvaluationTemplate $template): JsonResponse
+    {
+        return response()->json($template->load('university'));
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -40,6 +45,14 @@ class EvaluationTemplateController extends Controller
             'categories.*.label' => ['required', 'string'],
             'categories.*.description' => ['nullable', 'string'],
             'categories.*.weight' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'categories.*.criteria' => ['nullable', 'array'],
+            'categories.*.criteria.*.key' => ['required', 'string'],
+            'categories.*.criteria.*.label' => ['required', 'string'],
+            'categories.*.criteria.*.description' => ['nullable', 'string'],
+            'rating_scale' => ['nullable', 'array', 'min:2'],
+            'rating_scale.*.value' => ['required', 'numeric', 'min:0'],
+            'rating_scale.*.label' => ['required', 'string'],
+            'rating_scale.*.description' => ['nullable', 'string'],
         ]);
 
         // Deactivate existing template for same university + type
@@ -65,6 +78,14 @@ class EvaluationTemplateController extends Controller
             'categories.*.label' => ['required_with:categories', 'string'],
             'categories.*.description' => ['nullable', 'string'],
             'categories.*.weight' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'categories.*.criteria' => ['nullable', 'array'],
+            'categories.*.criteria.*.key' => ['required', 'string'],
+            'categories.*.criteria.*.label' => ['required', 'string'],
+            'categories.*.criteria.*.description' => ['nullable', 'string'],
+            'rating_scale' => ['nullable', 'array', 'min:2'],
+            'rating_scale.*.value' => ['required', 'numeric', 'min:0'],
+            'rating_scale.*.label' => ['required', 'string'],
+            'rating_scale.*.description' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
 

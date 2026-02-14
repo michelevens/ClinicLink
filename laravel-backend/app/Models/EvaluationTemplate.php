@@ -15,6 +15,7 @@ class EvaluationTemplate extends Model
         'type',
         'name',
         'categories',
+        'rating_scale',
         'is_active',
         'created_by',
     ];
@@ -23,6 +24,7 @@ class EvaluationTemplate extends Model
     {
         return [
             'categories' => 'array',
+            'rating_scale' => 'array',
             'is_active' => 'boolean',
         ];
     }

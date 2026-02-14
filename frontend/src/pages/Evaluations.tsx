@@ -6,6 +6,7 @@ import { Modal } from '../components/ui/Modal.tsx'
 import { useEvaluations, useCreateEvaluation, useApplications, useEvaluationTemplates } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { exportsApi } from '../services/api.ts'
+import type { ApiEvaluationTemplate, ApiRatingScaleLevel } from '../services/api.ts'
 import { toast } from 'sonner'
 import {
   Star, Plus, ClipboardCheck, User, Calendar,
@@ -34,6 +35,7 @@ export function Evaluations() {
   const [viewTab, setViewTab] = useState<ViewTab>('list')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('')
   const [form, setForm] = useState({
     type: (user?.role === 'preceptor' ? 'mid_rotation' : 'student_feedback') as 'mid_rotation' | 'final' | 'student_feedback',
     student_id: '',
@@ -55,11 +57,23 @@ export function Evaluations() {
   const isPreceptor = user?.role === 'preceptor'
   const isStudent = user?.role === 'student'
 
+  // Templates matching the selected evaluation type
+  const matchingTemplates = useMemo(() => {
+    const templates = (evalTemplatesData || []) as ApiEvaluationTemplate[]
+    return templates.filter(t => t.type === form.type && t.is_active)
+  }, [evalTemplatesData, form.type])
+
+  // The selected template (explicit pick or auto-select the first matching)
+  const selectedTemplate = useMemo((): ApiEvaluationTemplate | null => {
+    if (selectedTemplateId) {
+      return matchingTemplates.find(t => t.id === selectedTemplateId) || null
+    }
+    return matchingTemplates.length > 0 ? matchingTemplates[0] : null
+  }, [matchingTemplates, selectedTemplateId])
+
   const activeCategories = useMemo(() => {
-    const templates = evalTemplatesData || []
-    const template = templates.find((t: { type: string; is_active: boolean }) => t.type === form.type && t.is_active)
-    if (template) {
-      return template.categories.map((c: { key: string; label: string }) => ({ key: c.key, label: c.label }))
+    if (selectedTemplate) {
+      return selectedTemplate.categories.map(c => ({ key: c.key, label: c.label }))
     }
     if (isStudent) {
       return [
@@ -74,7 +88,21 @@ export function Evaluations() {
       ]
     }
     return RATING_CATEGORIES
-  }, [evalTemplatesData, form.type, isStudent])
+  }, [selectedTemplate, isStudent])
+
+  // Rating scale from selected template, fallback to default 5-point
+  const activeRatingScale = useMemo((): ApiRatingScaleLevel[] => {
+    if (selectedTemplate?.rating_scale && selectedTemplate.rating_scale.length >= 2) {
+      return selectedTemplate.rating_scale
+    }
+    return [
+      { value: 1, label: 'Poor' },
+      { value: 2, label: 'Below Average' },
+      { value: 3, label: 'Average' },
+      { value: 4, label: 'Above Average' },
+      { value: 5, label: 'Outstanding' },
+    ]
+  }, [selectedTemplate])
 
   // Filter evaluations
   const filteredEvals = typeFilter === 'all' ? evaluations : evaluations.filter(e => e.type === typeFilter)
@@ -141,6 +169,7 @@ export function Evaluations() {
     try {
       await createMutation.mutateAsync({
         type: form.type,
+        template_id: selectedTemplate?.id || undefined,
         student_id: form.student_id || undefined,
         slot_id: form.slot_id,
         ratings: form.ratings,
@@ -152,6 +181,7 @@ export function Evaluations() {
       })
       toast.success('Evaluation submitted successfully')
       setShowCreate(false)
+      setSelectedTemplateId('')
       setForm({
         type: isPreceptor ? 'mid_rotation' : 'student_feedback',
         student_id: '',
@@ -181,23 +211,32 @@ export function Evaluations() {
     )
   }
 
-  const renderInteractiveStars = (category: string) => {
+  const renderInteractiveRating = (category: string) => {
     const current = form.ratings[category] || 0
     return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map(i => (
+      <div className="flex gap-1 items-center">
+        {activeRatingScale.map(level => (
           <button
-            key={i}
-            onClick={() => setRating(category, i)}
-            className="focus:outline-none"
+            key={level.value}
+            onClick={() => setRating(category, level.value)}
+            className="focus:outline-none group relative"
+            title={`${level.label}${level.description ? ` - ${level.description}` : ''}`}
           >
             <Star
               className={`w-6 h-6 transition-colors ${
-                i <= current ? 'text-amber-400 fill-amber-400' : 'text-stone-300 hover:text-amber-300'
+                level.value <= current ? 'text-amber-400 fill-amber-400' : 'text-stone-300 hover:text-amber-300'
               }`}
             />
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-xs bg-stone-800 text-white rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              {level.label}
+            </span>
           </button>
         ))}
+        {current > 0 && (
+          <span className="text-xs text-stone-500 ml-1.5">
+            {activeRatingScale.find(l => l.value === current)?.label}
+          </span>
+        )}
       </div>
     )
   }
@@ -597,12 +636,39 @@ export function Evaluations() {
                 <label className="block text-sm font-medium text-stone-700">Evaluation Type</label>
                 <select
                   value={form.type}
-                  onChange={e => setForm({ ...form, type: e.target.value as typeof form.type })}
+                  onChange={e => {
+                    setForm({ ...form, type: e.target.value as typeof form.type, ratings: {} })
+                    setSelectedTemplateId('')
+                  }}
                   className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                 >
                   <option value="mid_rotation">Mid-Rotation</option>
                   <option value="final">Final</option>
                 </select>
+              </div>
+            )}
+            {matchingTemplates.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-stone-700">Rubric Template</label>
+                <select
+                  value={selectedTemplateId || selectedTemplate?.id || ''}
+                  onChange={e => {
+                    setSelectedTemplateId(e.target.value)
+                    setForm(f => ({ ...f, ratings: {} }))
+                  }}
+                  className="w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                >
+                  {matchingTemplates.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.categories.length} categories{t.rating_scale ? `, ${t.rating_scale.length}-pt scale` : ''})
+                    </option>
+                  ))}
+                </select>
+                {selectedTemplate?.rating_scale && (
+                  <p className="text-xs text-stone-400">
+                    Scale: {selectedTemplate.rating_scale.map(l => `${l.value}=${l.label}`).join(', ')}
+                  </p>
+                )}
               </div>
             )}
             {isPreceptor ? (
@@ -676,6 +742,7 @@ export function Evaluations() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-stone-500">Overall:</span>
                   <span className="text-lg font-bold text-amber-500">{overallScore()}</span>
+                  <span className="text-sm text-stone-400">/ {Math.max(...activeRatingScale.map(l => l.value))}</span>
                   {renderStars(overallScore(), 'md')}
                 </div>
               )}
@@ -684,7 +751,7 @@ export function Evaluations() {
               {activeCategories.map(cat => (
                 <div key={cat.key} className="flex items-center justify-between p-3 rounded-xl border border-stone-200 bg-white">
                   <span className="text-sm text-stone-700">{cat.label}</span>
-                  {renderInteractiveStars(cat.key)}
+                  {renderInteractiveRating(cat.key)}
                 </div>
               ))}
             </div>
