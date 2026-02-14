@@ -40,6 +40,9 @@ use Illuminate\Support\Facades\Route;
 | All API routes — global rate limiter
 |--------------------------------------------------------------------------
 */
+// Health check (outside rate limiter for uptime monitoring)
+Route::get('/health', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]));
+
 Route::middleware('throttle:api')->group(function () {
 
 /*
