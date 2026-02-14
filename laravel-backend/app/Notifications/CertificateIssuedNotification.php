@@ -38,7 +38,7 @@ class CertificateIssuedNotification extends Notification
             ->view('emails.certificate-issued', [
                 'certificate' => $this->certificate,
                 'studentName' => $notifiable->first_name,
-                'dashboardUrl' => config('app.frontend_url', 'https://michelevens.github.io/ClinicLink') . '/certificates',
+                'dashboardUrl' => config('app.frontend_url') . '/certificates',
             ]);
     }
 }

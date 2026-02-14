@@ -74,7 +74,7 @@
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
                                             <tr>
                                                 <td style="background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;box-shadow:0 4px 12px rgba(99,102,241,0.3);">
-                                                    <a href="{{ env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') }}/login" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Log In Now</a>
+                                                    <a href="{{ env('FRONTEND_URL', 'https://cliniclink.health') }}/login" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Log In Now</a>
                                                 </td>
                                             </tr>
                                         </table>

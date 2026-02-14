@@ -248,7 +248,7 @@ class CeCertificateController extends Controller
                 'approvedByUser',
             ]);
 
-            $frontendUrl = config('app.frontend_url', 'https://michelevens.github.io/ClinicLink');
+            $frontendUrl = config('app.frontend_url');
             $verifyUrl = $frontendUrl . '/verify-ce/' . $ceCertificate->verification_uuid;
 
             // Generate QR code as SVG (no imagick extension required)

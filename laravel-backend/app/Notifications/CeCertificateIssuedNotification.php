@@ -49,7 +49,7 @@ class CeCertificateIssuedNotification extends Notification
                 'specialty' => $slot?->specialty ?? 'N/A',
                 'universityName' => $this->ceCertificate->university?->name ?? 'N/A',
                 'contactHours' => number_format($this->ceCertificate->contact_hours, 1),
-                'dashboardUrl' => config('app.frontend_url', 'https://michelevens.github.io/ClinicLink') . '/ce-credits',
+                'dashboardUrl' => config('app.frontend_url') . '/ce-credits',
             ]);
     }
 }

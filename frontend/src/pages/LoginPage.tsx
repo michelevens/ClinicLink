@@ -202,7 +202,7 @@ export function LoginPage() {
         </Card>
 
         <p className="text-center text-xs text-stone-400 mt-6">
-          Demo: student@cliniclink.com / password (or any demo role email)
+          Demo: student@cliniclink.health / password (or any demo role email)
         </p>
       </div>
     </div>

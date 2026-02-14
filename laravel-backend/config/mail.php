@@ -34,7 +34,7 @@ return [
     ],
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'noreply@solarera.app'),
+        'address' => env('MAIL_FROM_ADDRESS', 'noreply@cliniclink.health'),
         'name' => env('MAIL_FROM_NAME', 'ClinicLink'),
     ],
 

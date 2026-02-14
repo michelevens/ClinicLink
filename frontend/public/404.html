@@ -5,7 +5,7 @@
     <title>ClinicLink</title>
     <script>
       // GitHub Pages SPA redirect: converts path to query string so index.html can restore it
-      var pathSegmentsToKeep = 1; // Keep /ClinicLink/ prefix
+      var pathSegmentsToKeep = 0; // No prefix with custom domain
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +

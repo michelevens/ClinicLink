@@ -80,7 +80,7 @@ class SiteInviteController extends Controller
             'expires_at' => now()->addDays($expiresInDays),
         ]);
 
-        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+        $frontendUrl = config('app.frontend_url');
         $inviteUrl = $frontendUrl . '/invite/' . $invite->token;
 
         // Send invite email if an email address was provided
@@ -131,7 +131,7 @@ class SiteInviteController extends Controller
         $expiresInDays = $validated['expires_in_days'] ?? 30;
         $inviterName = $user->first_name . ' ' . $user->last_name;
         $customMessage = $validated['message'] ?? null;
-        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+        $frontendUrl = config('app.frontend_url');
 
         $results = [];
         $sent = 0;
@@ -348,7 +348,7 @@ class SiteInviteController extends Controller
             $invite->update(['expires_at' => now()->addDays(30)]);
         }
 
-        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+        $frontendUrl = config('app.frontend_url');
         $inviteUrl = $frontendUrl . '/invite/' . $invite->token;
         $inviterName = $user->first_name . ' ' . $user->last_name;
 

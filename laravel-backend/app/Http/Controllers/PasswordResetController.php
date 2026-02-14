@@ -35,7 +35,7 @@ class PasswordResetController extends Controller
                 'created_at' => now(),
             ]);
 
-            $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
+            $resetUrl = config('app.frontend_url')
                 . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
 
             try {

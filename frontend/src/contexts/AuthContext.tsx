@@ -53,12 +53,12 @@ function mapApiUser(u: ApiUser): User {
 }
 
 const DEMO_USERS: Record<UserRole, User> = {
-  student: { id: 'demo-student-1', email: 'student@cliniclink.com', firstName: 'Sarah', lastName: 'Chen', role: 'student', createdAt: new Date().toISOString(), onboardingCompleted: true },
-  preceptor: { id: 'demo-preceptor-1', email: 'preceptor@cliniclink.com', firstName: 'Dr. James', lastName: 'Wilson', role: 'preceptor', createdAt: new Date().toISOString(), onboardingCompleted: true },
-  site_manager: { id: 'demo-site-1', email: 'site@cliniclink.com', firstName: 'Maria', lastName: 'Garcia', role: 'site_manager', createdAt: new Date().toISOString(), onboardingCompleted: true },
-  coordinator: { id: 'demo-coord-1', email: 'coordinator@cliniclink.com', firstName: 'Dr. Lisa', lastName: 'Thompson', role: 'coordinator', createdAt: new Date().toISOString(), onboardingCompleted: true },
-  professor: { id: 'demo-prof-1', email: 'professor@cliniclink.com', firstName: 'Prof. Robert', lastName: 'Martinez', role: 'professor', createdAt: new Date().toISOString(), onboardingCompleted: true },
-  admin: { id: 'demo-admin-1', email: 'admin@cliniclink.com', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  student: { id: 'demo-student-1', email: 'student@cliniclink.health', firstName: 'Sarah', lastName: 'Chen', role: 'student', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  preceptor: { id: 'demo-preceptor-1', email: 'preceptor@cliniclink.health', firstName: 'Dr. James', lastName: 'Wilson', role: 'preceptor', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  site_manager: { id: 'demo-site-1', email: 'site@cliniclink.health', firstName: 'Maria', lastName: 'Garcia', role: 'site_manager', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  coordinator: { id: 'demo-coord-1', email: 'coordinator@cliniclink.health', firstName: 'Dr. Lisa', lastName: 'Thompson', role: 'coordinator', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  professor: { id: 'demo-prof-1', email: 'professor@cliniclink.health', firstName: 'Prof. Robert', lastName: 'Martinez', role: 'professor', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  admin: { id: 'demo-admin-1', email: 'admin@cliniclink.health', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString(), onboardingCompleted: true },
 }
 
 const DEFAULT_STATE: AuthState = { user: null, token: null, isAuthenticated: false, isLoading: false, mfaPending: false, mfaToken: null }
@@ -181,12 +181,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const demoLogin = useCallback(async (role: UserRole) => {
     setState(s => ({ ...s, isLoading: true }))
     const emailMap: Record<UserRole, string> = {
-      student: 'student@cliniclink.com',
-      preceptor: 'preceptor@cliniclink.com',
-      site_manager: 'site@cliniclink.com',
-      coordinator: 'coordinator@cliniclink.com',
-      professor: 'professor@cliniclink.com',
-      admin: 'admin@cliniclink.com',
+      student: 'student@cliniclink.health',
+      preceptor: 'preceptor@cliniclink.health',
+      site_manager: 'site@cliniclink.health',
+      coordinator: 'coordinator@cliniclink.health',
+      professor: 'professor@cliniclink.health',
+      admin: 'admin@cliniclink.health',
     }
     try {
       const res = await authApi.login({ login: emailMap[role], password: 'password' })

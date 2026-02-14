@@ -95,7 +95,7 @@ class AdminController extends Controller
                 ['email' => $user->email],
                 ['token' => Hash::make($resetToken), 'created_at' => now()],
             );
-            $resetUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink')
+            $resetUrl = config('app.frontend_url')
                 . '/reset-password?token=' . $resetToken . '&email=' . urlencode($user->email);
 
             Mail::to($user->email)->send(new WelcomeMail($user, $resetUrl));
@@ -239,7 +239,7 @@ class AdminController extends Controller
         // Send approval email when user is activated
         if ($wasInactive && $beingActivated) {
             try {
-                $loginUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') . '/login';
+                $loginUrl = config('app.frontend_url') . '/login';
                 Mail::to($user->email)->send(new AccountApprovedMail($user, $loginUrl));
             } catch (\Throwable $e) {
                 Log::error('Failed to send approval email to ' . $user->email . ': ' . $e->getMessage());
@@ -344,7 +344,7 @@ class AdminController extends Controller
         $universityId = $validated['university_id'] ?? null;
         $programId = $validated['program_id'] ?? null;
         $siteIds = $validated['site_ids'] ?? [];
-        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+        $frontendUrl = config('app.frontend_url');
 
         $results = [];
         $sent = 0;

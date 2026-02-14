@@ -499,7 +499,7 @@ class StudentController extends Controller
             : ($request->input('university_id') ?? null);
 
         $defaultProgramId = $request->input('program_id');
-        $frontendUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink');
+        $frontendUrl = config('app.frontend_url');
 
         $created = [];
         $skipped = [];

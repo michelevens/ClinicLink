@@ -7,13 +7,11 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
-        'https://michelevens.github.io',
-        'https://frontend-seven-olive-39.vercel.app',
+        'https://cliniclink.health',
+        'https://www.cliniclink.health',
     ],
 
-    'allowed_origins_patterns' => [
-        '#^https://frontend.*-evens-michels-projects\.vercel\.app$#',
-    ],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 

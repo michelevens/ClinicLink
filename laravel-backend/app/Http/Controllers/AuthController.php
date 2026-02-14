@@ -68,7 +68,7 @@ class AuthController extends Controller
         // Notify all admin users about the new registration (email + in-app)
         try {
             $admins = User::where('role', 'admin')->where('is_active', true)->get();
-            $reviewUrl = env('FRONTEND_URL', 'https://michelevens.github.io/ClinicLink') . '/admin/users/' . $user->id;
+            $reviewUrl = config('app.frontend_url') . '/admin/users/' . $user->id;
             foreach ($admins as $admin) {
                 Mail::to($admin->email)->send(new NewUserRegistrationMail($user, $reviewUrl));
                 $admin->notify(new NewUserRegisteredNotification($user));
