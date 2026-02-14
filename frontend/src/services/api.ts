@@ -131,6 +131,12 @@ export const authApi = {
   resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) =>
     api.post<{ message: string }>('/auth/reset-password', data),
 
+  verifyEmail: (token: string) =>
+    api.get<{ message: string }>(`/auth/verify-email/${token}`),
+
+  resendVerification: (email: string) =>
+    api.post<{ message: string }>('/auth/resend-verification', { email }),
+
   completeOnboarding: (data: Record<string, unknown>) =>
     api.post<{ user: ApiUser }>('/auth/complete-onboarding', data),
 
@@ -423,6 +429,24 @@ export const agreementsApi = {
   downloadUrl: (id: string) => `${API_URL}/agreements/${id}/download`,
 }
 
+// --- E-Signatures ---
+export const signaturesApi = {
+  listForAgreement: (agreementId: string) =>
+    api.get<{ data: ApiSignature[] }>(`/agreements/${agreementId}/signatures`),
+  requestSignature: (agreementId: string, data: { signer_name: string; signer_email: string; signer_role: 'university' | 'site'; message?: string }) =>
+    api.post<ApiSignature>(`/agreements/${agreementId}/signatures`, data),
+  sign: (signatureId: string, data: { signature_data: string }) =>
+    api.put<ApiSignature>(`/signatures/${signatureId}/sign`, data),
+  reject: (signatureId: string, data?: { reason?: string }) =>
+    api.put<ApiSignature>(`/signatures/${signatureId}/reject`, data),
+  cancel: (signatureId: string) =>
+    api.put<ApiSignature>(`/signatures/${signatureId}/cancel`),
+  resend: (signatureId: string) =>
+    api.post<{ message: string }>(`/signatures/${signatureId}/resend`, {}),
+  myPending: () =>
+    api.get<{ data: ApiSignature[] }>('/signatures/pending'),
+}
+
 // --- Admin ---
 export const adminApi = {
   users: (params?: { search?: string; role?: string; page?: number }) => {
@@ -675,6 +699,7 @@ export interface ApiHourLog {
 export interface ApiEvaluation {
   id: string
   type: 'mid_rotation' | 'final' | 'student_feedback'
+  template_id: string | null
   student_id: string
   preceptor_id: string
   slot_id: string
@@ -688,6 +713,7 @@ export interface ApiEvaluation {
   student?: ApiUser
   preceptor?: ApiUser
   slot?: ApiSlot
+  template?: ApiEvaluationTemplate
 }
 
 export interface ApiCredential {
@@ -736,6 +762,7 @@ export interface ApiAgreement {
   university_id: string
   site_id: string
   status: 'draft' | 'pending_review' | 'active' | 'expired' | 'terminated'
+  signature_status: 'none' | 'pending' | 'partially_signed' | 'fully_signed'
   start_date: string | null
   end_date: string | null
   document_url: string | null
@@ -748,6 +775,32 @@ export interface ApiAgreement {
   university?: ApiUniversity
   site?: ApiSite
   creator?: ApiUser
+  signatures?: ApiSignature[]
+}
+
+export interface ApiSignature {
+  id: string
+  signable_type: string
+  signable_id: string
+  signer_role: 'university' | 'site'
+  signer_name: string
+  signer_email: string
+  signer_id: string | null
+  requested_by: string | null
+  status: 'requested' | 'signed' | 'rejected' | 'cancelled'
+  signature_data: string | null
+  ip_address: string | null
+  user_agent: string | null
+  request_message: string | null
+  rejection_reason: string | null
+  requested_at: string | null
+  signed_at: string | null
+  rejected_at: string | null
+  created_at: string
+  updated_at: string
+  signer?: ApiUser
+  requester?: ApiUser
+  signable?: ApiAgreement
 }
 
 export interface ApiCertificate {
@@ -1192,12 +1245,33 @@ export const savedSearchesApi = {
 }
 
 // --- Evaluation Templates ---
+export interface ApiRatingScaleLevel {
+  value: number
+  label: string
+  description?: string
+}
+
+export interface ApiTemplateCriterion {
+  key: string
+  label: string
+  description?: string
+}
+
+export interface ApiTemplateCategory {
+  key: string
+  label: string
+  description?: string
+  weight?: number
+  criteria?: ApiTemplateCriterion[]
+}
+
 export interface ApiEvaluationTemplate {
   id: string
   university_id: string
   type: 'mid_rotation' | 'final' | 'student_feedback'
   name: string
-  categories: { key: string; label: string; description?: string; weight?: number }[]
+  categories: ApiTemplateCategory[]
+  rating_scale: ApiRatingScaleLevel[] | null
   is_active: boolean
   created_by: string | null
   created_at: string
@@ -1213,9 +1287,10 @@ export const evaluationTemplatesApi = {
     if (params?.active_only) qs.set('active_only', '1')
     return api.get<ApiEvaluationTemplate[]>(`/evaluation-templates?${qs}`)
   },
-  create: (data: { university_id: string; type: string; name: string; categories: { key: string; label: string; description?: string; weight?: number }[] }) =>
+  get: (id: string) => api.get<ApiEvaluationTemplate>(`/evaluation-templates/${id}`),
+  create: (data: { university_id: string; type: string; name: string; categories: ApiTemplateCategory[]; rating_scale?: ApiRatingScaleLevel[] }) =>
     api.post<ApiEvaluationTemplate>('/evaluation-templates', data),
-  update: (id: string, data: { name?: string; categories?: { key: string; label: string; description?: string; weight?: number }[]; is_active?: boolean }) =>
+  update: (id: string, data: { name?: string; categories?: ApiTemplateCategory[]; rating_scale?: ApiRatingScaleLevel[]; is_active?: boolean }) =>
     api.put<ApiEvaluationTemplate>(`/evaluation-templates/${id}`, data),
   delete: (id: string) => api.delete(`/evaluation-templates/${id}`),
 }

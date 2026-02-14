@@ -6,6 +6,7 @@ import {
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
+  signaturesApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1051,6 +1052,14 @@ export function useEvaluationTemplates(params?: { university_id?: string; type?:
   })
 }
 
+export function useEvaluationTemplate(id: string | undefined) {
+  return useQuery({
+    queryKey: ['evaluation-templates', id],
+    queryFn: () => evaluationTemplatesApi.get(id!),
+    enabled: !!id,
+  })
+}
+
 export function useCreateEvaluationTemplate() {
   const qc = useQueryClient()
   return useMutation({
@@ -1328,5 +1337,76 @@ export function useDeleteReport() {
   return useMutation({
     mutationFn: accreditationReportsApi.delete,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['accreditation-reports'] }) },
+  })
+}
+
+// --- E-Signatures ---
+export function useAgreementSignatures(agreementId: string | null) {
+  return useQuery({
+    queryKey: ['agreement-signatures', agreementId],
+    queryFn: () => signaturesApi.listForAgreement(agreementId!),
+    enabled: !!agreementId,
+  })
+}
+
+export function useMyPendingSignatures() {
+  return useQuery({
+    queryKey: ['pending-signatures'],
+    queryFn: () => signaturesApi.myPending(),
+  })
+}
+
+export function useRequestSignature() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ agreementId, data }: { agreementId: string; data: Parameters<typeof signaturesApi.requestSignature>[1] }) =>
+      signaturesApi.requestSignature(agreementId, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agreement-signatures'] })
+      qc.invalidateQueries({ queryKey: ['agreements'] })
+    },
+  })
+}
+
+export function useSignSignature() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { signature_data: string } }) =>
+      signaturesApi.sign(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agreement-signatures'] })
+      qc.invalidateQueries({ queryKey: ['agreements'] })
+      qc.invalidateQueries({ queryKey: ['pending-signatures'] })
+    },
+  })
+}
+
+export function useRejectSignature() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data?: { reason?: string } }) =>
+      signaturesApi.reject(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agreement-signatures'] })
+      qc.invalidateQueries({ queryKey: ['agreements'] })
+      qc.invalidateQueries({ queryKey: ['pending-signatures'] })
+    },
+  })
+}
+
+export function useCancelSignature() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: signaturesApi.cancel,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agreement-signatures'] })
+      qc.invalidateQueries({ queryKey: ['agreements'] })
+    },
+  })
+}
+
+export function useResendSignature() {
+  return useMutation({
+    mutationFn: signaturesApi.resend,
   })
 }

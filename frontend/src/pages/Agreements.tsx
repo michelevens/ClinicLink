@@ -1,13 +1,14 @@
 import { useState, useMemo, useRef } from 'react'
-import { FileText, Plus, Search, Building2, GraduationCap, Calendar, Upload, Download, Paperclip, Filter, Trash2 } from 'lucide-react'
+import { FileText, Plus, Search, Building2, GraduationCap, Calendar, Upload, Download, Paperclip, Filter, Trash2, PenTool, Send, Clock, CheckCircle2, XCircle, RotateCcw, Mail } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import { useAgreements, useCreateAgreement, useUpdateAgreement, useUploadAgreementDocument, useMySites, useSites, useUniversities, useAgreementTemplates, useCreateAgreementTemplate, useDeleteAgreementTemplate } from '../hooks/useApi.ts'
+import { useAgreements, useCreateAgreement, useUpdateAgreement, useUploadAgreementDocument, useMySites, useSites, useUniversities, useAgreementTemplates, useCreateAgreementTemplate, useDeleteAgreementTemplate, useAgreementSignatures, useRequestSignature, useSignSignature, useRejectSignature, useCancelSignature, useResendSignature } from '../hooks/useApi.ts'
 import { agreementsApi } from '../services/api.ts'
-import type { ApiAgreement, ApiAgreementTemplate } from '../services/api.ts'
+import type { ApiAgreement, ApiAgreementTemplate, ApiSignature } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
+import { SignatureCanvas } from '../components/ui/SignatureCanvas.tsx'
 import { toast } from 'sonner'
 
 const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'secondary' }> = {
@@ -18,6 +19,266 @@ const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'succe
   terminated: { label: 'Terminated', variant: 'danger' },
 }
 
+const SIG_STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'secondary'; icon: typeof PenTool }> = {
+  none: { label: 'No Signatures', variant: 'default', icon: PenTool },
+  pending: { label: 'Awaiting Signatures', variant: 'warning', icon: Clock },
+  partially_signed: { label: 'Partially Signed', variant: 'warning', icon: PenTool },
+  fully_signed: { label: 'Fully Signed', variant: 'success', icon: CheckCircle2 },
+}
+
+// --- Signature Panel sub-component ---
+function SignaturePanel({ agreement }: { agreement: ApiAgreement }) {
+  const { user } = useAuth()
+  const canManage = user?.role === 'coordinator' || user?.role === 'site_manager' || user?.role === 'admin'
+
+  const { data: sigData, isLoading: sigLoading } = useAgreementSignatures(agreement.id)
+  const signatures = sigData?.data || []
+
+  const requestMutation = useRequestSignature()
+  const signMutation = useSignSignature()
+  const rejectMutation = useRejectSignature()
+  const cancelMutation = useCancelSignature()
+  const resendMutation = useResendSignature()
+
+  const [showRequestForm, setShowRequestForm] = useState(false)
+  const [signingId, setSigningId] = useState<string | null>(null)
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
+  const [rejectReason, setRejectReason] = useState('')
+  const [requestForm, setRequestForm] = useState({ signer_name: '', signer_email: '', signer_role: 'university' as 'university' | 'site', message: '' })
+
+  const handleRequestSignature = async () => {
+    if (!requestForm.signer_name || !requestForm.signer_email) {
+      toast.error('Name and email are required.')
+      return
+    }
+    try {
+      await requestMutation.mutateAsync({ agreementId: agreement.id, data: requestForm })
+      toast.success('Signature request sent!')
+      setShowRequestForm(false)
+      setRequestForm({ signer_name: '', signer_email: '', signer_role: 'university', message: '' })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send request.')
+    }
+  }
+
+  const handleSign = async (dataUrl: string) => {
+    if (!signingId) return
+    try {
+      await signMutation.mutateAsync({ id: signingId, data: { signature_data: dataUrl } })
+      toast.success('Signature submitted successfully!')
+      setSigningId(null)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to submit signature.')
+    }
+  }
+
+  const handleReject = async () => {
+    if (!rejectingId) return
+    try {
+      await rejectMutation.mutateAsync({ id: rejectingId, data: { reason: rejectReason || undefined } })
+      toast.success('Signature request declined.')
+      setRejectingId(null)
+      setRejectReason('')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to reject.')
+    }
+  }
+
+  const canUserSign = (sig: ApiSignature) => {
+    return sig.status === 'requested' && (sig.signer_email === user?.email || sig.signer_id === user?.id)
+  }
+
+  const sigStatusIcon = (status: string) => {
+    switch (status) {
+      case 'signed': return <CheckCircle2 className="w-4 h-4 text-green-500" />
+      case 'requested': return <Clock className="w-4 h-4 text-amber-500" />
+      case 'rejected': return <XCircle className="w-4 h-4 text-red-500" />
+      case 'cancelled': return <XCircle className="w-4 h-4 text-stone-400" />
+      default: return null
+    }
+  }
+
+  if (sigLoading) {
+    return (
+      <div className="py-3 text-center">
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-600 mx-auto" />
+      </div>
+    )
+  }
+
+  // Signing canvas modal
+  if (signingId) {
+    return (
+      <div>
+        <p className="text-xs font-medium text-stone-500 uppercase tracking-wide mb-3">Sign Agreement</p>
+        <SignatureCanvas
+          onSave={handleSign}
+          onCancel={() => setSigningId(null)}
+          saving={signMutation.isPending}
+        />
+      </div>
+    )
+  }
+
+  // Reject reason input
+  if (rejectingId) {
+    return (
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-stone-500 uppercase tracking-wide">Decline Signature</p>
+        <textarea
+          value={rejectReason}
+          onChange={e => setRejectReason(e.target.value)}
+          placeholder="Reason for declining (optional)..."
+          rows={3}
+          className="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
+        />
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => { setRejectingId(null); setRejectReason('') }}>Cancel</Button>
+          <Button variant="danger" size="sm" onClick={handleReject} disabled={rejectMutation.isPending}>
+            {rejectMutation.isPending ? 'Declining...' : 'Confirm Decline'}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-medium text-stone-500 uppercase tracking-wide">E-Signatures</p>
+        {canManage && (
+          <button
+            onClick={() => setShowRequestForm(!showRequestForm)}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors"
+          >
+            <Send className="w-3.5 h-3.5" />
+            Request Signature
+          </button>
+        )}
+      </div>
+
+      {/* Request form */}
+      {showRequestForm && (
+        <div className="bg-primary-50/50 border border-primary-100 rounded-xl p-4 mb-3 space-y-3">
+          <p className="text-sm font-medium text-stone-900">Request a Signature</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={requestForm.signer_name}
+              onChange={e => setRequestForm(f => ({ ...f, signer_name: e.target.value }))}
+              placeholder="Signer's full name *"
+              className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            />
+            <input
+              type="email"
+              value={requestForm.signer_email}
+              onChange={e => setRequestForm(f => ({ ...f, signer_email: e.target.value }))}
+              placeholder="Signer's email *"
+              className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+            />
+          </div>
+          <select
+            value={requestForm.signer_role}
+            onChange={e => setRequestForm(f => ({ ...f, signer_role: e.target.value as 'university' | 'site' }))}
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+          >
+            <option value="university">University Representative</option>
+            <option value="site">Site Representative</option>
+          </select>
+          <textarea
+            value={requestForm.message}
+            onChange={e => setRequestForm(f => ({ ...f, message: e.target.value }))}
+            placeholder="Personal message (optional)..."
+            rows={2}
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowRequestForm(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleRequestSignature} disabled={requestMutation.isPending}>
+              <Mail className="w-3.5 h-3.5 mr-1.5" />
+              {requestMutation.isPending ? 'Sending...' : 'Send Request'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Signature list */}
+      {signatures.length === 0 ? (
+        <div className="text-center py-4 bg-stone-50 rounded-xl">
+          <PenTool className="w-6 h-6 text-stone-300 mx-auto mb-1" />
+          <p className="text-xs text-stone-400">No signatures yet{canManage ? ' — request one above' : ''}</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {signatures.map(sig => (
+            <div key={sig.id} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                {sigStatusIcon(sig.status)}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-stone-900 truncate">{sig.signer_name}</p>
+                  <div className="flex items-center gap-2 text-xs text-stone-500">
+                    <span>{sig.signer_email}</span>
+                    <span className="text-stone-300">|</span>
+                    <span className="capitalize">{sig.signer_role} rep.</span>
+                    {sig.signed_at && <span className="text-stone-300">|</span>}
+                    {sig.signed_at && <span>Signed {new Date(sig.signed_at).toLocaleDateString()}</span>}
+                    {sig.rejected_at && <span className="text-stone-300">|</span>}
+                    {sig.rejected_at && <span className="text-red-500">Declined {new Date(sig.rejected_at).toLocaleDateString()}</span>}
+                  </div>
+                  {sig.rejection_reason && (
+                    <p className="text-xs text-red-500 mt-0.5">Reason: {sig.rejection_reason}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                {/* Show signature image thumbnail for signed */}
+                {sig.status === 'signed' && sig.signature_data && (
+                  <img src={sig.signature_data} alt="Signature" className="h-8 w-16 object-contain border border-stone-200 rounded bg-white" />
+                )}
+                {/* Actions for the signer */}
+                {canUserSign(sig) && (
+                  <>
+                    <Button size="sm" onClick={() => setSigningId(sig.id)}>
+                      <PenTool className="w-3.5 h-3.5 mr-1" /> Sign
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => setRejectingId(sig.id)}>Decline</Button>
+                  </>
+                )}
+                {/* Actions for the requester/admin */}
+                {sig.status === 'requested' && canManage && !canUserSign(sig) && (
+                  <>
+                    <button
+                      onClick={() => resendMutation.mutate(sig.id, {
+                        onSuccess: () => toast.success('Reminder sent!'),
+                        onError: (err: Error) => toast.error(err.message),
+                      })}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
+                      title="Resend request"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => cancelMutation.mutate(sig.id, {
+                        onSuccess: () => toast.success('Request cancelled.'),
+                        onError: (err: Error) => toast.error(err.message),
+                      })}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                      title="Cancel request"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Main Agreements Page ---
 export function Agreements() {
   const { user } = useAuth()
   const canCreate = user?.role === 'coordinator' || user?.role === 'site_manager' || user?.role === 'admin'
@@ -251,45 +512,57 @@ export function Agreements() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(agreement => (
-            <Card key={agreement.id} className="p-5 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedAgreement(agreement)}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <GraduationCap className="w-4 h-4 text-primary-500 shrink-0" />
-                    <span className="font-semibold text-stone-900 truncate">{agreement.university?.name || 'Unknown University'}</span>
-                    <span className="text-stone-400 mx-1">&harr;</span>
-                    <Building2 className="w-4 h-4 text-secondary-500 shrink-0" />
-                    <span className="font-semibold text-stone-900 truncate">{agreement.site?.name || 'Unknown Site'}</span>
+          {filtered.map(agreement => {
+            const sigCfg = SIG_STATUS_CONFIG[agreement.signature_status] || SIG_STATUS_CONFIG.none
+            return (
+              <Card key={agreement.id} className="p-5 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedAgreement(agreement)}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <GraduationCap className="w-4 h-4 text-primary-500 shrink-0" />
+                      <span className="font-semibold text-stone-900 truncate">{agreement.university?.name || 'Unknown University'}</span>
+                      <span className="text-stone-400 mx-1">&harr;</span>
+                      <Building2 className="w-4 h-4 text-secondary-500 shrink-0" />
+                      <span className="font-semibold text-stone-900 truncate">{agreement.site?.name || 'Unknown Site'}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500 mt-1">
+                      {agreement.start_date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(agreement.start_date).toLocaleDateString()} – {agreement.end_date ? new Date(agreement.end_date).toLocaleDateString() : 'No end date'}
+                        </span>
+                      )}
+                      {agreement.file_name && (
+                        <span className="flex items-center gap-1">
+                          <Paperclip className="w-3 h-3" />
+                          {agreement.file_name}
+                          {agreement.file_size && ` (${formatFileSize(agreement.file_size)})`}
+                        </span>
+                      )}
+                      {agreement.creator && (
+                        <span>Created by {agreement.creator.first_name} {agreement.creator.last_name}</span>
+                      )}
+                    </div>
+                    {agreement.notes && (
+                      <p className="text-xs text-stone-400 mt-1 truncate">{agreement.notes}</p>
+                    )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500 mt-1">
-                    {agreement.start_date && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(agreement.start_date).toLocaleDateString()} – {agreement.end_date ? new Date(agreement.end_date).toLocaleDateString() : 'No end date'}
-                      </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Signature status badge */}
+                    {agreement.signature_status && agreement.signature_status !== 'none' && (
+                      <Badge variant={sigCfg.variant}>
+                        <sigCfg.icon className="w-3 h-3 mr-1" />
+                        {sigCfg.label}
+                      </Badge>
                     )}
-                    {agreement.file_name && (
-                      <span className="flex items-center gap-1">
-                        <Paperclip className="w-3 h-3" />
-                        {agreement.file_name}
-                        {agreement.file_size && ` (${formatFileSize(agreement.file_size)})`}
-                      </span>
-                    )}
-                    {agreement.creator && (
-                      <span>Created by {agreement.creator.first_name} {agreement.creator.last_name}</span>
-                    )}
+                    <Badge variant={STATUS_CONFIG[agreement.status]?.variant || 'default'}>
+                      {STATUS_CONFIG[agreement.status]?.label || agreement.status}
+                    </Badge>
                   </div>
-                  {agreement.notes && (
-                    <p className="text-xs text-stone-400 mt-1 truncate">{agreement.notes}</p>
-                  )}
                 </div>
-                <Badge variant={STATUS_CONFIG[agreement.status]?.variant || 'default'}>
-                  {STATUS_CONFIG[agreement.status]?.label || agreement.status}
-                </Badge>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            )
+          })}
         </div>
       )}
 
@@ -382,11 +655,12 @@ export function Agreements() {
           </div>
         </Modal>
 
-      {/* Detail Modal */}
+      {/* Detail Modal (with Signature Panel) */}
       <Modal
         isOpen={!!selectedAgreement}
         title="Agreement Details"
         onClose={() => setSelectedAgreement(null)}
+        size="lg"
       >
           {selectedAgreement && <div className="space-y-5">
             {/* Parties */}
@@ -418,6 +692,15 @@ export function Agreements() {
               <Badge variant={STATUS_CONFIG[selectedAgreement.status]?.variant || 'default'}>
                 {STATUS_CONFIG[selectedAgreement.status]?.label || selectedAgreement.status}
               </Badge>
+              {selectedAgreement.signature_status && selectedAgreement.signature_status !== 'none' && (() => {
+                const cfg = SIG_STATUS_CONFIG[selectedAgreement.signature_status]
+                return (
+                  <Badge variant={cfg.variant}>
+                    <cfg.icon className="w-3 h-3 mr-1" />
+                    {cfg.label}
+                  </Badge>
+                )
+              })()}
               {selectedAgreement.start_date && (
                 <span className="text-sm text-stone-500 flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
@@ -502,6 +785,11 @@ export function Agreements() {
               ) : (
                 <p className="text-sm text-stone-400 italic">No document attached</p>
               )}
+            </div>
+
+            {/* E-Signatures Panel */}
+            <div className="border-t border-stone-200 pt-4">
+              <SignaturePanel agreement={selectedAgreement} />
             </div>
 
             {/* Status Actions */}

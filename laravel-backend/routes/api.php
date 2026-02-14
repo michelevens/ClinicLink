@@ -33,6 +33,7 @@ use App\Http\Controllers\PreceptorProfileController;
 use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AccreditationReportController;
+use App\Http\Controllers\SignatureController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -57,6 +58,8 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [PasswordResetController::class, 'resetPassword']);
     Route::post('/auth/mfa/verify', [MfaController::class, 'verify']);
+    Route::get('/auth/verify-email/{token}', [AuthController::class, 'verifyEmail']);
+    Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
 });
 
 // Public certificate verification
@@ -235,6 +238,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/agreements/{agreement}/download', [UniversityController::class, 'downloadAgreementDocument']);
     });
 
+    // E-Signatures
+    Route::get('/signatures/pending', [SignatureController::class, 'myPending']);
+    Route::middleware('role:coordinator,site_manager,admin')->group(function () {
+        Route::get('/agreements/{agreement}/signatures', [SignatureController::class, 'index']);
+        Route::post('/agreements/{agreement}/signatures', [SignatureController::class, 'requestSignature']);
+        Route::post('/signatures/{signature}/resend', [SignatureController::class, 'resend']);
+        Route::put('/signatures/{signature}/cancel', [SignatureController::class, 'cancel']);
+    });
+    Route::put('/signatures/{signature}/sign', [SignatureController::class, 'sign']);
+    Route::put('/signatures/{signature}/reject', [SignatureController::class, 'reject']);
+
     // Compliance (student sees own; site_manager, coordinator, professor, admin)
     Route::middleware('role:site_manager,admin')
         ->get('/compliance/site/{site}', [ComplianceController::class, 'site']);
@@ -311,6 +325,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Evaluation Templates (any auth can read; coordinator/admin can write)
     Route::get('/evaluation-templates', [EvaluationTemplateController::class, 'index']);
+    Route::get('/evaluation-templates/{template}', [EvaluationTemplateController::class, 'show']);
     Route::middleware('role:coordinator,admin')->group(function () {
         Route::post('/evaluation-templates', [EvaluationTemplateController::class, 'store']);
         Route::put('/evaluation-templates/{template}', [EvaluationTemplateController::class, 'update']);

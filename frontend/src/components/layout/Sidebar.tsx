@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { useMessageUnreadCount } from '../../hooks/useApi.ts'
+import { useMessageUnreadCount, useMyPendingSignatures } from '../../hooks/useApi.ts'
 import { NotificationBell } from './NotificationBell.tsx'
 import type { UserRole } from '../../types/index.ts'
 
@@ -67,6 +67,8 @@ export function Sidebar() {
   }, [mobileOpen])
 
   const { data: messageUnread } = useMessageUnreadCount()
+  const { data: pendingSigs } = useMyPendingSignatures()
+  const pendingSigCount = pendingSigs?.data?.length ?? 0
   const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
 
   const roleLabels: Record<UserRole, string> = {
@@ -137,6 +139,11 @@ export function Sidebar() {
             {item.path === '/messages' && (messageUnread?.count ?? 0) > 0 && (
               <span className="w-5 h-5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
                 {messageUnread!.count > 9 ? '9+' : messageUnread!.count}
+              </span>
+            )}
+            {item.path === '/agreements' && pendingSigCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center" title="Pending signatures">
+                {pendingSigCount > 9 ? '9+' : pendingSigCount}
               </span>
             )}
           </NavLink>
