@@ -979,6 +979,11 @@ export interface ApiCePolicy {
   certificate_template_path: string | null
   signer_name: string | null
   signer_credentials: string | null
+  version: number | null
+  effective_from: string | null
+  effective_to: string | null
+  created_by: string | null
+  updated_by: string | null
   created_at: string
   updated_at: string
 }
@@ -989,18 +994,35 @@ export interface ApiCeCertificate {
   preceptor_id: string
   application_id: string
   contact_hours: number
-  status: 'pending' | 'approved' | 'issued' | 'rejected'
+  status: 'pending' | 'approved' | 'issued' | 'rejected' | 'revoked'
   issued_at: string | null
   approved_by: string | null
   certificate_path: string | null
   verification_uuid: string
   rejection_reason: string | null
+  revoked_at: string | null
+  revoked_by: string | null
+  revocation_reason: string | null
+  policy_version_id: string | null
   created_at: string
   updated_at: string
   university?: ApiUniversity
   preceptor?: ApiUser
   application?: ApiApplication
   approved_by_user?: ApiUser
+  revoked_by_user?: ApiUser
+}
+
+export interface ApiCeAuditEvent {
+  id: string
+  ce_certificate_id: string
+  event_type: string
+  actor_id: string | null
+  actor_role: string
+  metadata: Record<string, unknown> | null
+  ip_address: string | null
+  created_at: string
+  actor?: { id: string; first_name: string; last_name: string; role: string }
 }
 
 export interface CeEligibility {
@@ -1031,6 +1053,10 @@ export const ceCertificatesApi = {
   approve: (id: string) => api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/approve`),
   reject: (id: string, data: { rejection_reason: string }) =>
     api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/reject`, data),
+  revoke: (id: string, data: { revocation_reason: string }) =>
+    api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/revoke`, data),
+  auditTrail: (id: string) =>
+    api.get<{ audit_trail: ApiCeAuditEvent[] }>(`/ce-certificates/${id}/audit-trail`),
   downloadUrl: (id: string) => {
     const token = localStorage.getItem('cliniclink_token')
     return `${API_URL}/ce-certificates/${id}/download?token=${token}`

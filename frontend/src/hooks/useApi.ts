@@ -880,6 +880,22 @@ export function useRejectCeCertificate() {
   })
 }
 
+export function useRevokeCeCertificate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { revocation_reason: string } }) => ceCertificatesApi.revoke(id, data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ce-certificates'] }) },
+  })
+}
+
+export function useCeAuditTrail(certificateId: string | null) {
+  return useQuery({
+    queryKey: ['ce-audit-trail', certificateId],
+    queryFn: () => ceCertificatesApi.auditTrail(certificateId!),
+    enabled: !!certificateId,
+  })
+}
+
 export function useCeEligibility(applicationId: string | null) {
   return useQuery({
     queryKey: ['ce-eligibility', applicationId],
