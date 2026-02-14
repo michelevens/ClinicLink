@@ -40,7 +40,7 @@
 ### University Dashboard
 - [x] Program setup (degree type, required hours, specialties)
 - [x] Student roster with placement status
-- [ ] Bulk student import (CSV)
+- [x] Bulk student import (CSV)
 - [x] Placement overview (placed vs unplaced vs in-progress)
 - [x] Quick stats (placement rate, average time to place)
 
@@ -61,7 +61,7 @@
 - [x] Hour categories (direct patient care, indirect, simulation, etc.)
 - [ ] GPS check-in/check-out (optional, for verification)
 - [x] Hour summary reports (by week, month, rotation, total)
-- [ ] Export hours log (PDF, CSV)
+- [x] Export hours log (PDF, CSV) — also evaluations + compliance exports
 
 ### Evaluations
 - [x] Mid-rotation evaluation (preceptor → student)
@@ -69,7 +69,7 @@
 - [x] Student feedback evaluation
 - [x] Standardized rubrics (1-5 scale scoring)
 - [ ] Custom evaluation templates per university
-- [ ] Evaluation reminders and deadlines
+- [x] Evaluation reminders and deadlines (daily scheduled command + email + in-app notification)
 - [x] Evaluation history and trends
 
 ### Compliance & Document Management
@@ -94,7 +94,7 @@
 - [x] Relationship-based messaging authorization (students ↔ accepted preceptors, coordinators ↔ affiliated sites, etc.)
 - [x] Conversation search and new conversation creation with user search
 - [x] Unread message count with sidebar badge and polling
-- [ ] Announcement broadcasts (university → all students)
+- [x] Announcement broadcasts (coordinator/admin → students, by program or role)
 - [x] In-app notifications (bell icon, mark read/unread)
 - [x] Email notifications (11 mail classes for applications, hours, credentials, agreements, onboarding)
 - [x] New message database notifications

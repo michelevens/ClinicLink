@@ -307,13 +307,55 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
-## Phase 3.2: Payments & Intelligence — NEXT
+## Phase 3.2: Exports, Broadcasts, Reminders, Bulk Import ✅ COMPLETE
+**Goal:** CSV/PDF exports, coordinator broadcasts, evaluation reminders, bulk student import
+
+### What Was Built
+
+#### CSV/PDF Exports (6 Endpoints)
+- ExportController with role-scoped queries (student, preceptor, site_manager, coordinator, admin)
+- Hour logs CSV/PDF export with date/status/slot filters
+- Evaluations CSV/PDF export with type filter
+- Compliance CSV/PDF export with site filter
+- Premium DomPDF templates with gradient headers, stats boxes, and data tables
+- Token-based auth for browser downloads (window.open pattern)
+- Export dropdown buttons on Hour Log, Evaluations, and Compliance Dashboard pages
+
+#### Announcement Broadcasts
+- Migration: `is_broadcast` + `broadcast_by` fields on conversations table
+- Coordinator/admin broadcast messaging with audience targeting
+- Audience options: all students, by program, by role (admin-only)
+- Coordinator scoped to their university's students
+- BroadcastModal component with audience selector, subject, message body
+- Megaphone icon + "Broadcast" badge in conversation list
+- Chunked participant insertion (100) and notification delivery (50)
+
+#### Evaluation Reminders (Scheduled Command)
+- `reminders:evaluations` daily command at 05:00
+- Identifies active rotations with upcoming mid-rotation and final evaluation dates
+- Sends reminders at 7-days-before and on-due-date windows
+- Dedup table (`evaluation_reminders_sent`) prevents duplicate sends
+- Premium amber-themed email template with urgency badge and student info
+- In-app notification via EvaluationDueNotification
+- `--dry-run` mode for testing
+
+#### Bulk Student Import
+- CSV template download endpoint with sample row
+- Bulk import endpoint: parses CSV, validates headers, creates User + StudentProfile
+- Per-row error handling (missing fields, invalid email, duplicate detection)
+- Welcome email with password reset link for each new student
+- Audit log for each import
+- BulkImportModal component with template download, file upload, results table
+- Import Students button on My Students page (coordinator/admin only)
+
+---
+
+## Phase 3.3: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system
 - Smart matching algorithm (student prefs × site requirements)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)
 - Accreditation-ready report generation
-- CSV/PDF exports for hour logs, compliance reports
 
 ---
 
@@ -339,7 +381,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Email | Resend | ✅ |
 | 2FA/MFA | pragmarx/google2fa + qrcode.react | ✅ |
 | Hosting | GitHub Pages + Railway | ✅ |
-| Scheduled Jobs | Laravel Scheduler (4 daily commands) | ✅ |
+| Scheduled Jobs | Laravel Scheduler (5 daily commands) | ✅ |
 | Search | Algolia / Meilisearch | Planned |
 | Maps | Google Maps / Mapbox | Planned |
 | Payments | Stripe Connect | Planned |
