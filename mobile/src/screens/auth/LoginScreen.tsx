@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../theme'
@@ -118,6 +118,16 @@ export function LoginScreen({ navigation }: { navigation: any }) {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Company */}
+          <View style={styles.companyFooter}>
+            <Text style={[styles.companyText, { color: theme.colors.textTertiary }]}>
+              A product of Acsyom Analytics
+            </Text>
+            <Text style={[styles.companyText, { color: theme.colors.textTertiary }]}>
+              Clermont, FL &bull; 407-462-7233
+            </Text>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -180,5 +190,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: fontSize.sm,
+  },
+  companyFooter: {
+    alignItems: 'center',
+    marginTop: spacing.xl,
+  },
+  companyText: {
+    fontSize: fontSize.xs,
+    marginTop: 2,
   },
 })

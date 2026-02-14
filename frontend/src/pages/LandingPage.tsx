@@ -9,7 +9,7 @@ import {
   Search, Clock, Shield, ArrowRight, Users, CheckCircle,
   Zap, Award, BarChart3, Globe, Lock, FileCheck,
   Brain, Smartphone, ClipboardCheck,
-  ChevronRight, Sparkles, MapPin, Calendar
+  ChevronRight, Sparkles, MapPin, Calendar, Phone, Mail, ExternalLink
 } from 'lucide-react'
 import type { UserRole } from '../types/index.ts'
 
@@ -454,18 +454,52 @@ export function LandingPage() {
             <div>
               <h4 className="font-medium text-white text-sm mb-3">Company</h4>
               <ul className="space-y-2 text-sm">
-                <li><span className="hover:text-white transition-colors cursor-default">About</span></li>
-                <li><span className="hover:text-white transition-colors cursor-default">Privacy Policy</span></li>
-                <li><span className="hover:text-white transition-colors cursor-default">Terms of Service</span></li>
-                <li><span className="hover:text-white transition-colors cursor-default">Contact</span></li>
+                <li>
+                  <a href="https://www.linkedin.com/company/acsyom-analytics" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1">
+                    About Acsyom Analytics <ExternalLink className="w-3 h-3" />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://www.linkedin.com/in/evensmichel/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1">
+                    Our Founder <ExternalLink className="w-3 h-3" />
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:contact@cliniclink.health" className="hover:text-white transition-colors flex items-center gap-1">
+                    <Mail className="w-3 h-3" /> Contact Us
+                  </a>
+                </li>
+                <li>
+                  <a href="tel:+14074627233" className="hover:text-white transition-colors flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> 407-462-7233
+                  </a>
+                </li>
+                <li><button onClick={() => navigate('/privacy')} className="hover:text-white transition-colors">Privacy Policy</button></li>
+                <li><button onClick={() => navigate('/terms')} className="hover:text-white transition-colors">Terms of Service</button></li>
               </ul>
+              <div className="mt-4 p-3 bg-stone-800/50 rounded-lg">
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  <span className="text-stone-400 font-medium">Acsyom Analytics</span> is a technology company founded by{' '}
+                  <a href="https://www.linkedin.com/in/evensmichel/" target="_blank" rel="noopener noreferrer" className="text-stone-400 hover:text-white transition-colors underline">
+                    Evens Michel, MBA, MSEE
+                  </a>
+                  , specializing in healthcare technology, clinical education, and enterprise software.
+                </p>
+                <p className="text-xs text-stone-500 mt-2">
+                  <span className="flex items-center gap-1"><MapPin className="w-3 h-3 inline" /> Clermont, FL</span>
+                </p>
+              </div>
             </div>
           </div>
           <div className="border-t border-stone-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs">&copy; 2026 ClinicLink. All rights reserved.</p>
+            <p className="text-xs">&copy; {new Date().getFullYear()} ClinicLink &mdash; A product of{' '}
+              <a href="https://www.linkedin.com/company/acsyom-analytics" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                Acsyom Analytics
+              </a>
+            </p>
             <div className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Miami, FL</span>
-              <span className="flex items-center gap-1"><Globe className="w-3 h-3" /> USA</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Clermont, FL</span>
+              <a href="tel:+14074627233" className="flex items-center gap-1 hover:text-white transition-colors"><Phone className="w-3 h-3" /> 407-462-7233</a>
             </div>
           </div>
         </div>

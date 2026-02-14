@@ -29,17 +29,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // =====================================================================
-        // 1. DEMO USERS — Predictable login credentials (all use "password")
+        // 1. DEMO USERS — Predictable login credentials (all use "ClinicLink2026!")
         // =====================================================================
+
+        $demoPassword = Hash::make('ClinicLink2026!');
 
         $demoStudent = User::create([
             'first_name' => 'Sarah',
             'last_name' => 'Chen',
-            'email' => 'student@cliniclink.com',
+            'email' => 'student@cliniclink.health',
             'username' => 'sarahchen',
-            'password' => Hash::make('password'),
+            'password' => $demoPassword,
             'role' => 'student',
-            'phone' => '(305) 555-0101',
+            'phone' => '(407) 555-0101',
             'is_active' => true,
             'email_verified' => true,
         ]);
@@ -47,11 +49,11 @@ class DatabaseSeeder extends Seeder
         $demoPreceptor = User::create([
             'first_name' => 'James',
             'last_name' => 'Wilson',
-            'email' => 'preceptor@cliniclink.com',
+            'email' => 'preceptor@cliniclink.health',
             'username' => 'drwilson',
-            'password' => Hash::make('password'),
+            'password' => $demoPassword,
             'role' => 'preceptor',
-            'phone' => '(305) 555-0102',
+            'phone' => '(407) 555-0102',
             'is_active' => true,
             'email_verified' => true,
         ]);
@@ -59,11 +61,11 @@ class DatabaseSeeder extends Seeder
         $demoSiteManager = User::create([
             'first_name' => 'Maria',
             'last_name' => 'Garcia',
-            'email' => 'site@cliniclink.com',
+            'email' => 'site@cliniclink.health',
             'username' => 'mariagarcia',
-            'password' => Hash::make('password'),
+            'password' => $demoPassword,
             'role' => 'site_manager',
-            'phone' => '(305) 555-0103',
+            'phone' => '(407) 555-0103',
             'is_active' => true,
             'email_verified' => true,
         ]);
@@ -71,11 +73,11 @@ class DatabaseSeeder extends Seeder
         $demoCoordinator = User::create([
             'first_name' => 'Lisa',
             'last_name' => 'Thompson',
-            'email' => 'coordinator@cliniclink.com',
+            'email' => 'coordinator@cliniclink.health',
             'username' => 'lisathompson',
-            'password' => Hash::make('password'),
+            'password' => $demoPassword,
             'role' => 'coordinator',
-            'phone' => '(305) 555-0104',
+            'phone' => '(407) 555-0104',
             'is_active' => true,
             'email_verified' => true,
         ]);
@@ -83,11 +85,11 @@ class DatabaseSeeder extends Seeder
         $demoProfessor = User::create([
             'first_name' => 'Robert',
             'last_name' => 'Martinez',
-            'email' => 'professor@cliniclink.com',
+            'email' => 'professor@cliniclink.health',
             'username' => 'profmartinez',
-            'password' => Hash::make('password'),
+            'password' => $demoPassword,
             'role' => 'professor',
-            'phone' => '(305) 555-0105',
+            'phone' => '(407) 555-0105',
             'is_active' => true,
             'email_verified' => true,
         ]);
@@ -95,9 +97,9 @@ class DatabaseSeeder extends Seeder
         $demoAdmin = User::create([
             'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'admin@cliniclink.com',
+            'email' => 'admin@cliniclink.health',
             'username' => 'admin',
-            'password' => Hash::make('password'),
+            'password' => $demoPassword,
             'role' => 'admin',
             'phone' => '(305) 555-0100',
             'is_active' => true,

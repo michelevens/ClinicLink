@@ -140,6 +140,23 @@ export function MoreMenuScreen({ navigation }: { navigation: any }) {
         </TouchableOpacity>
       </View>
 
+      {/* Company Footer */}
+      <View style={styles.companyFooter}>
+        <View style={styles.companyBrand}>
+          <Ionicons name="medical" size={16} color={theme.colors.primary} />
+          <Text style={[styles.companyAppName, { color: theme.colors.textSecondary }]}>ClinicLink</Text>
+        </View>
+        <Text style={[styles.companyLine, { color: theme.colors.textTertiary }]}>
+          A product of Acsyom Analytics
+        </Text>
+        <Text style={[styles.companyLine, { color: theme.colors.textTertiary }]}>
+          Clermont, FL &bull; 407-462-7233
+        </Text>
+        <Text style={[styles.companyLine, { color: theme.colors.textTertiary }]}>
+          Founded by Evens Michel, MBA, MSEE
+        </Text>
+      </View>
+
       <View style={{ height: spacing['3xl'] }} />
     </ScrollView>
   )
@@ -200,5 +217,25 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
+  },
+  companyFooter: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
+  },
+  companyBrand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  companyAppName: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+  },
+  companyLine: {
+    fontSize: fontSize.xs,
+    marginTop: 2,
   },
 })

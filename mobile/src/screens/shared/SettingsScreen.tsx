@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../theme'
@@ -88,6 +88,31 @@ export function SettingsScreen({ navigation }: { navigation: any }) {
             <Text style={[styles.infoValue, { color: theme.colors.text }]}>{user?.email}</Text>
           </View>
         </Card>
+
+        {/* Company */}
+        <Card style={[styles.card, { backgroundColor: theme.colors.card }]}>
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Company</Text>
+          <View style={styles.companyInfo}>
+            <Text style={[styles.companyName, { color: theme.colors.text }]}>Acsyom Analytics</Text>
+            <Text style={[styles.companyDetail, { color: theme.colors.textSecondary }]}>
+              Healthcare technology, clinical education, and enterprise software.
+            </Text>
+            <View style={styles.companyRow}>
+              <Ionicons name="location-outline" size={14} color={theme.colors.textTertiary} />
+              <Text style={[styles.companyDetail, { color: theme.colors.textSecondary }]}>Clermont, FL</Text>
+            </View>
+            <View style={styles.companyRow}>
+              <Ionicons name="call-outline" size={14} color={theme.colors.textTertiary} />
+              <Text style={[styles.companyDetail, { color: theme.colors.textSecondary }]}>407-462-7233</Text>
+            </View>
+            <View style={styles.companyRow}>
+              <Ionicons name="person-outline" size={14} color={theme.colors.textTertiary} />
+              <Text style={[styles.companyDetail, { color: theme.colors.textSecondary }]}>
+                Founded by Evens Michel, MBA, MSEE
+              </Text>
+            </View>
+          </View>
+        </Card>
       </View>
     </Screen>
   )
@@ -150,5 +175,20 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
+  },
+  companyInfo: {
+    gap: spacing.sm,
+  },
+  companyName: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
+  },
+  companyDetail: {
+    fontSize: fontSize.sm,
+  },
+  companyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
 })

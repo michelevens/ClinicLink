@@ -189,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       admin: 'admin@cliniclink.health',
     }
     try {
-      const res = await authApi.login({ login: emailMap[role], password: 'password' })
+      const res = await authApi.login({ login: emailMap[role], password: 'ClinicLink2026!' })
       // Demo users shouldn't have MFA, but handle it gracefully
       if ('mfa_required' in res && res.mfa_required) {
         setState(s => ({ ...s, isLoading: false, mfaPending: true, mfaToken: res.mfa_token }))
