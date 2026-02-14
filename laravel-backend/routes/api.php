@@ -18,7 +18,9 @@ use App\Http\Controllers\RotationSlotController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\SiteInviteController;
 use App\Http\Controllers\SiteJoinRequestController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CeCertificateController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\UniversityController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,9 +52,10 @@ Route::get('/verify-ce/{uuid}', [CeCertificateController::class, 'publicVerify']
 // Public invite validation
 Route::get('/invite/{token}', [SiteInviteController::class, 'show']);
 
-// PDF downloads (auth handled via query token in controller for window.open() browser tabs)
+// File downloads (auth handled via query token in controller for window.open() browser tabs)
 Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
 Route::get('/ce-certificates/{ceCertificate}/download', [CeCertificateController::class, 'download']);
+Route::get('/student/credentials/{credential}/download', [StudentController::class, 'downloadCredentialFile']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -162,7 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/student/credentials/{credential}', [StudentController::class, 'updateCredential']);
         Route::delete('/student/credentials/{credential}', [StudentController::class, 'deleteCredential']);
         Route::post('/student/credentials/{credential}/upload', [StudentController::class, 'uploadCredentialFile']);
-        Route::get('/student/credentials/{credential}/download', [StudentController::class, 'downloadCredentialFile']);
+        // download moved to public routes (auth via query token for window.open)
     });
 
     // Certificates
@@ -253,6 +256,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/universities/{university}/ce-policy', [CeCertificateController::class, 'getPolicy']);
         Route::put('/universities/{university}/ce-policy', [CeCertificateController::class, 'upsertPolicy']);
     });
+
+    // Messages (all authenticated users — controller scopes by relationship)
+    Route::get('/messages/conversations', [MessageController::class, 'conversations']);
+    Route::get('/messages/conversations/{conversation}', [MessageController::class, 'messages']);
+    Route::post('/messages/conversations/{conversation}', [MessageController::class, 'send']);
+    Route::post('/messages/conversations', [MessageController::class, 'createConversation']);
+    Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
+    Route::get('/messages/users', [MessageController::class, 'searchUsers']);
+
+    // Calendar (all authenticated users — controller scopes by role)
+    Route::get('/calendar/events', [CalendarController::class, 'events']);
 
     /*
     |--------------------------------------------------------------------------

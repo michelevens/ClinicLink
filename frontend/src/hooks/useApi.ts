@@ -4,6 +4,7 @@ import {
   evaluationsApi, studentApi, sitesApi, certificatesApi, myStudentsApi, adminApi, universitiesApi, notificationsApi,
   onboardingTemplatesApi, onboardingTasksApi, sitePreceptorsApi, siteInvitesApi, agreementsApi, complianceApi,
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
+  messagesApi, calendarApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -896,5 +897,69 @@ export function useCompleteApplication() {
       qc.invalidateQueries({ queryKey: ['ce-certificates'] })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
+  })
+}
+
+// --- Messages ---
+export function useConversations(params?: { page?: number }) {
+  return useQuery({
+    queryKey: ['conversations', params],
+    queryFn: () => messagesApi.conversations(params),
+  })
+}
+
+export function useConversation(conversationId: string | null) {
+  return useQuery({
+    queryKey: ['conversation', conversationId],
+    queryFn: () => messagesApi.messages(conversationId!),
+    enabled: !!conversationId,
+    refetchInterval: 10000,
+  })
+}
+
+export function useSendMessage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ conversationId, body }: { conversationId: string; body: string }) =>
+      messagesApi.send(conversationId, body),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['conversation', variables.conversationId] })
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}
+
+export function useCreateConversation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: messagesApi.createConversation,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['conversations'] })
+    },
+  })
+}
+
+export function useMessageUnreadCount() {
+  return useQuery({
+    queryKey: ['message-unread-count'],
+    queryFn: () => messagesApi.unreadCount(),
+    refetchInterval: 30000,
+  })
+}
+
+export function useSearchMessageableUsers(search: string) {
+  return useQuery({
+    queryKey: ['messageable-users', search],
+    queryFn: () => messagesApi.searchUsers(search),
+    enabled: search.length >= 2,
+  })
+}
+
+// --- Calendar ---
+export function useCalendarEvents(start: string | null, end: string | null) {
+  return useQuery({
+    queryKey: ['calendar-events', start, end],
+    queryFn: () => calendarApi.events(start!, end!),
+    enabled: !!start && !!end,
   })
 }

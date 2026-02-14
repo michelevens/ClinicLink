@@ -35,6 +35,8 @@ import { CeCredits } from './pages/CeCredits.tsx'
 import { VerifyCeCertificate } from './pages/VerifyCeCertificate.tsx'
 import { ForgotPassword } from './pages/ForgotPassword.tsx'
 import { ResetPassword } from './pages/ResetPassword.tsx'
+import { Messages } from './pages/Messages.tsx'
+import { Calendar } from './pages/Calendar.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
@@ -114,6 +116,9 @@ export default function App() {
       <Route path="/universities/:id" element={<ProtectedRoute roles={['coordinator', 'admin']}><UniversityDetail /></ProtectedRoute>} />
       <Route path="/onboarding-checklists" element={<ProtectedRoute roles={['student', 'site_manager']}><OnboardingChecklists /></ProtectedRoute>} />
       <Route path="/agreements" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Agreements /></ProtectedRoute>} />
+      <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+      <Route path="/messages/:id" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+      <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
       <Route path="/compliance" element={<ProtectedRoute roles={['student', 'site_manager', 'coordinator', 'professor', 'admin']}><ComplianceDashboard /></ProtectedRoute>} />
       <Route path="/ce-credits" element={<ProtectedRoute roles={['preceptor', 'coordinator', 'admin']}><CeCredits /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />

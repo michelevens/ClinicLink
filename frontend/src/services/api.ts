@@ -306,7 +306,10 @@ export const studentApi = {
     formData.append('file', file)
     return api.upload<{ credential: ApiCredential; message: string }>(`/student/credentials/${id}/upload`, formData)
   },
-  downloadCredentialUrl: (id: string) => `${API_URL}/student/credentials/${id}/download`,
+  downloadCredentialUrl: (id: string) => {
+    const token = localStorage.getItem('cliniclink_token')
+    return `${API_URL}/student/credentials/${id}/download?token=${token}`
+  },
 }
 
 // --- My Students ---
@@ -1045,4 +1048,83 @@ export const ceCertificatesApi = {
 export const applicationsExtApi = {
   complete: (id: string) =>
     api.put<{ application: ApiApplication; ce: { ce_certificate_created: boolean; ce_status?: string; contact_hours?: number; ce_reason?: string } }>(`/applications/${id}/complete`),
+}
+
+// --- Messages ---
+export interface ApiConversation {
+  id: string
+  subject: string | null
+  is_group: boolean
+  unread_count: number
+  created_at: string
+  updated_at: string
+  latest_message: ApiMessage | null
+  users: ApiConversationUser[]
+}
+
+export interface ApiConversationUser {
+  id: string
+  first_name: string
+  last_name: string
+  role: string
+  avatar_url: string | null
+  pivot?: { last_read_at: string | null }
+}
+
+export interface ApiMessage {
+  id: string
+  conversation_id: string
+  sender_id: string
+  body: string
+  created_at: string
+  updated_at: string
+  sender?: { id: string; first_name: string; last_name: string; role: string; avatar_url: string | null }
+}
+
+export interface ApiSearchableUser {
+  id: string
+  first_name: string
+  last_name: string
+  role: string
+  avatar_url: string | null
+}
+
+export const messagesApi = {
+  conversations: (params?: { page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiConversation>>(`/messages/conversations?${qs}`)
+  },
+  messages: (conversationId: string, params?: { page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<{ messages: PaginatedResponse<ApiMessage>; conversation: ApiConversation }>(`/messages/conversations/${conversationId}?${qs}`)
+  },
+  send: (conversationId: string, body: string) =>
+    api.post<ApiMessage>(`/messages/conversations/${conversationId}`, { body }),
+  createConversation: (data: { user_id: string; body: string }) =>
+    api.post<{ conversation: ApiConversation; message: ApiMessage }>('/messages/conversations', data),
+  unreadCount: () => api.get<{ count: number }>('/messages/unread-count'),
+  searchUsers: (search: string) => api.get<ApiSearchableUser[]>(`/messages/users?search=${encodeURIComponent(search)}`),
+}
+
+// --- Calendar ---
+export interface CalendarEvent {
+  id: string
+  title: string
+  start: string
+  end?: string
+  allDay?: boolean
+  color: string
+  type: 'rotation' | 'hour_log' | 'evaluation' | 'deadline' | 'application'
+  meta: {
+    entity_id: string
+    link: string
+    description: string
+  }
+}
+
+export const calendarApi = {
+  events: (start: string, end: string) =>
+    api.get<CalendarEvent[]>(`/calendar/events?start=${start}&end=${end}`),
 }

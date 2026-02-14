@@ -109,6 +109,18 @@ class User extends Authenticatable
         return $this->hasMany(Evaluation::class, 'preceptor_id');
     }
 
+    public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants')
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
     // Scopes
 
     public function scopeRole($query, string $role)

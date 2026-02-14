@@ -263,7 +263,20 @@ class StudentController extends Controller
 
     public function downloadCredentialFile(Request $request, Credential $credential)
     {
-        if ($credential->user_id !== $request->user()->id) {
+        // Authenticate via query token (for window.open() browser downloads)
+        $user = $request->user();
+        if (!$user && $request->filled('token')) {
+            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->input('token'));
+            if ($token) {
+                $user = $token->tokenable;
+            }
+        }
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        if ($credential->user_id !== $user->id && $user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 

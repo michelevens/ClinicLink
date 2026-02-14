@@ -2,10 +2,12 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Settings, Handshake, ShieldCheck,
-  GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck
+  GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
+  MessageSquare, Calendar
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { useMessageUnreadCount } from '../../hooks/useApi.ts'
 import { NotificationBell } from './NotificationBell.tsx'
 import type { UserRole } from '../../types/index.ts'
 
@@ -26,6 +28,8 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'CE Credits', path: '/ce-credits', icon: <BadgeCheck className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'admin'] },
   { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'] },
   { label: 'Agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
+  { label: 'Messages', path: '/messages', icon: <MessageSquare className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
+  { label: 'Calendar', path: '/calendar', icon: <Calendar className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
   { label: 'Compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'] },
   { label: 'My Site', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'] },
   { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'] },
@@ -58,6 +62,7 @@ export function Sidebar() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
+  const { data: messageUnread } = useMessageUnreadCount()
   const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
 
   const roleLabels: Record<UserRole, string> = {
@@ -124,7 +129,12 @@ export function Sidebar() {
             }
           >
             {item.icon}
-            <span>{item.label}</span>
+            <span className="flex-1">{item.label}</span>
+            {item.path === '/messages' && (messageUnread?.count ?? 0) > 0 && (
+              <span className="w-5 h-5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
+                {messageUnread!.count > 9 ? '9+' : messageUnread!.count}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>
