@@ -96,17 +96,22 @@ export function Calendar() {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
           initialView={isMobile ? 'listWeek' : 'dayGridMonth'}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,listWeek',
+          headerToolbar={isMobile
+            ? { left: 'prev,next', center: 'title', right: 'dayGridMonth,listWeek' }
+            : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' }
+          }
+          buttonText={{
+            today: 'Today',
+            month: 'Month',
+            week: 'Week',
+            list: 'List',
           }}
           events={filteredEvents}
           datesSet={handleDatesSet}
           eventClick={handleEventClick}
           height="auto"
           eventDisplay="block"
-          dayMaxEvents={3}
+          dayMaxEvents={isMobile ? 2 : 3}
           nowIndicator
           eventTimeFormat={{ hour: '2-digit', minute: '2-digit', meridiem: 'short' }}
         />
