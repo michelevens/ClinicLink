@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, CheckCircle, Building2, Search, Loader2, BookOpen } from 'lucide-react'
+import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, Building2, Search, Loader2, BookOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
 import { universitiesApi, api } from '../services/api.ts'
@@ -60,9 +60,9 @@ export function RegisterPage() {
   const prefillEmail = searchParams.get('email') || ''
   const prefillRole = (searchParams.get('role') as UserRole) || 'student'
 
+  const navigate = useNavigate()
   const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '' })
   const [showPassword, setShowPassword] = useState(false)
-  const [pendingApproval, setPendingApproval] = useState(false)
   const { register, isLoading } = useAuth()
 
   // University search
@@ -147,35 +147,11 @@ export function RegisterPage() {
     }
     try {
       await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined })
-      setPendingApproval(true)
+      navigate('/verify-email?email=' + encodeURIComponent(form.email))
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
       toast.error(message)
     }
-  }
-
-  if (pendingApproval) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50 px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 text-green-500 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8" />
-            </div>
-            <h1 className="text-xl font-bold text-stone-900 mb-2">Registration Submitted!</h1>
-            <p className="text-stone-600 mb-4">
-              Thank you for registering, <strong>{form.firstName}</strong>. Your account is pending approval by an administrator.
-            </p>
-            <div className="bg-amber-50 text-amber-800 rounded-xl px-4 py-3 text-sm mb-6">
-              You will receive an email at <strong>{form.email}</strong> once your account has been approved and activated.
-            </div>
-            <Link to="/login">
-              <Button variant="outline" className="w-full">Go to Login</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (

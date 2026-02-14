@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EmailVerificationMail;
 use App\Mail\NewUserRegistrationMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
@@ -56,6 +57,13 @@ class AuthController extends Controller
                 $profileData['program_id'] = $validated['program_id'];
             }
             StudentProfile::create($profileData);
+        }
+
+        // Send email verification link
+        try {
+            $this->sendVerificationEmail($user);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send verification email to ' . $user->email . ': ' . $e->getMessage());
         }
 
         // Send registration received email (account pending approval)
@@ -305,5 +313,80 @@ class AuthController extends Controller
         $userData['onboarding_completed'] = true;
 
         return response()->json(['user' => $userData]);
+    }
+
+    public function verifyEmail(string $token): JsonResponse
+    {
+        $record = DB::table('email_verification_tokens')
+            ->where('token', $token)
+            ->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Invalid or expired verification link.'], 400);
+        }
+
+        if (now()->greaterThan($record->expires_at)) {
+            DB::table('email_verification_tokens')->where('id', $record->id)->delete();
+            return response()->json(['message' => 'This verification link has expired. Please request a new one.'], 400);
+        }
+
+        $user = User::find($record->user_id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found.'], 404);
+        }
+
+        $user->update([
+            'email_verified' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        DB::table('email_verification_tokens')->where('user_id', $user->id)->delete();
+
+        AuditLog::record('User', $user->id, 'email_verified', $user->id, $user->role);
+
+        return response()->json(['message' => 'Email verified successfully. You can now log in.']);
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            // Don't reveal whether the email exists
+            return response()->json(['message' => 'If that email is registered, a verification link has been sent.']);
+        }
+
+        if ($user->email_verified) {
+            return response()->json(['message' => 'This email is already verified.']);
+        }
+
+        $this->sendVerificationEmail($user);
+
+        return response()->json(['message' => 'If that email is registered, a verification link has been sent.']);
+    }
+
+    private function sendVerificationEmail(User $user): void
+    {
+        // Delete any existing tokens for this user
+        DB::table('email_verification_tokens')->where('user_id', $user->id)->delete();
+
+        $token = Str::random(64);
+
+        DB::table('email_verification_tokens')->insert([
+            'id' => Str::uuid()->toString(),
+            'user_id' => $user->id,
+            'token' => $token,
+            'expires_at' => now()->addHours(24),
+            'created_at' => now(),
+        ]);
+
+        $verificationUrl = config('app.frontend_url', env('FRONTEND_URL', 'https://cliniclink.health'))
+            . '/verify-email/' . $token;
+
+        Mail::to($user->email)->send(new EmailVerificationMail($user, $verificationUrl));
     }
 }

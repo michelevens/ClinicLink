@@ -41,6 +41,7 @@ import { EvaluationTemplates } from './pages/EvaluationTemplates.tsx'
 import { PreceptorDirectory } from './pages/PreceptorDirectory.tsx'
 import { Analytics } from './pages/Analytics.tsx'
 import { AccreditationReports } from './pages/AccreditationReports.tsx'
+import { VerifyEmailPrompt, VerifyEmailCallback } from './pages/VerifyEmail.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
@@ -92,6 +93,8 @@ export default function App() {
       <Route path="/verify/:certificateNumber" element={<VerifyCertificate />} />
       <Route path="/verify-ce/:uuid" element={<VerifyCeCertificate />} />
       <Route path="/invite/:token" element={<AcceptInvite />} />
+      <Route path="/verify-email" element={<VerifyEmailPrompt />} />
+      <Route path="/verify-email/:token" element={<VerifyEmailCallback />} />
 
       {/* Semi-protected (works for both auth and unauth users) */}
       <Route path="/rotations" element={<SemiProtectedRoute><RotationSearch /></SemiProtectedRoute>} />
