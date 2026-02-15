@@ -1220,7 +1220,7 @@ function SubscriptionTab() {
               disabled={checkout.isPending}
               className="p-4 rounded-xl border-2 border-stone-200 hover:border-primary-300 transition-all text-left"
             >
-              <p className="text-lg font-bold text-stone-900">$9<span className="text-sm font-normal text-stone-500">/month</span></p>
+              <p className="text-lg font-bold text-stone-900">$9.99<span className="text-sm font-normal text-stone-500">/month</span></p>
               <p className="text-xs text-stone-500 mt-1">Billed monthly, cancel anytime</p>
             </button>
             <button
@@ -1229,10 +1229,10 @@ function SubscriptionTab() {
               className="p-4 rounded-xl border-2 border-primary-300 bg-primary-50 hover:bg-primary-100 transition-all text-left relative"
             >
               <div className="absolute -top-2.5 right-3">
-                <span className="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">Save 20%</span>
+                <span className="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">Save 28%</span>
               </div>
               <p className="text-lg font-bold text-stone-900">$86<span className="text-sm font-normal text-stone-500">/year</span></p>
-              <p className="text-xs text-stone-500 mt-1">$7.17/month, billed annually</p>
+              <p className="text-xs text-stone-500 mt-1">$7.17/month, billed annually (save 28%)</p>
             </button>
           </div>
           <div className="mt-6">

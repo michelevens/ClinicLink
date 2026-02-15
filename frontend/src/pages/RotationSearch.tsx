@@ -730,7 +730,7 @@ export function RotationSearch() {
             </p>
           </div>
           <div className="bg-stone-50 rounded-xl p-4 text-left">
-            <p className="text-sm font-semibold text-stone-900 mb-2">Pro Plan — $9/month</p>
+            <p className="text-sm font-semibold text-stone-900 mb-2">Pro Plan — $9.99/month</p>
             <ul className="text-xs text-stone-600 space-y-1">
               <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Unlimited rotation applications</li>
               <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Priority application badge</li>

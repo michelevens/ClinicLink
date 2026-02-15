@@ -39,7 +39,7 @@ const STUDENT_PLANS: Plan[] = [
   },
   {
     name: 'Pro',
-    price: '$9',
+    price: '$9.99',
     period: '/month',
     description: 'Unlimited rotations and premium features.',
     features: [
@@ -369,7 +369,7 @@ export function Pricing() {
             {[
               {
                 q: 'Is ClinicLink really free for students?',
-                a: 'Yes! Every student gets 1 free rotation and a 3-month trial period (whichever comes first). After that, upgrade to Pro for $9/month for unlimited rotations.',
+                a: 'Yes! Every student gets 1 free rotation and a 3-month trial period (whichever comes first). After that, upgrade to Pro for $9.99/month for unlimited rotations.',
               },
               {
                 q: 'How does the free trial work?',
@@ -389,7 +389,7 @@ export function Pricing() {
               },
               {
                 q: 'Is there a discount for annual billing?',
-                a: 'Yes! The Pro plan is $9/month or $86/year (save 20% with annual billing).',
+                a: 'Yes! The Pro plan is $9.99/month or $86/year (save 28% with annual billing).',
               },
               {
                 q: 'What does the university Enterprise plan include?',
