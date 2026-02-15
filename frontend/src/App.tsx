@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext.tsx'
+import { useDesignVersion } from './contexts/DesignVersionContext.tsx'
 import { MainLayout } from './components/layout/MainLayout.tsx'
 import { LandingPage } from './pages/LandingPage.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 import { RegisterPage } from './pages/RegisterPage.tsx'
 import { Dashboard } from './pages/Dashboard.tsx'
+import { DashboardV2 } from './pages/DashboardV2.tsx'
 import { RotationSearch } from './pages/RotationSearch.tsx'
 import { Applications } from './pages/Applications.tsx'
 import { HourLog } from './pages/HourLog.tsx'
@@ -75,6 +77,11 @@ function SemiProtectedRoute({ children }: { children: ReactNode }) {
   )
 }
 
+function VersionedDashboard() {
+  const { version } = useDesignVersion()
+  return version === 'v2' ? <DashboardV2 /> : <Dashboard />
+}
+
 function OnboardingRoute() {
   const { isAuthenticated, user } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
@@ -105,7 +112,7 @@ export default function App() {
       <Route path="/onboarding" element={<OnboardingRoute />} />
 
       {/* Protected — role guards match sidebar visibility */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><VersionedDashboard /></ProtectedRoute>} />
       <Route path="/applications" element={<ProtectedRoute roles={['student']}><Applications /></ProtectedRoute>} />
       <Route path="/hours" element={<ProtectedRoute roles={['student', 'preceptor']}><HourLog /></ProtectedRoute>} />
       <Route path="/evaluations" element={<ProtectedRoute roles={['student', 'preceptor']}><Evaluations /></ProtectedRoute>} />

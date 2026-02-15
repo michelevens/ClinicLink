@@ -118,6 +118,44 @@
   padding: 1px 4px;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   V2 Design System Overrides
+   Applied when [data-design="v2"] is on <html>
+   ═══════════════════════════════════════════════════════════ */
+[data-design="v2"] body {
+  background-color: #020617; /* slate-950 */
+  color: #e2e8f0; /* slate-200 */
+}
+
+/* V2 FullCalendar dark theme */
+[data-design="v2"] .fc {
+  --fc-border-color: #1e293b;
+  --fc-button-bg-color: #6366f1;
+  --fc-button-border-color: #6366f1;
+  --fc-button-hover-bg-color: #4f46e5;
+  --fc-button-hover-border-color: #4f46e5;
+  --fc-button-active-bg-color: #4338ca;
+  --fc-button-active-border-color: #4338ca;
+  --fc-today-bg-color: rgba(99, 102, 241, 0.08);
+  --fc-page-bg-color: transparent;
+}
+
+[data-design="v2"] .fc .fc-toolbar-title {
+  color: #f1f5f9;
+}
+
+[data-design="v2"] .fc .fc-col-header-cell-cushion {
+  color: #64748b;
+}
+
+[data-design="v2"] .fc .fc-daygrid-day-number {
+  color: #94a3b8;
+}
+
+[data-design="v2"] .fc .fc-button:focus {
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.4) !important;
+}
+
 /* Mobile: stack toolbar vertically, shrink buttons */
 @media (max-width: 640px) {
   .fc .fc-toolbar {
