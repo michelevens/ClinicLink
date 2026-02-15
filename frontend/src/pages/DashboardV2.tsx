@@ -174,16 +174,16 @@ function StudentDashboardV2() {
   const evaluations = evalsData?.data || []
   const credentials = credsData?.credentials || []
 
-  const platformHours = hours.reduce((sum: number, h: Record<string, unknown>) => sum + (Number(h.hours_worked) || 0), 0)
-  const approvedHours = hours.filter((h: Record<string, unknown>) => h.status === 'approved').reduce((sum: number, h: Record<string, unknown>) => sum + (Number(h.hours_worked) || 0), 0)
+  const platformHours = hours.reduce((sum, h) => sum + (Number(h.hours_worked) || 0), 0)
+  const approvedHours = hours.filter((h) => h.status === 'approved').reduce((sum, h) => sum + (Number(h.hours_worked) || 0), 0)
   const priorHours = stats?.prior_hours || 0
   const totalHours = priorHours + approvedHours
   const requiredHours = stats?.hours_required || 0
-  const pendingCount = hours.filter((h: Record<string, unknown>) => h.status === 'pending').length
+  const pendingCount = hours.filter((h) => h.status === 'pending').length
   const progressPct = requiredHours > 0 ? Math.min(Math.round((totalHours / requiredHours) * 100), 100) : 0
-  const activeRotations = applications.filter((a: Record<string, unknown>) => a.status === 'accepted')
-  const expiredCreds = credentials.filter((c: Record<string, unknown>) => c.status === 'expired')
-  const expiringSoonCreds = credentials.filter((c: Record<string, unknown>) => c.status === 'expiring_soon')
+  const activeRotations = applications.filter((a) => a.status === 'accepted')
+  const expiredCreds = credentials.filter((c) => c.status === 'expired')
+  const expiringSoonCreds = credentials.filter((c) => c.status === 'expiring_soon')
 
   if (statsLoading) return <V2LoadingSpinner />
 
@@ -285,9 +285,9 @@ function StudentDashboardV2() {
           </div>
           {(expiredCreds.length > 0 || expiringSoonCreds.length > 0) && (
             <div className="mt-3 space-y-2">
-              {[...expiredCreds, ...expiringSoonCreds].slice(0, 3).map((c: Record<string, unknown>) => (
-                <div key={c.id as string} className="flex items-center justify-between text-sm p-2 bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-300 text-xs">{c.name as string}</span>
+              {[...expiredCreds, ...expiringSoonCreds].slice(0, 3).map((c) => (
+                <div key={c.id} className="flex items-center justify-between text-sm p-2 bg-slate-800/50 rounded-lg">
+                  <span className="text-slate-300 text-xs">{c.name}</span>
                   <V2Badge color={c.status === 'expired' ? 'rose' : 'amber'}>
                     {c.status === 'expired' ? 'Expired' : 'Expiring'}
                   </V2Badge>
@@ -315,22 +315,22 @@ function StudentDashboardV2() {
           <V2SectionHeader title="Active Rotations" actionLabel="All Applications" onAction={() => navigate('/applications')} />
           <div className="space-y-2">
             {activeRotations.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No active rotations. Search to get started!</p>}
-            {activeRotations.slice(0, 3).map((app: Record<string, unknown>) => {
-              const slot = app.slot as Record<string, unknown> | undefined
-              const site = slot?.site as Record<string, unknown> | undefined
+            {activeRotations.slice(0, 3).map((app) => {
+              const slot = app.slot
+              const site = slot?.site
               return (
-                <div key={app.id as string} className="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div className="flex items-start justify-between mb-1">
                     <div>
-                      <p className="text-sm font-medium text-white">{(slot?.title as string) || 'Rotation'}</p>
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> {site?.name as string}</p>
+                      <p className="text-sm font-medium text-white">{(slot?.title) || 'Rotation'}</p>
+                      <p className="text-[11px] text-slate-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> {site?.name}</p>
                     </div>
                     <V2Badge color="emerald">Active</V2Badge>
                   </div>
                   {slot && (
                     <div className="flex items-center gap-3 text-[11px] text-slate-600 mt-1">
-                      <span>{slot.specialty as string}</span>
-                      <span>{new Date(slot.start_date as string).toLocaleDateString()} - {new Date(slot.end_date as string).toLocaleDateString()}</span>
+                      <span>{slot.specialty}</span>
+                      <span>{new Date(slot.start_date).toLocaleDateString()} - {new Date(slot.end_date).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
@@ -343,16 +343,16 @@ function StudentDashboardV2() {
           <V2SectionHeader title="Recent Evaluations" actionLabel="View All" onAction={() => navigate('/evaluations')} />
           <div className="space-y-2">
             {evaluations.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No evaluations yet.</p>}
-            {evaluations.slice(0, 3).map((ev: Record<string, unknown>) => {
-              const slot = ev.slot as Record<string, unknown> | undefined
-              const preceptor = ev.preceptor as Record<string, unknown> | undefined
+            {evaluations.slice(0, 3).map((ev) => {
+              const slot = ev.slot
+              const preceptor = ev.preceptor
               return (
-                <div key={ev.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={ev.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div>
                     <p className="text-sm font-medium text-white">
                       {ev.type === 'mid_rotation' ? 'Mid-Rotation' : ev.type === 'final' ? 'Final' : 'Feedback'} Eval
                     </p>
-                    <p className="text-[11px] text-slate-500">{(slot?.title as string) || 'Rotation'} {preceptor ? `• ${preceptor.first_name} ${preceptor.last_name}` : ''}</p>
+                    <p className="text-[11px] text-slate-500">{(slot?.title) || 'Rotation'} {preceptor ? `• ${preceptor.first_name} ${preceptor.last_name}` : ''}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-indigo-400">{ev.overall_score ? `${ev.overall_score}/5` : '—'}</p>
@@ -382,10 +382,10 @@ function SiteManagerDashboardV2() {
   const pendingJoinRequests = joinReqData?.join_requests || []
 
   const allApps = appsData?.data || []
-  const pendingApps = allApps.filter((a: Record<string, unknown>) => a.status === 'pending')
-  const acceptedApps = allApps.filter((a: Record<string, unknown>) => a.status === 'accepted')
+  const pendingApps = allApps.filter((a) => a.status === 'pending')
+  const acceptedApps = allApps.filter((a) => a.status === 'accepted')
   const slots = slotsData?.data || []
-  const openSlots = slots.filter((s: Record<string, unknown>) => s.status === 'open')
+  const openSlots = slots.filter((s) => s.status === 'open')
   const sites = sitesData?.sites || []
 
   if (isLoading) return <V2LoadingSpinner />
@@ -406,7 +406,7 @@ function SiteManagerDashboardV2() {
         <V2StatCard icon={<CalendarDays className="w-5 h-5" />} label="Open Slots" value={stats?.open_slots || openSlots.length} color="cyan" />
         <V2StatCard icon={<FileText className="w-5 h-5" />} label="Pending Apps" value={stats?.pending_applications || pendingApps.length} color="amber" />
         <V2StatCard icon={<Users className="w-5 h-5" />} label="Active Students" value={stats?.active_students || acceptedApps.length} color="emerald" />
-        <V2StatCard icon={<Star className="w-5 h-5" />} label="Avg Rating" value={sites.length > 0 ? (sites.reduce((s: number, st: Record<string, unknown>) => s + (Number(st.rating) || 0), 0) / sites.length).toFixed(1) : '—'} color="rose" />
+        <V2StatCard icon={<Star className="w-5 h-5" />} label="Avg Rating" value={sites.length > 0 ? (sites.reduce((s, st) => s + (Number(st.rating) || 0), 0) / sites.length).toFixed(1) : '—'} color="rose" />
       </div>
 
       <V2ActionBanner items={[
@@ -418,22 +418,22 @@ function SiteManagerDashboardV2() {
         <V2Card glow="cyan">
           <V2SectionHeader title="Slot Occupancy" actionLabel="Manage Slots" onAction={() => navigate('/slots')} />
           <div className="space-y-3">
-            {slots.slice(0, 5).map((slot: Record<string, unknown>) => {
+            {slots.slice(0, 5).map((slot) => {
               const capacity = Number(slot.capacity) || 0
               const filled = Number(slot.filled) || 0
               const occupancy = capacity > 0 ? Math.round((filled / capacity) * 100) : 0
               return (
-                <div key={slot.id as string} className="flex items-center gap-4">
+                <div key={slot.id} className="flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-white truncate">{slot.title as string}</p>
+                      <p className="text-sm font-medium text-white truncate">{slot.title}</p>
                       <span className="text-[11px] text-slate-500 ml-2">{filled}/{capacity}</span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full transition-all ${occupancy >= 100 ? 'bg-rose-400' : occupancy >= 75 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(occupancy, 100)}%` }} />
                     </div>
                   </div>
-                  <V2Badge color={slot.status === 'open' ? 'emerald' : slot.status === 'filled' ? 'amber' : 'slate'}>{slot.status as string}</V2Badge>
+                  <V2Badge color={slot.status === 'open' ? 'emerald' : slot.status === 'filled' ? 'amber' : 'slate'}>{slot.status}</V2Badge>
                 </div>
               )
             })}
@@ -456,14 +456,14 @@ function SiteManagerDashboardV2() {
           <V2SectionHeader title="Pending Applications" actionLabel="View All" onAction={() => navigate('/site-applications')} />
           <div className="space-y-2">
             {pendingApps.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No pending applications.</p>}
-            {pendingApps.slice(0, 4).map((app: Record<string, unknown>) => {
-              const student = app.student as Record<string, unknown> | undefined
-              const slot = app.slot as Record<string, unknown> | undefined
+            {pendingApps.slice(0, 4).map((app) => {
+              const student = app.student
+              const slot = app.slot
               return (
-                <div key={app.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div>
                     <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name}</p>
-                    <p className="text-[11px] text-slate-500">{slot?.title as string} • {slot?.specialty as string}</p>
+                    <p className="text-[11px] text-slate-500">{slot?.title} • {slot?.specialty}</p>
                   </div>
                   <V2Badge color="amber">Pending</V2Badge>
                 </div>
@@ -491,8 +491,8 @@ function PreceptorDashboardV2() {
 
   const hours = hoursData?.data || []
   const evaluations = evalsData?.data || []
-  const pendingHours = hours.filter((h: Record<string, unknown>) => h.status === 'pending')
-  const pendingEvals = evaluations.filter((e: Record<string, unknown>) => !e.is_submitted)
+  const pendingHours = hours.filter((h) => h.status === 'pending')
+  const pendingEvals = evaluations.filter((e) => !e.is_submitted)
   const sites = sitesData?.sites || []
   const pendingInvites = pendingInvitesData?.invites || []
 
@@ -522,7 +522,7 @@ function PreceptorDashboardV2() {
         <V2StatCard icon={<Users className="w-5 h-5" />} label="Current Students" value={stats?.active_students || 0} color="indigo" />
         <V2StatCard icon={<Clock className="w-5 h-5" />} label="Hours to Review" value={stats?.pending_hour_reviews || pendingHours.length} color="amber" />
         <V2StatCard icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations Due" value={stats?.pending_evaluations || pendingEvals.length} color="cyan" />
-        <V2StatCard icon={<Award className="w-5 h-5" />} label="Hours Supervised" value={hours.filter((h: Record<string, unknown>) => h.status === 'approved').reduce((s: number, h: Record<string, unknown>) => s + (Number(h.hours_worked) || 0), 0)} color="emerald" />
+        <V2StatCard icon={<Award className="w-5 h-5" />} label="Hours Supervised" value={hours.filter((h) => h.status === 'approved').reduce((s, h) => s + (Number(h.hours_worked) || 0), 0)} color="emerald" />
       </div>
 
       <V2ActionBanner items={[
@@ -534,21 +534,21 @@ function PreceptorDashboardV2() {
       {/* Pending Site Invites */}
       {pendingInvites.length > 0 && (
         <div className="space-y-3">
-          {pendingInvites.map((invite: Record<string, unknown>) => {
-            const site = invite.site as Record<string, unknown>
+          {pendingInvites.map((invite) => {
+            const site = invite.site
             return (
-              <V2Card key={invite.id as string} className="border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 to-purple-500/5">
+              <V2Card key={invite.id} className="border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 to-purple-500/5">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-indigo-500/15 flex items-center justify-center flex-shrink-0">
                     <Building2 className="w-6 h-6 text-indigo-400" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">Site Invitation</p>
-                    <p className="font-semibold text-white">{site.name as string}</p>
-                    <p className="text-xs text-slate-500">{site.city as string}, {site.state as string}</p>
+                    <p className="font-semibold text-white">{site.name}</p>
+                    <p className="text-xs text-slate-500">{site.city}, {site.state}</p>
                   </div>
                   <button
-                    onClick={() => handleAcceptInvite(invite.token as string, site.name as string)}
+                    onClick={() => handleAcceptInvite(invite.token, site.name)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-all"
                   >
                     <CheckCircle className="w-4 h-4" /> Accept & Join
@@ -575,13 +575,13 @@ function PreceptorDashboardV2() {
           <V2SectionHeader title="Pending Hour Reviews" actionLabel="Review All" onAction={() => navigate('/hours')} />
           <div className="space-y-2">
             {pendingHours.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">All caught up!</p>}
-            {pendingHours.slice(0, 5).map((h: Record<string, unknown>) => {
-              const slot = h.slot as Record<string, unknown> | undefined
+            {pendingHours.slice(0, 5).map((h) => {
+              const slot = h.slot
               return (
-                <div key={h.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={h.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div>
-                    <p className="text-sm font-medium text-white">{h.hours_worked as number}h — {(h.category as string).replace('_', ' ')}</p>
-                    <p className="text-[11px] text-slate-500">{new Date(h.date as string).toLocaleDateString()} • {slot?.title as string}</p>
+                    <p className="text-sm font-medium text-white">{h.hours_worked}h — {(h.category).replace('_', ' ')}</p>
+                    <p className="text-[11px] text-slate-500">{new Date(h.date).toLocaleDateString()} • {slot?.title}</p>
                   </div>
                   <V2Badge color="amber">Pending</V2Badge>
                 </div>
@@ -608,9 +608,9 @@ function CoordinatorDashboardV2() {
   const applications = appsData?.data || []
   const slots = slotsData?.data || []
   const ceCerts = certsData?.ce_certificates || []
-  const pendingCerts = ceCerts.filter((c: Record<string, unknown>) => c.status === 'pending')
-  const pendingApps = applications.filter((a: Record<string, unknown>) => a.status === 'pending')
-  const acceptedApps = applications.filter((a: Record<string, unknown>) => a.status === 'accepted')
+  const pendingCerts = ceCerts.filter((c) => c.status === 'pending')
+  const pendingApps = applications.filter((a) => a.status === 'pending')
+  const acceptedApps = applications.filter((a) => a.status === 'accepted')
   const totalStudents = stats?.total_students || 0
   const placedStudents = stats?.active_placements || acceptedApps.length
   const unplacedStudents = Math.max(totalStudents - placedStudents, 0)
@@ -634,7 +634,7 @@ function CoordinatorDashboardV2() {
         <V2StatCard icon={<CheckCircle className="w-5 h-5" />} label="Active Placements" value={placedStudents} color="emerald" />
         <V2StatCard icon={<AlertCircle className="w-5 h-5" />} label="Unplaced" value={unplacedStudents} color={unplacedStudents > 0 ? 'amber' : 'emerald'} />
         <V2StatCard icon={<FileText className="w-5 h-5" />} label="Pending Apps" value={stats?.pending_applications || pendingApps.length} color="cyan" />
-        <V2StatCard icon={<CalendarDays className="w-5 h-5" />} label="Available Slots" value={stats?.available_slots || slots.filter((s: Record<string, unknown>) => s.status === 'open').length} color="rose" />
+        <V2StatCard icon={<CalendarDays className="w-5 h-5" />} label="Available Slots" value={stats?.available_slots || slots.filter((s) => s.status === 'open').length} color="rose" />
       </div>
 
       <V2ActionBanner items={[
@@ -683,18 +683,18 @@ function CoordinatorDashboardV2() {
           <V2SectionHeader title="Recent Applications" actionLabel="View All" onAction={() => navigate('/placements')} />
           <div className="space-y-2">
             {applications.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No applications to review.</p>}
-            {applications.slice(0, 5).map((app: Record<string, unknown>) => {
-              const student = app.student as Record<string, unknown> | undefined
-              const slot = app.slot as Record<string, unknown> | undefined
-              const site = slot?.site as Record<string, unknown> | undefined
+            {applications.slice(0, 5).map((app) => {
+              const student = app.student
+              const slot = app.slot
+              const site = slot?.site
               return (
-                <div key={app.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div>
                     <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name}</p>
-                    <p className="text-[11px] text-slate-500">{slot?.title as string} • {site?.name as string}</p>
+                    <p className="text-[11px] text-slate-500">{slot?.title} • {site?.name}</p>
                   </div>
                   <V2Badge color={app.status === 'accepted' ? 'emerald' : app.status === 'pending' ? 'amber' : app.status === 'declined' ? 'rose' : 'slate'}>
-                    {app.status as string}
+                    {app.status}
                   </V2Badge>
                 </div>
               )
@@ -718,7 +718,7 @@ function ProfessorDashboardV2() {
 
   const applications = appsData?.data || []
   const evaluations = evalsData?.data || []
-  const activeStudents = applications.filter((a: Record<string, unknown>) => a.status === 'accepted')
+  const activeStudents = applications.filter((a) => a.status === 'accepted')
   const totalStudents = stats?.total_students || 0
   const unplacedStudents = Math.max(totalStudents - (stats?.active_placements || activeStudents.length), 0)
 
@@ -761,19 +761,19 @@ function ProfessorDashboardV2() {
           <V2SectionHeader title="Student Placements" actionLabel="View All" onAction={() => navigate('/students')} />
           <div className="space-y-2">
             {activeStudents.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No active placements to monitor.</p>}
-            {activeStudents.slice(0, 5).map((app: Record<string, unknown>) => {
-              const student = app.student as Record<string, unknown> | undefined
-              const slot = app.slot as Record<string, unknown> | undefined
-              const site = slot?.site as Record<string, unknown> | undefined
+            {activeStudents.slice(0, 5).map((app) => {
+              const student = app.student
+              const slot = app.slot
+              const site = slot?.site
               return (
-                <div key={app.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-white text-[10px] font-bold">
-                      {(student?.first_name as string)?.[0] || ''}{(student?.last_name as string)?.[0] || ''}
+                      {(student?.first_name)?.[0] || ''}{(student?.last_name)?.[0] || ''}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name}</p>
-                      <p className="text-[11px] text-slate-500">{slot?.title as string} • {site?.name as string}</p>
+                      <p className="text-[11px] text-slate-500">{slot?.title} • {site?.name}</p>
                     </div>
                   </div>
                   <V2Badge color="emerald">Active</V2Badge>
@@ -788,18 +788,18 @@ function ProfessorDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Recent Evaluations" actionLabel="View All" onAction={() => navigate('/evaluations')} />
           <div className="space-y-2">
-            {evaluations.slice(0, 4).map((ev: Record<string, unknown>) => {
-              const student = ev.student as Record<string, unknown> | undefined
-              const slot = ev.slot as Record<string, unknown> | undefined
-              const preceptor = ev.preceptor as Record<string, unknown> | undefined
+            {evaluations.slice(0, 4).map((ev) => {
+              const student = ev.student
+              const slot = ev.slot
+              const preceptor = ev.preceptor
               return (
-                <div key={ev.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={ev.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                   <div>
                     <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name} — {ev.type === 'mid_rotation' ? 'Mid-Rotation' : ev.type === 'final' ? 'Final' : 'Feedback'}</p>
-                    <p className="text-[11px] text-slate-500">{slot?.title as string} • by {preceptor?.first_name} {preceptor?.last_name}</p>
+                    <p className="text-[11px] text-slate-500">{slot?.title} • by {preceptor?.first_name} {preceptor?.last_name}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {ev.overall_score && <span className="text-sm font-bold text-indigo-400">{ev.overall_score as number}/5</span>}
+                    {ev.overall_score && <span className="text-sm font-bold text-indigo-400">{ev.overall_score}/5</span>}
                     <V2Badge color={ev.is_submitted ? 'emerald' : 'amber'}>{ev.is_submitted ? 'Complete' : 'Pending'}</V2Badge>
                   </div>
                 </div>
@@ -828,8 +828,8 @@ function AdminDashboardV2() {
   const applications = appsData?.data || []
   const sites = sitesData?.sites || []
   const pendingJoinRequests = joinReqData?.join_requests || []
-  const openSlots = slots.filter((s: Record<string, unknown>) => s.status === 'open').length
-  const pendingApps = applications.filter((a: Record<string, unknown>) => a.status === 'pending').length
+  const openSlots = slots.filter((s) => s.status === 'open').length
+  const pendingApps = applications.filter((a) => a.status === 'pending').length
 
   if (isLoading) return <V2LoadingSpinner />
 
@@ -877,7 +877,7 @@ function AdminDashboardV2() {
           </div>
           <div className="text-center p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
             <UserCheck className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
-            <p className="text-xl font-bold text-white">{applications.filter((a: Record<string, unknown>) => a.status === 'accepted').length}</p>
+            <p className="text-xl font-bold text-white">{applications.filter((a) => a.status === 'accepted').length}</p>
             <p className="text-[11px] text-slate-500">Active Placements</p>
           </div>
         </div>
@@ -919,15 +919,15 @@ function AdminDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Sites Overview" actionLabel="View All" onAction={() => navigate('/sites')} />
           <div className="space-y-2">
-            {sites.slice(0, 4).map((site: Record<string, unknown>) => (
-              <div key={site.id as string} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+            {sites.slice(0, 4).map((site) => (
+              <div key={site.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
                     <Building2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">{site.name as string}</p>
-                    <p className="text-[11px] text-slate-500">{site.city as string}, {site.state as string} • {(site.specialties as string[])?.slice(0, 2).join(', ')}</p>
+                    <p className="text-sm font-medium text-white">{site.name}</p>
+                    <p className="text-[11px] text-slate-500">{site.city}, {site.state} • {(site.specialties)?.slice(0, 2).join(', ')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
