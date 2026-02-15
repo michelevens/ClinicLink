@@ -6,7 +6,7 @@ import {
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
-  signaturesApi,
+  signaturesApi, subscriptionApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1408,5 +1408,25 @@ export function useCancelSignature() {
 export function useResendSignature() {
   return useMutation({
     mutationFn: signaturesApi.resend,
+  })
+}
+
+// --- Subscriptions ---
+export function useSubscriptionStatus() {
+  return useQuery({
+    queryKey: ['subscription-status'],
+    queryFn: () => subscriptionApi.status(),
+  })
+}
+
+export function useSubscriptionCheckout() {
+  return useMutation({
+    mutationFn: subscriptionApi.checkout,
+  })
+}
+
+export function useSubscriptionPortal() {
+  return useMutation({
+    mutationFn: subscriptionApi.portal,
   })
 }

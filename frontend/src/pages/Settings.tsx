@@ -17,15 +17,16 @@ import {
   CreditCard, ExternalLink, CheckCircle, AlertCircle, RefreshCw
 } from 'lucide-react'
 import { studentApi } from '../services/api.ts'
-import { useConnectStatus, useCreateConnectAccount, useRefreshConnectLink, usePaymentHistory } from '../hooks/useApi.ts'
+import { useConnectStatus, useCreateConnectAccount, useRefreshConnectLink, usePaymentHistory, useSubscriptionStatus, useSubscriptionCheckout, useSubscriptionPortal } from '../hooks/useApi.ts'
 
-type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications' | 'payments'
+type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications' | 'payments' | 'subscription'
 
 const TABS: { key: Tab; label: string; icon: typeof User; roles?: string[] }[] = [
   { key: 'profile', label: 'Profile', icon: User },
   { key: 'academic', label: 'Academic', icon: GraduationCap, roles: ['student'] },
   { key: 'credentials', label: 'Credentials', icon: FileCheck, roles: ['student'] },
   { key: 'payments', label: 'Payments', icon: CreditCard, roles: ['site_manager'] },
+  { key: 'subscription', label: 'Subscription', icon: CreditCard, roles: ['student'] },
   { key: 'security', label: 'Security', icon: Shield },
   { key: 'notifications', label: 'Notifications', icon: Bell },
 ]
@@ -86,6 +87,7 @@ export function Settings() {
           {activeTab === 'academic' && <AcademicTab />}
           {activeTab === 'credentials' && <CredentialsTab />}
           {activeTab === 'payments' && <PaymentsTab />}
+          {activeTab === 'subscription' && <SubscriptionTab />}
           {activeTab === 'security' && <SecurityTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
         </div>
@@ -1126,6 +1128,125 @@ function PaymentsTab() {
           </div>
         )}
       </Card>
+    </div>
+  )
+}
+
+function SubscriptionTab() {
+  const { data: subStatus, isLoading } = useSubscriptionStatus()
+  const checkout = useSubscriptionCheckout()
+  const portal = useSubscriptionPortal()
+
+  const handleUpgrade = (interval: 'month' | 'year') => {
+    checkout.mutate({ plan: 'pro', interval }, {
+      onSuccess: (data) => { window.location.href = data.url },
+      onError: (err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Failed to start checkout'
+        toast.error(message)
+      },
+    })
+  }
+
+  const handleManage = () => {
+    portal.mutate(undefined, {
+      onSuccess: (data) => { window.location.href = data.url },
+      onError: (err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Failed to open billing portal'
+        toast.error(message)
+      },
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        </div>
+      </Card>
+    )
+  }
+
+  const isPro = subStatus?.plan === 'pro'
+  const trialActive = subStatus?.trial_active
+  const needsUpgrade = subStatus?.needs_upgrade
+
+  return (
+    <div className="space-y-6">
+      {/* Current Plan Status */}
+      <Card>
+        <h2 className="text-lg font-semibold text-stone-900 mb-4">Your Plan</h2>
+        <div className={`p-4 rounded-xl border ${
+          needsUpgrade ? 'bg-amber-50 border-amber-200' : isPro ? 'bg-primary-50 border-primary-200' : 'bg-green-50 border-green-200'
+        }`}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-base font-bold text-stone-900 capitalize">{subStatus?.plan || 'free'} Plan</p>
+                <Badge variant={isPro ? 'primary' : needsUpgrade ? 'warning' : 'success'} size="sm">
+                  {isPro ? 'Active' : needsUpgrade ? 'Expired' : 'Active'}
+                </Badge>
+              </div>
+              <p className="text-sm text-stone-500 mt-1">
+                {isPro
+                  ? `Subscription ${subStatus?.subscription_status === 'active' ? 'active' : subStatus?.subscription_status || ''}`
+                  : trialActive && subStatus?.trial_days_remaining !== null
+                    ? `${subStatus.trial_days_remaining} days left in trial · ${subStatus.free_rotations_used}/${subStatus.free_rotations_limit} free rotation used`
+                    : needsUpgrade
+                      ? 'Your free trial has ended. Upgrade to continue applying for rotations.'
+                      : `${subStatus?.free_rotations_used || 0}/${subStatus?.free_rotations_limit || 1} free rotation used`
+                }
+              </p>
+            </div>
+            {isPro && (
+              <Button variant="outline" size="sm" onClick={handleManage} isLoading={portal.isPending}>
+                <ExternalLink className="w-4 h-4" /> Manage Billing
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Upgrade CTA (show for free users) */}
+      {!isPro && (
+        <Card>
+          <h2 className="text-lg font-semibold text-stone-900 mb-4">Upgrade to Pro</h2>
+          <p className="text-sm text-stone-500 mb-6">
+            Get unlimited rotation applications and premium features.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <button
+              onClick={() => handleUpgrade('month')}
+              disabled={checkout.isPending}
+              className="p-4 rounded-xl border-2 border-stone-200 hover:border-primary-300 transition-all text-left"
+            >
+              <p className="text-lg font-bold text-stone-900">$9<span className="text-sm font-normal text-stone-500">/month</span></p>
+              <p className="text-xs text-stone-500 mt-1">Billed monthly, cancel anytime</p>
+            </button>
+            <button
+              onClick={() => handleUpgrade('year')}
+              disabled={checkout.isPending}
+              className="p-4 rounded-xl border-2 border-primary-300 bg-primary-50 hover:bg-primary-100 transition-all text-left relative"
+            >
+              <div className="absolute -top-2.5 right-3">
+                <span className="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-semibold">Save 20%</span>
+              </div>
+              <p className="text-lg font-bold text-stone-900">$86<span className="text-sm font-normal text-stone-500">/year</span></p>
+              <p className="text-xs text-stone-500 mt-1">$7.17/month, billed annually</p>
+            </button>
+          </div>
+          <div className="mt-6">
+            <p className="text-xs font-semibold text-stone-700 mb-2">What's included in Pro:</p>
+            <ul className="grid sm:grid-cols-2 gap-1.5 text-xs text-stone-600">
+              {['Unlimited rotation applications', 'Priority application badge', 'Saved search alerts', 'Advanced analytics & insights', 'Preceptor matching AI', 'Priority support'].map(f => (
+                <li key={f} className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-green-500 shrink-0" /> {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

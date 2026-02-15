@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { useSubscriptionCheckout, useSubscriptionStatus } from '../hooks/useApi.ts'
 import {
-  Check, ArrowRight, Stethoscope, GraduationCap, Building2, BookOpen,
-  Sparkles, Shield, Zap, Users
+  Check, ArrowRight, GraduationCap, Building2, BookOpen,
+  Sparkles, Clock, RotateCcw, Percent
 } from 'lucide-react'
 
 interface Plan {
@@ -13,76 +14,70 @@ interface Plan {
   features: string[]
   highlighted?: boolean
   cta: string
+  badge?: string
+  action?: 'subscribe' | 'register' | 'contact' | 'none'
 }
 
 const STUDENT_PLANS: Plan[] = [
   {
-    name: 'Free',
+    name: 'Free Trial',
     price: '$0',
-    period: 'forever',
-    description: 'Everything you need to find and manage rotations.',
+    period: 'to start',
+    description: '1 free rotation or 3 months — whichever comes first.',
     features: [
+      '1 rotation placement included',
+      '3-month trial period',
       'Search & apply to rotations',
       'Hour logging & tracking',
       'Evaluations & certificates',
       'Secure messaging',
       'Calendar & scheduling',
       'Compliance tracking',
-      'Credential management',
     ],
     cta: 'Get Started Free',
+    action: 'register',
   },
   {
     name: 'Pro',
     price: '$9',
     period: '/month',
-    description: 'Advanced tools for competitive students.',
+    description: 'Unlimited rotations and premium features.',
     features: [
-      'Everything in Free',
+      'Unlimited rotation applications',
+      'Everything in Free Trial',
       'Priority application badge',
       'Saved search alerts',
       'Advanced analytics & insights',
-      'Resume builder & export',
       'Preceptor matching AI',
       'Priority support',
     ],
     highlighted: true,
-    cta: 'Coming Soon',
+    cta: 'Upgrade to Pro',
+    badge: 'Best Value',
+    action: 'subscribe',
   },
 ]
 
 const SITE_PLANS: Plan[] = [
   {
-    name: 'Starter',
+    name: 'Free',
     price: '$0',
     period: 'forever',
-    description: 'List your site and start accepting students.',
+    description: 'List your site and accept students. Free rotations at no cost, paid rotations with a small platform fee.',
     features: [
-      'Up to 5 rotation slots',
+      'Unlimited rotation listings',
+      'Free rotations — no charge ever',
+      'Paid rotations — 10% platform fee',
       'Application management',
-      'Student hour review',
+      'Student hour review & approval',
       'Evaluation tools',
-      'Secure messaging',
-      'Basic compliance tracking',
-    ],
-    cta: 'Get Started Free',
-  },
-  {
-    name: 'Professional',
-    price: '$49',
-    period: '/month',
-    description: 'For growing clinical sites with multiple preceptors.',
-    features: [
-      'Unlimited rotation slots',
-      'Stripe payment processing',
-      'Multi-preceptor management',
       'Onboarding checklists',
-      'Advanced compliance tools',
-      'Analytics & reports',
-      'Priority support',
+      'Secure messaging',
+      'Stripe payouts for paid rotations',
+      'Compliance tracking',
     ],
-    highlighted: true,
-    cta: 'Coming Soon',
+    cta: 'List Your Site Free',
+    action: 'register',
   },
 ]
 
@@ -101,6 +96,7 @@ const UNIVERSITY_PLANS: Plan[] = [
       'Student compliance monitoring',
     ],
     cta: 'Get Started Free',
+    action: 'register',
   },
   {
     name: 'Enterprise',
@@ -119,12 +115,35 @@ const UNIVERSITY_PLANS: Plan[] = [
     ],
     highlighted: true,
     cta: 'Contact Sales',
+    badge: 'Custom',
+    action: 'contact',
   },
 ]
 
-function PlanCard({ plan }: { plan: Plan }) {
+function PlanCard({ plan, onSubscribe, subscribing }: {
+  plan: Plan
+  onSubscribe?: (interval: 'month' | 'year') => void
+  subscribing?: boolean
+}) {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+
+  const handleClick = () => {
+    if (plan.action === 'none') return
+    if (plan.action === 'contact') {
+      window.location.href = 'mailto:sales@cliniclink.health?subject=Enterprise%20Inquiry'
+      return
+    }
+    if (plan.action === 'subscribe') {
+      if (!isAuthenticated) {
+        navigate('/register')
+        return
+      }
+      onSubscribe?.('month')
+      return
+    }
+    navigate(isAuthenticated ? '/dashboard' : '/register')
+  }
 
   return (
     <div className={`relative rounded-2xl border p-6 sm:p-8 flex flex-col transition-all duration-300 ${
@@ -132,10 +151,10 @@ function PlanCard({ plan }: { plan: Plan }) {
         ? 'border-primary-300 bg-white shadow-lg shadow-primary-500/10 scale-[1.02]'
         : 'border-stone-200 bg-white hover:border-stone-300'
     }`}>
-      {plan.highlighted && (
+      {plan.badge && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-semibold">
-            <Sparkles className="w-3 h-3" /> Most Popular
+            <Sparkles className="w-3 h-3" /> {plan.badge}
           </span>
         </div>
       )}
@@ -159,23 +178,18 @@ function PlanCard({ plan }: { plan: Plan }) {
       </ul>
 
       <button
-        onClick={() => {
-          if (plan.cta === 'Coming Soon' || plan.cta === 'Contact Sales') return
-          navigate(isAuthenticated ? '/dashboard' : '/register')
-        }}
-        disabled={plan.cta === 'Coming Soon'}
+        onClick={handleClick}
+        disabled={subscribing}
         className={`w-full py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
           plan.highlighted
-            ? plan.cta === 'Coming Soon'
-              ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600 shadow-md hover:-translate-y-0.5'
-            : plan.cta === 'Contact Sales'
+            ? 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600 shadow-md hover:-translate-y-0.5'
+            : plan.action === 'contact'
               ? 'bg-stone-900 text-white hover:bg-stone-800'
               : 'bg-stone-100 text-stone-900 hover:bg-stone-200'
-        }`}
+        } ${subscribing ? 'opacity-50 cursor-wait' : ''}`}
       >
-        {plan.cta}
-        {plan.cta !== 'Coming Soon' && <ArrowRight className="w-4 h-4" />}
+        {subscribing ? 'Redirecting to Stripe...' : plan.cta}
+        {!subscribing && <ArrowRight className="w-4 h-4" />}
       </button>
     </div>
   )
@@ -183,6 +197,17 @@ function PlanCard({ plan }: { plan: Plan }) {
 
 export function Pricing() {
   const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuth()
+  const checkout = useSubscriptionCheckout()
+  const { data: subStatus } = useSubscriptionStatus()
+
+  const handleSubscribe = (interval: 'month' | 'year') => {
+    checkout.mutate({ plan: 'pro', interval }, {
+      onSuccess: (data) => {
+        window.location.href = data.url
+      },
+    })
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -195,9 +220,78 @@ export function Pricing() {
           Simple, transparent pricing
         </h1>
         <p className="text-lg text-stone-600 max-w-2xl mx-auto">
-          Start free and scale as you grow. No hidden fees, no surprises.
+          Start free. Only pay when you need more.
         </p>
       </section>
+
+      {/* How it works banner */}
+      <section className="px-4 sm:px-6 pb-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-blue-50 border border-blue-100">
+              <Clock className="w-8 h-8 text-blue-500 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-stone-900">3-Month Trial</p>
+                <p className="text-xs text-stone-500">Students start with 3 months free</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-100">
+              <RotateCcw className="w-8 h-8 text-green-500 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-stone-900">1 Free Rotation</p>
+                <p className="text-xs text-stone-500">Your first rotation is always free</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-purple-50 border border-purple-100">
+              <Percent className="w-8 h-8 text-purple-500 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-stone-900">10% Platform Fee</p>
+                <p className="text-xs text-stone-500">Only on paid rotations for sites</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Active subscription status */}
+      {isAuthenticated && user?.role === 'student' && subStatus && (
+        <section className="px-4 sm:px-6 pb-8">
+          <div className="max-w-5xl mx-auto">
+            <div className={`p-4 rounded-xl border ${
+              subStatus.needs_upgrade
+                ? 'bg-amber-50 border-amber-200'
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-stone-900">
+                    Your Plan: <span className="capitalize">{subStatus.plan}</span>
+                  </p>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    {subStatus.trial_active && subStatus.trial_days_remaining !== null
+                      ? `${subStatus.trial_days_remaining} days left in trial`
+                      : subStatus.needs_upgrade
+                        ? 'Free trial ended — upgrade to continue applying'
+                        : subStatus.plan === 'pro'
+                          ? 'Active subscription'
+                          : `${subStatus.free_rotations_used}/${subStatus.free_rotations_limit} free rotation used`
+                    }
+                  </p>
+                </div>
+                {subStatus.needs_upgrade && (
+                  <button
+                    onClick={() => handleSubscribe('month')}
+                    disabled={checkout.isPending}
+                    className="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-semibold hover:bg-primary-600 transition-colors"
+                  >
+                    {checkout.isPending ? 'Redirecting...' : 'Upgrade Now'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* For Students */}
       <section className="py-8 sm:py-12 px-4 sm:px-6">
@@ -212,12 +306,19 @@ export function Pricing() {
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-6">
-            {STUDENT_PLANS.map(plan => <PlanCard key={plan.name} plan={plan} />)}
+            {STUDENT_PLANS.map(plan => (
+              <PlanCard
+                key={plan.name}
+                plan={plan}
+                onSubscribe={handleSubscribe}
+                subscribing={checkout.isPending}
+              />
+            ))}
           </div>
         </div>
       </section>
 
-      {/* For Clinical Sites */}
+      {/* For Clinical Sites & Preceptors */}
       <section className="py-8 sm:py-12 px-4 sm:px-6 bg-white border-y border-stone-200">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-3 mb-8">
@@ -225,12 +326,19 @@ export function Pricing() {
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-stone-900">For Clinical Sites</h2>
-              <p className="text-sm text-stone-500">List rotations, manage students, accept payments</p>
+              <h2 className="text-xl font-bold text-stone-900">For Clinical Sites & Preceptors</h2>
+              <p className="text-sm text-stone-500">List rotations free — only pay a small fee on paid placements</p>
             </div>
           </div>
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div className="max-w-lg mx-auto">
             {SITE_PLANS.map(plan => <PlanCard key={plan.name} plan={plan} />)}
+          </div>
+          <div className="mt-8 text-center">
+            <p className="text-sm text-stone-500">
+              Whether you're a large clinic or an independent preceptor, listing is always free.
+              <br />
+              ClinicLink only takes a 10% platform fee on paid rotation placements.
+            </p>
           </div>
         </div>
       </section>
@@ -260,24 +368,32 @@ export function Pricing() {
           <div className="space-y-6">
             {[
               {
-                q: 'Is ClinicLink really free?',
-                a: 'Yes! All core features are free for students, clinical sites, and universities. Premium plans unlock advanced features like analytics, AI matching, and priority support.',
+                q: 'Is ClinicLink really free for students?',
+                a: 'Yes! Every student gets 1 free rotation and a 3-month trial period (whichever comes first). After that, upgrade to Pro for $9/month for unlimited rotations.',
               },
               {
-                q: 'How does payment processing work?',
-                a: 'Clinical sites can charge fees for rotation placements via Stripe Connect. ClinicLink handles all payment processing, compliance, and payouts. A small platform fee applies to each transaction.',
+                q: 'How does the free trial work?',
+                a: 'When you sign up as a student, you get 3 months of full access plus 1 free rotation placement. Once you\'ve used your free rotation or the 3 months are up, you\'ll need a Pro subscription to apply for more rotations.',
               },
               {
-                q: 'Can I switch plans later?',
-                a: 'Absolutely. You can upgrade or downgrade at any time. Your data is always preserved.',
+                q: 'Is listing a rotation site really free?',
+                a: 'Absolutely. There\'s no subscription fee for clinical sites or preceptors. If you offer free rotations, you pay nothing. For paid rotations, ClinicLink takes a 10% platform fee — you keep 90%. Payouts happen via Stripe.',
               },
               {
-                q: 'What does "Coming Soon" mean?',
-                a: 'Premium plans are in development. Sign up for free today and you\'ll be the first to know when they launch — with early adopter pricing.',
+                q: 'I\'m a solo preceptor, not a big clinic. Can I still use ClinicLink?',
+                a: 'Yes! Whether you\'re an independent preceptor or a large clinic, you can list rotation slots for free. The platform works the same for everyone.',
+              },
+              {
+                q: 'How does payment processing work for paid rotations?',
+                a: 'Clinical sites connect their Stripe account via Stripe Connect. When a student pays for a rotation, ClinicLink processes the payment and transfers 90% directly to the site. The 10% platform fee covers payment processing, compliance, and platform maintenance.',
               },
               {
                 q: 'Is there a discount for annual billing?',
-                a: 'Yes, annual plans will include a 20% discount when premium tiers launch.',
+                a: 'Yes! The Pro plan is $9/month or $86/year (save 20% with annual billing).',
+              },
+              {
+                q: 'What does the university Enterprise plan include?',
+                a: 'Enterprise includes unlimited students and programs, accreditation reporting, SSO integration, and a dedicated account manager. Contact us for custom pricing based on your institution\'s needs.',
               },
             ].map(faq => (
               <div key={faq.q} className="p-5 rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">

@@ -1652,3 +1652,26 @@ export const exportsApi = {
     return `${API_URL}/exports/compliance/pdf?${qs}`
   },
 }
+
+// --- Subscription Types ---
+export interface SubscriptionStatus {
+  plan: 'free' | 'pro'
+  trial_ends_at: string | null
+  trial_active: boolean
+  trial_days_remaining: number | null
+  free_rotations_used: number
+  free_rotations_limit: number
+  needs_upgrade: boolean
+  subscription_status: string | null
+  subscription_ends_at: string | null
+}
+
+// --- Subscriptions ---
+export const subscriptionApi = {
+  status: () =>
+    api.get<SubscriptionStatus>('/subscription/status'),
+  checkout: (data: { plan: 'pro'; interval?: 'month' | 'year' }) =>
+    api.post<{ url: string }>('/subscription/checkout', data),
+  portal: () =>
+    api.post<{ url: string }>('/subscription/portal'),
+}

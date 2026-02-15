@@ -5,7 +5,7 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useSlots, useCreateApplication, useToggleBookmark, useBookmarkedSlots, useCreateSavedSearch } from '../hooks/useApi.ts'
+import { useSlots, useCreateApplication, useToggleBookmark, useBookmarkedSlots, useCreateSavedSearch, useSubscriptionCheckout } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
 import type { ApiSlot } from '../services/api.ts'
@@ -34,9 +34,11 @@ export function RotationSearch() {
   const [showSaveSearch, setShowSaveSearch] = useState(false)
   const [saveSearchName, setSaveSearchName] = useState('')
   const [showSavedSearches, setShowSavedSearches] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   const isStudent = user?.role === 'student'
   const toggleBookmark = useToggleBookmark()
+  const subscriptionCheckout = useSubscriptionCheckout()
   const { data: bookmarkedData } = useBookmarkedSlots()
   const bookmarkedIds = new Set((bookmarkedData?.data || []).map(s => s.id))
   const createSavedSearch = useCreateSavedSearch()
@@ -102,9 +104,22 @@ export function RotationSearch() {
       setSelectedSlot(null)
       setShowDetail(false)
     } catch (err: unknown) {
+      const error = err as Error & { status?: number }
+      if (error.status === 403 && error.message?.includes('upgrade')) {
+        setShowApplyModal(false)
+        setShowUpgradeModal(true)
+        return
+      }
       const message = err instanceof Error ? err.message : 'Failed to submit application'
       toast.error(message)
     }
+  }
+
+  const handleUpgrade = () => {
+    subscriptionCheckout.mutate({ plan: 'pro', interval: 'month' }, {
+      onSuccess: (data) => { window.location.href = data.url },
+      onError: () => { navigate('/pricing') },
+    })
   }
 
   const openDetail = (slot: ApiSlot) => {
@@ -699,6 +714,37 @@ export function RotationSearch() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Upgrade Required Modal */}
+      <Modal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} title="Upgrade Required" size="md">
+        <div className="space-y-4 text-center py-4">
+          <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+            <Star className="w-8 h-8 text-amber-500" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-stone-900">Your free trial has ended</h3>
+            <p className="text-sm text-stone-500 mt-2">
+              You've used your free rotation or your 3-month trial period has expired.
+              Upgrade to Pro for unlimited rotation applications.
+            </p>
+          </div>
+          <div className="bg-stone-50 rounded-xl p-4 text-left">
+            <p className="text-sm font-semibold text-stone-900 mb-2">Pro Plan — $9/month</p>
+            <ul className="text-xs text-stone-600 space-y-1">
+              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Unlimited rotation applications</li>
+              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Priority application badge</li>
+              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Saved search alerts</li>
+              <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Advanced analytics & insights</li>
+            </ul>
+          </div>
+          <div className="flex gap-3 justify-center pt-2">
+            <Button variant="ghost" onClick={() => setShowUpgradeModal(false)}>Maybe Later</Button>
+            <Button onClick={handleUpgrade} isLoading={subscriptionCheckout.isPending}>
+              Upgrade to Pro
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

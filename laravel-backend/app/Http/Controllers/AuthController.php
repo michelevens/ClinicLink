@@ -45,6 +45,7 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
             'is_active' => true,
+            'trial_ends_at' => $validated['role'] === 'student' ? now()->addMonths(3) : null,
         ]);
 
         // Create student profile with university/program affiliation if provided

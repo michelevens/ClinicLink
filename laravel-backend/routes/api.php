@@ -34,6 +34,7 @@ use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AccreditationReportController;
 use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -356,6 +357,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:student')->post('/payments/checkout', [PaymentController::class, 'createCheckoutSession']);
     Route::get('/payments/history', [PaymentController::class, 'paymentHistory']);
     Route::middleware('role:site_manager,admin')->post('/payments/{payment}/refund', [PaymentController::class, 'refund']);
+
+    // Subscriptions
+    Route::get('/subscription/status', [SubscriptionController::class, 'status']);
+    Route::post('/subscription/checkout', [SubscriptionController::class, 'createCheckout']);
+    Route::post('/subscription/portal', [SubscriptionController::class, 'portal']);
 
     // Preceptor Profiles
     Route::get('/preceptor-profiles', [PreceptorProfileController::class, 'directory']);

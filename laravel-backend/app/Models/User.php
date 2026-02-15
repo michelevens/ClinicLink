@@ -32,6 +32,13 @@ class User extends Authenticatable
         'locked_until',
         'stripe_account_id',
         'stripe_onboarded',
+        'plan',
+        'trial_ends_at',
+        'free_rotations_used',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'subscription_status',
+        'subscription_ends_at',
     ];
 
     protected $hidden = [
@@ -53,6 +60,8 @@ class User extends Authenticatable
             'notification_preferences' => 'array',
             'locked_until' => 'datetime',
             'stripe_onboarded' => 'boolean',
+            'trial_ends_at' => 'datetime',
+            'subscription_ends_at' => 'datetime',
         ];
     }
 
@@ -207,6 +216,40 @@ class User extends Authenticatable
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    // Subscription & plan helpers
+
+    public function hasActivePlan(): bool
+    {
+        if ($this->plan !== 'free') {
+            return in_array($this->subscription_status, ['active', 'trialing']);
+        }
+        return $this->isWithinFreeTier();
+    }
+
+    public function isWithinFreeTier(): bool
+    {
+        // Students: 1 free rotation OR 3 months, whichever first
+        if ($this->isStudent()) {
+            $withinTrial = $this->trial_ends_at && $this->trial_ends_at->isFuture();
+            $withinRotationLimit = ($this->free_rotations_used ?? 0) < 1;
+            return $withinTrial && $withinRotationLimit;
+        }
+        // Non-students: free tier has no time limit (universities pay separately)
+        return true;
+    }
+
+    public function needsUpgrade(): bool
+    {
+        if (!$this->isStudent()) return false;
+        if ($this->plan !== 'free') return false;
+        return !$this->isWithinFreeTier();
+    }
+
+    public function incrementRotationsUsed(): void
+    {
+        $this->increment('free_rotations_used');
     }
 
     // Account lockout

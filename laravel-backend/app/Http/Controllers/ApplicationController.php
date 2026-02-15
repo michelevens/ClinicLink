@@ -77,6 +77,13 @@ class ApplicationController extends Controller
             return response()->json(['message' => 'Only students can create applications.'], 403);
         }
 
+        if ($user->needsUpgrade()) {
+            return response()->json([
+                'message' => 'Your free trial has ended. Please upgrade to continue applying for rotations.',
+                'upgrade_required' => true,
+            ], 403);
+        }
+
         $validated = $request->validate([
             'slot_id' => ['required', 'uuid', 'exists:rotation_slots,id'],
             'cover_letter' => ['nullable', 'string', 'max:5000'],
@@ -155,6 +162,9 @@ class ApplicationController extends Controller
             if ($slot->filled >= $slot->capacity) {
                 $slot->update(['status' => 'filled']);
             }
+
+            // Track free rotation usage for student plan limits
+            $application->student->incrementRotationsUsed();
 
             // Auto-create onboarding tasks from site's active template
             $site = $slot->site;
