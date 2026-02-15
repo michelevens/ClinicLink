@@ -12,23 +12,16 @@ import {
   Building2, Users, CalendarDays, TrendingUp, Star,
   GraduationCap, ClipboardCheck, BarChart3, BookOpen, Loader2,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
-  UserCheck, Activity, Eye, Settings, Plus, Stethoscope,
-  ArrowUpRight, Sparkles, Target, Flame,
+  UserCheck, Activity, Eye, Settings, Plus,
+  Target,
 } from 'lucide-react'
 
-// ─── V2 Design Primitives ──────────────────────────────────────
-function V2Card({ children, className = '', glow }: {
-  children: React.ReactNode; className?: string; glow?: 'indigo' | 'cyan' | 'amber' | 'emerald' | 'rose'
+// ─── V2 Design Primitives (Light Theme) ─────────────────────
+function V2Card({ children, className = '' }: {
+  children: React.ReactNode; className?: string; glow?: string
 }) {
-  const glowColors: Record<string, string> = {
-    indigo: 'shadow-indigo-500/5 hover:shadow-indigo-500/10',
-    cyan: 'shadow-cyan-500/5 hover:shadow-cyan-500/10',
-    amber: 'shadow-amber-500/5 hover:shadow-amber-500/10',
-    emerald: 'shadow-emerald-500/5 hover:shadow-emerald-500/10',
-    rose: 'shadow-rose-500/5 hover:shadow-rose-500/10',
-  }
   return (
-    <div className={`bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg transition-all duration-300 hover:border-slate-700 ${glow ? glowColors[glow] : ''} ${className}`}>
+    <div className={`bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${className}`}>
       {children}
     </div>
   )
@@ -36,12 +29,12 @@ function V2Card({ children, className = '', glow }: {
 
 function V2Badge({ children, color = 'slate' }: { children: React.ReactNode; color?: string }) {
   const colors: Record<string, string> = {
-    slate: 'bg-slate-800 text-slate-300',
-    indigo: 'bg-indigo-500/15 text-indigo-400',
-    emerald: 'bg-emerald-500/15 text-emerald-400',
-    amber: 'bg-amber-500/15 text-amber-400',
-    rose: 'bg-rose-500/15 text-rose-400',
-    cyan: 'bg-cyan-500/15 text-cyan-400',
+    slate: 'bg-gray-100 text-gray-600',
+    indigo: 'bg-indigo-50 text-indigo-700',
+    emerald: 'bg-emerald-50 text-emerald-700',
+    amber: 'bg-amber-50 text-amber-700',
+    rose: 'bg-red-50 text-red-700',
+    cyan: 'bg-sky-50 text-sky-700',
   }
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full ${colors[color] || colors.slate}`}>
@@ -53,28 +46,30 @@ function V2Badge({ children, color = 'slate' }: { children: React.ReactNode; col
 function V2StatCard({ icon, label, value, trend, color = 'indigo' }: {
   icon: React.ReactNode; label: string; value: string | number; trend?: string; color?: string
 }) {
-  const accents: Record<string, { bg: string; text: string; glow: string }> = {
-    indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-400', glow: 'shadow-indigo-500/20' },
-    cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-400', glow: 'shadow-cyan-500/20' },
-    emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', glow: 'shadow-emerald-500/20' },
-    amber: { bg: 'bg-amber-500/10', text: 'text-amber-400', glow: 'shadow-amber-500/20' },
-    rose: { bg: 'bg-rose-500/10', text: 'text-rose-400', glow: 'shadow-rose-500/20' },
+  const accents: Record<string, { bg: string; text: string }> = {
+    indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600' },
+    cyan: { bg: 'bg-sky-50', text: 'text-sky-600' },
+    emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+    amber: { bg: 'bg-amber-50', text: 'text-amber-600' },
+    rose: { bg: 'bg-red-50', text: 'text-red-600' },
   }
   const a = accents[color] || accents.indigo
   return (
     <V2Card>
-      <div className="flex items-start justify-between">
-        <div className={`w-10 h-10 rounded-xl ${a.bg} flex items-center justify-center ${a.text}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          {trend && (
+            <div className="flex items-center mt-1 text-xs font-medium text-emerald-600">
+              <TrendingUp className="w-3 h-3 mr-0.5" />{trend}
+            </div>
+          )}
+        </div>
+        <div className={`w-12 h-12 rounded-lg ${a.bg} flex items-center justify-center ${a.text}`}>
           {icon}
         </div>
-        {trend && (
-          <span className="flex items-center gap-0.5 text-xs font-medium text-emerald-400">
-            <TrendingUp className="w-3 h-3" />{trend}
-          </span>
-        )}
       </div>
-      <p className="text-2xl font-bold text-white mt-3">{value}</p>
-      <p className="text-xs text-slate-500 mt-0.5">{label}</p>
     </V2Card>
   )
 }
@@ -82,10 +77,10 @@ function V2StatCard({ icon, label, value, trend, color = 'indigo' }: {
 function V2SectionHeader({ title, actionLabel, onAction }: { title: string; actionLabel?: string; onAction?: () => void }) {
   return (
     <div className="flex items-center justify-between mb-4">
-      <h3 className="font-semibold text-white text-sm">{title}</h3>
+      <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
       {actionLabel && onAction && (
-        <button onClick={onAction} className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1 transition-colors">
-          {actionLabel} <ArrowUpRight className="w-3 h-3" />
+        <button onClick={onAction} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 transition-colors">
+          {actionLabel} <ArrowRight className="w-3 h-3" />
         </button>
       )}
     </div>
@@ -96,18 +91,18 @@ function V2QuickAction({ icon, label, onClick, color = 'indigo' }: {
   icon: React.ReactNode; label: string; onClick: () => void; color?: string
 }) {
   const accents: Record<string, string> = {
-    indigo: 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 border-indigo-500/20',
-    cyan: 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border-cyan-500/20',
-    emerald: 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/20',
-    amber: 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border-amber-500/20',
-    rose: 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border-rose-500/20',
+    indigo: 'border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-700 hover:text-indigo-700',
+    cyan: 'border-gray-200 hover:border-sky-300 hover:bg-sky-50 text-gray-700 hover:text-sky-700',
+    emerald: 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700',
+    amber: 'border-gray-200 hover:border-amber-300 hover:bg-amber-50 text-gray-700 hover:text-amber-700',
+    rose: 'border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-700 hover:text-red-700',
   }
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${accents[color] || accents.indigo}`}
+      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 group ${accents[color] || accents.indigo}`}
     >
-      {icon}
+      <div className="group-hover:scale-110 transition-transform">{icon}</div>
       <span className="text-xs font-medium">{label}</span>
     </button>
   )
@@ -116,7 +111,7 @@ function V2QuickAction({ icon, label, onClick, color = 'indigo' }: {
 function V2LoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
     </div>
   )
 }
@@ -128,23 +123,23 @@ function V2ActionBanner({ items }: {
   if (actionItems.length === 0) return null
 
   return (
-    <V2Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-orange-500/5">
+    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-500 rounded-r-xl p-4">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-          <AlertTriangle className="w-5 h-5 text-amber-400" />
+        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+          <AlertTriangle className="w-5 h-5 text-amber-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-amber-300 text-sm">Action Required</p>
+          <p className="font-semibold text-amber-800 text-sm">Action Required</p>
           <div className="mt-2 space-y-2">
             {actionItems.map((item, i) => (
               <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold flex-shrink-0">{item.count}</span>
-                  <span className="text-xs text-amber-200/70">{item.label}</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-200 text-amber-800 text-[10px] font-bold flex-shrink-0">{item.count}</span>
+                  <span className="text-sm text-amber-700">{item.label}</span>
                 </div>
                 <button
                   onClick={item.onClick}
-                  className="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg border border-amber-500/20 transition-all"
+                  className="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-800 bg-white/60 hover:bg-white px-3 py-1.5 rounded-lg border border-amber-200 transition-all"
                 >
                   {item.buttonLabel} <ArrowRight className="w-3 h-3" />
                 </button>
@@ -153,7 +148,7 @@ function V2ActionBanner({ items }: {
           </div>
         </div>
       </div>
-    </V2Card>
+    </div>
   )
 }
 
@@ -190,15 +185,10 @@ function StudentDashboardV2() {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
-            <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">Student Portal</span>
-          </div>
-          <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || 'Student'}</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Track your clinical rotation progress and manage placements.</p>
-        </div>
+      <div>
+        <p className="text-sm text-gray-500 mb-0.5">Student Portal</p>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || 'Student'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Track your clinical rotation progress and manage placements.</p>
       </div>
 
       {/* Stats Grid */}
@@ -215,31 +205,31 @@ function StudentDashboardV2() {
         { label: 'hour log(s) pending review', count: pendingCount, onClick: () => navigate('/hours'), buttonLabel: 'View' },
       ]} />
 
-      {/* Hours Progress - Bento Full Width */}
-      <V2Card glow="indigo">
+      {/* Hours Progress */}
+      <V2Card>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-indigo-400" />
-            <h3 className="font-semibold text-white text-sm">Clinical Hours Progress</h3>
+            <Target className="w-4 h-4 text-indigo-600" />
+            <h3 className="font-semibold text-gray-900 text-sm">Clinical Hours Progress</h3>
           </div>
-          <span className="text-sm font-bold text-indigo-400">{requiredHours > 0 ? `${progressPct}%` : 'N/A'}</span>
+          <span className="text-sm font-bold text-indigo-600">{requiredHours > 0 ? `${progressPct}%` : 'N/A'}</span>
         </div>
-        <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
           {requiredHours > 0 ? (
             <div className="h-full flex">
               {priorHours > 0 && (
-                <div className="h-full bg-slate-600 transition-all duration-700" style={{ width: `${Math.min((priorHours / requiredHours) * 100, 100)}%` }} />
+                <div className="h-full bg-gray-300 transition-all duration-700" style={{ width: `${Math.min((priorHours / requiredHours) * 100, 100)}%` }} />
               )}
               <div
-                className="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 transition-all duration-700"
+                className="h-full bg-gradient-to-r from-indigo-500 to-sky-400 transition-all duration-700"
                 style={{ width: `${Math.min((approvedHours / requiredHours) * 100, 100 - (priorHours / requiredHours) * 100)}%` }}
               />
             </div>
           ) : (
-            <div className="h-full bg-slate-700 rounded-full" />
+            <div className="h-full bg-gray-200 rounded-full" />
           )}
         </div>
-        <div className="flex flex-col sm:flex-row justify-between mt-2 text-[11px] text-slate-500 gap-1">
+        <div className="flex flex-col sm:flex-row justify-between mt-2 text-xs text-gray-500 gap-1">
           {priorHours > 0 && <span>{priorHours} prior</span>}
           <span>{approvedHours} approved{priorHours > 0 ? ' on platform' : ''}</span>
           <span>{platformHours - approvedHours > 0 ? `${platformHours - approvedHours} pending` : ''}</span>
@@ -247,35 +237,34 @@ function StudentDashboardV2() {
         </div>
       </V2Card>
 
-      {/* Bento Grid: Compliance + Quick Actions */}
+      {/* Compliance + Quick Actions */}
       <div className="grid lg:grid-cols-2 gap-4">
-        {/* Credential Compliance */}
-        <V2Card glow="emerald">
+        <V2Card>
           <V2SectionHeader title="Credential Compliance" actionLabel="Manage" onAction={() => navigate('/settings')} />
-          <div className={`flex items-center gap-3 p-4 rounded-xl ${
-            expiredCreds.length > 0 ? 'bg-rose-500/10 border border-rose-500/20' :
-            expiringSoonCreds.length > 0 ? 'bg-amber-500/10 border border-amber-500/20' :
-            'bg-emerald-500/10 border border-emerald-500/20'
+          <div className={`flex items-center gap-3 p-4 rounded-lg ${
+            expiredCreds.length > 0 ? 'bg-red-50 border border-red-200' :
+            expiringSoonCreds.length > 0 ? 'bg-amber-50 border border-amber-200' :
+            'bg-emerald-50 border border-emerald-200'
           }`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              expiredCreds.length > 0 ? 'bg-rose-500/20 text-rose-400' :
-              expiringSoonCreds.length > 0 ? 'bg-amber-500/20 text-amber-400' :
-              'bg-emerald-500/20 text-emerald-400'
+              expiredCreds.length > 0 ? 'bg-red-100 text-red-600' :
+              expiringSoonCreds.length > 0 ? 'bg-amber-100 text-amber-600' :
+              'bg-emerald-100 text-emerald-600'
             }`}>
               <Shield className="w-5 h-5" />
             </div>
             <div>
               <p className={`font-semibold text-sm ${
-                expiredCreds.length > 0 ? 'text-rose-300' :
-                expiringSoonCreds.length > 0 ? 'text-amber-300' :
-                'text-emerald-300'
+                expiredCreds.length > 0 ? 'text-red-800' :
+                expiringSoonCreds.length > 0 ? 'text-amber-800' :
+                'text-emerald-800'
               }`}>
                 {expiredCreds.length > 0 ? 'Action Required' : expiringSoonCreds.length > 0 ? 'Expiring Soon' : 'All Current'}
               </p>
               <p className={`text-xs ${
-                expiredCreds.length > 0 ? 'text-rose-400/70' :
-                expiringSoonCreds.length > 0 ? 'text-amber-400/70' :
-                'text-emerald-400/70'
+                expiredCreds.length > 0 ? 'text-red-600' :
+                expiringSoonCreds.length > 0 ? 'text-amber-600' :
+                'text-emerald-600'
               }`}>
                 {expiredCreds.length > 0 ? `${expiredCreds.length} expired` :
                  expiringSoonCreds.length > 0 ? `${expiringSoonCreds.length} expiring soon` :
@@ -286,8 +275,8 @@ function StudentDashboardV2() {
           {(expiredCreds.length > 0 || expiringSoonCreds.length > 0) && (
             <div className="mt-3 space-y-2">
               {[...expiredCreds, ...expiringSoonCreds].slice(0, 3).map((c) => (
-                <div key={c.id} className="flex items-center justify-between text-sm p-2 bg-slate-800/50 rounded-lg">
-                  <span className="text-slate-300 text-xs">{c.name}</span>
+                <div key={c.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded-lg">
+                  <span className="text-gray-700 text-xs">{c.name}</span>
                   <V2Badge color={c.status === 'expired' ? 'rose' : 'amber'}>
                     {c.status === 'expired' ? 'Expired' : 'Expiring'}
                   </V2Badge>
@@ -297,9 +286,8 @@ function StudentDashboardV2() {
           )}
         </V2Card>
 
-        {/* Quick Actions */}
         <V2Card>
-          <h3 className="font-semibold text-white text-sm mb-4">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 text-sm mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <V2QuickAction icon={<Search className="w-5 h-5" />} label="Search Rotations" onClick={() => navigate('/rotations')} color="indigo" />
             <V2QuickAction icon={<Clock className="w-5 h-5" />} label="Log Hours" onClick={() => navigate('/hours')} color="cyan" />
@@ -309,26 +297,26 @@ function StudentDashboardV2() {
         </V2Card>
       </div>
 
-      {/* Bento Grid: Active Rotations + Recent Evaluations */}
+      {/* Active Rotations + Recent Evaluations */}
       <div className="grid lg:grid-cols-2 gap-4">
         <V2Card>
           <V2SectionHeader title="Active Rotations" actionLabel="All Applications" onAction={() => navigate('/applications')} />
           <div className="space-y-2">
-            {activeRotations.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No active rotations. Search to get started!</p>}
+            {activeRotations.length === 0 && <p className="text-xs text-gray-400 py-4 text-center">No active rotations. Search to get started!</p>}
             {activeRotations.slice(0, 3).map((app) => {
               const slot = app.slot
               const site = slot?.site
               return (
-                <div key={app.id} className="p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-start justify-between mb-1">
                     <div>
-                      <p className="text-sm font-medium text-white">{(slot?.title) || 'Rotation'}</p>
-                      <p className="text-[11px] text-slate-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> {site?.name}</p>
+                      <p className="text-sm font-medium text-gray-900">{(slot?.title) || 'Rotation'}</p>
+                      <p className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" /> {site?.name}</p>
                     </div>
                     <V2Badge color="emerald">Active</V2Badge>
                   </div>
                   {slot && (
-                    <div className="flex items-center gap-3 text-[11px] text-slate-600 mt-1">
+                    <div className="flex items-center gap-3 text-xs text-gray-400 mt-1">
                       <span>{slot.specialty}</span>
                       <span>{new Date(slot.start_date).toLocaleDateString()} - {new Date(slot.end_date).toLocaleDateString()}</span>
                     </div>
@@ -342,20 +330,20 @@ function StudentDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Recent Evaluations" actionLabel="View All" onAction={() => navigate('/evaluations')} />
           <div className="space-y-2">
-            {evaluations.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No evaluations yet.</p>}
+            {evaluations.length === 0 && <p className="text-xs text-gray-400 py-4 text-center">No evaluations yet.</p>}
             {evaluations.slice(0, 3).map((ev) => {
               const slot = ev.slot
               const preceptor = ev.preceptor
               return (
-                <div key={ev.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={ev.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-gray-900">
                       {ev.type === 'mid_rotation' ? 'Mid-Rotation' : ev.type === 'final' ? 'Final' : 'Feedback'} Eval
                     </p>
-                    <p className="text-[11px] text-slate-500">{(slot?.title) || 'Rotation'} {preceptor ? `• ${preceptor.first_name} ${preceptor.last_name}` : ''}</p>
+                    <p className="text-xs text-gray-500">{(slot?.title) || 'Rotation'} {preceptor ? `• ${preceptor.first_name} ${preceptor.last_name}` : ''}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-indigo-400">{ev.overall_score ? `${ev.overall_score}/5` : '—'}</p>
+                    <p className="text-lg font-bold text-indigo-600">{ev.overall_score ? `${ev.overall_score}/5` : '—'}</p>
                     <V2Badge color={ev.is_submitted ? 'emerald' : 'amber'}>{ev.is_submitted ? 'Complete' : 'Pending'}</V2Badge>
                   </div>
                 </div>
@@ -393,12 +381,9 @@ function SiteManagerDashboardV2() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Building2 className="w-5 h-5 text-cyan-400" />
-          <span className="text-xs font-medium text-cyan-400 uppercase tracking-wider">Site Manager</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || 'Manager'}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Manage your clinical sites, rotation slots, and placements.</p>
+        <p className="text-sm text-gray-500 mb-0.5">Site Manager</p>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || 'Manager'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Manage your clinical sites, rotation slots, and placements.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -415,7 +400,7 @@ function SiteManagerDashboardV2() {
       ]} />
 
       {slots.length > 0 && (
-        <V2Card glow="cyan">
+        <V2Card>
           <V2SectionHeader title="Slot Occupancy" actionLabel="Manage Slots" onAction={() => navigate('/slots')} />
           <div className="space-y-3">
             {slots.slice(0, 5).map((slot) => {
@@ -426,11 +411,11 @@ function SiteManagerDashboardV2() {
                 <div key={slot.id} className="flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-white truncate">{slot.title}</p>
-                      <span className="text-[11px] text-slate-500 ml-2">{filled}/{capacity}</span>
+                      <p className="text-sm font-medium text-gray-900 truncate">{slot.title}</p>
+                      <span className="text-xs text-gray-500 ml-2">{filled}/{capacity}</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${occupancy >= 100 ? 'bg-rose-400' : occupancy >= 75 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(occupancy, 100)}%` }} />
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${occupancy >= 100 ? 'bg-red-400' : occupancy >= 75 ? 'bg-amber-400' : 'bg-emerald-400'}`} style={{ width: `${Math.min(occupancy, 100)}%` }} />
                     </div>
                   </div>
                   <V2Badge color={slot.status === 'open' ? 'emerald' : slot.status === 'filled' ? 'amber' : 'slate'}>{slot.status}</V2Badge>
@@ -443,7 +428,7 @@ function SiteManagerDashboardV2() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         <V2Card>
-          <h3 className="font-semibold text-white text-sm mb-4">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 text-sm mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <V2QuickAction icon={<Plus className="w-5 h-5" />} label="Create Slot" onClick={() => navigate('/slots')} color="indigo" />
             <V2QuickAction icon={<FileText className="w-5 h-5" />} label="Review Apps" onClick={() => navigate('/site-applications')} color="cyan" />
@@ -455,15 +440,15 @@ function SiteManagerDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Pending Applications" actionLabel="View All" onAction={() => navigate('/site-applications')} />
           <div className="space-y-2">
-            {pendingApps.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No pending applications.</p>}
+            {pendingApps.length === 0 && <p className="text-xs text-gray-400 py-4 text-center">No pending applications.</p>}
             {pendingApps.slice(0, 4).map((app) => {
               const student = app.student
               const slot = app.slot
               return (
-                <div key={app.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name}</p>
-                    <p className="text-[11px] text-slate-500">{slot?.title} • {slot?.specialty}</p>
+                    <p className="text-sm font-medium text-gray-900">{student?.first_name} {student?.last_name}</p>
+                    <p className="text-xs text-gray-500">{slot?.title} • {slot?.specialty}</p>
                   </div>
                   <V2Badge color="amber">Pending</V2Badge>
                 </div>
@@ -510,12 +495,9 @@ function PreceptorDashboardV2() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Stethoscope className="w-5 h-5 text-emerald-400" />
-          <span className="text-xs font-medium text-emerald-400 uppercase tracking-wider">Preceptor</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || 'Preceptor'}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Manage students, review hours, and complete evaluations.</p>
+        <p className="text-sm text-gray-500 mb-0.5">Preceptor</p>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || 'Preceptor'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Manage students, review hours, and complete evaluations.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -537,19 +519,19 @@ function PreceptorDashboardV2() {
           {pendingInvites.map((invite) => {
             const site = invite.site
             return (
-              <V2Card key={invite.id} className="border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 to-purple-500/5">
+              <V2Card key={invite.id} className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-500/15 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-6 h-6 text-indigo-400" />
+                  <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-6 h-6 text-indigo-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">Site Invitation</p>
-                    <p className="font-semibold text-white">{site.name}</p>
-                    <p className="text-xs text-slate-500">{site.city}, {site.state}</p>
+                    <p className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mb-0.5">Site Invitation</p>
+                    <p className="font-semibold text-gray-900">{site.name}</p>
+                    <p className="text-xs text-gray-500">{site.city}, {site.state}</p>
                   </div>
                   <button
                     onClick={() => handleAcceptInvite(invite.token, site.name)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-all"
                   >
                     <CheckCircle className="w-4 h-4" /> Accept & Join
                   </button>
@@ -562,7 +544,7 @@ function PreceptorDashboardV2() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         <V2Card>
-          <h3 className="font-semibold text-white text-sm mb-4">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 text-sm mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <V2QuickAction icon={<Clock className="w-5 h-5" />} label="Review Hours" onClick={() => navigate('/hours')} color="amber" />
             <V2QuickAction icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations" onClick={() => navigate('/evaluations')} color="cyan" />
@@ -574,14 +556,14 @@ function PreceptorDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Pending Hour Reviews" actionLabel="Review All" onAction={() => navigate('/hours')} />
           <div className="space-y-2">
-            {pendingHours.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">All caught up!</p>}
+            {pendingHours.length === 0 && <p className="text-xs text-gray-400 py-4 text-center">All caught up!</p>}
             {pendingHours.slice(0, 5).map((h) => {
               const slot = h.slot
               return (
-                <div key={h.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={h.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-white">{h.hours_worked}h — {(h.category).replace('_', ' ')}</p>
-                    <p className="text-[11px] text-slate-500">{new Date(h.date).toLocaleDateString()} • {slot?.title}</p>
+                    <p className="text-sm font-medium text-gray-900">{h.hours_worked}h — {(h.category).replace('_', ' ')}</p>
+                    <p className="text-xs text-gray-500">{new Date(h.date).toLocaleDateString()} • {slot?.title}</p>
                   </div>
                   <V2Badge color="amber">Pending</V2Badge>
                 </div>
@@ -621,12 +603,9 @@ function CoordinatorDashboardV2() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <GraduationCap className="w-5 h-5 text-indigo-400" />
-          <span className="text-xs font-medium text-indigo-400 uppercase tracking-wider">Coordinator</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || 'Coordinator'}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Monitor student placements, compliance, and site partnerships.</p>
+        <p className="text-sm text-gray-500 mb-0.5">Coordinator</p>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || 'Coordinator'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Monitor student placements, compliance, and site partnerships.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -643,34 +622,34 @@ function CoordinatorDashboardV2() {
       ]} />
 
       {/* Placement Pipeline */}
-      <V2Card glow="indigo">
+      <V2Card>
         <V2SectionHeader title="Placement Pipeline" />
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-slate-500">Placement Rate</span>
-          <span className="text-sm font-bold text-indigo-400">{placementRate}%</span>
+          <span className="text-xs text-gray-500">Placement Rate</span>
+          <span className="text-sm font-bold text-indigo-600">{placementRate}%</span>
         </div>
-        <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+        <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-700" style={{ width: `${placementRate}%` }} />
         </div>
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <div className="text-center p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-            <p className="text-xl font-bold text-emerald-400">{placedStudents}</p>
-            <p className="text-[11px] text-emerald-400/70">Placed</p>
+          <div className="text-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+            <p className="text-xl font-bold text-emerald-700">{placedStudents}</p>
+            <p className="text-xs text-emerald-600">Placed</p>
           </div>
-          <div className="text-center p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-            <p className="text-xl font-bold text-amber-400">{pendingApps.length}</p>
-            <p className="text-[11px] text-amber-400/70">Pending</p>
+          <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <p className="text-xl font-bold text-amber-700">{pendingApps.length}</p>
+            <p className="text-xs text-amber-600">Pending</p>
           </div>
-          <div className="text-center p-3 bg-slate-800 rounded-xl border border-slate-700">
-            <p className="text-xl font-bold text-slate-300">{unplacedStudents}</p>
-            <p className="text-[11px] text-slate-500">Unplaced</p>
+          <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-xl font-bold text-gray-700">{unplacedStudents}</p>
+            <p className="text-xs text-gray-500">Unplaced</p>
           </div>
         </div>
       </V2Card>
 
       <div className="grid lg:grid-cols-2 gap-4">
         <V2Card>
-          <h3 className="font-semibold text-white text-sm mb-4">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 text-sm mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <V2QuickAction icon={<Users className="w-5 h-5" />} label="My Students" onClick={() => navigate('/students')} color="indigo" />
             <V2QuickAction icon={<GraduationCap className="w-5 h-5" />} label="Placements" onClick={() => navigate('/placements')} color="emerald" />
@@ -682,16 +661,16 @@ function CoordinatorDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Recent Applications" actionLabel="View All" onAction={() => navigate('/placements')} />
           <div className="space-y-2">
-            {applications.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No applications to review.</p>}
+            {applications.length === 0 && <p className="text-xs text-gray-400 py-4 text-center">No applications to review.</p>}
             {applications.slice(0, 5).map((app) => {
               const student = app.student
               const slot = app.slot
               const site = slot?.site
               return (
-                <div key={app.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name}</p>
-                    <p className="text-[11px] text-slate-500">{slot?.title} • {site?.name}</p>
+                    <p className="text-sm font-medium text-gray-900">{student?.first_name} {student?.last_name}</p>
+                    <p className="text-xs text-gray-500">{slot?.title} • {site?.name}</p>
                   </div>
                   <V2Badge color={app.status === 'accepted' ? 'emerald' : app.status === 'pending' ? 'amber' : app.status === 'declined' ? 'rose' : 'slate'}>
                     {app.status}
@@ -727,12 +706,9 @@ function ProfessorDashboardV2() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <BookOpen className="w-5 h-5 text-rose-400" />
-          <span className="text-xs font-medium text-rose-400 uppercase tracking-wider">Professor</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white">Welcome back, {user?.firstName || 'Professor'}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Monitor students' clinical progress and evaluations.</p>
+        <p className="text-sm text-gray-500 mb-0.5">Professor</p>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || 'Professor'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Monitor students' clinical progress and evaluations.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -748,7 +724,7 @@ function ProfessorDashboardV2() {
 
       <div className="grid lg:grid-cols-2 gap-4">
         <V2Card>
-          <h3 className="font-semibold text-white text-sm mb-4">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 text-sm mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <V2QuickAction icon={<Users className="w-5 h-5" />} label="My Students" onClick={() => navigate('/students')} color="indigo" />
             <V2QuickAction icon={<ClipboardCheck className="w-5 h-5" />} label="Evaluations" onClick={() => navigate('/evaluations')} color="cyan" />
@@ -760,20 +736,20 @@ function ProfessorDashboardV2() {
         <V2Card>
           <V2SectionHeader title="Student Placements" actionLabel="View All" onAction={() => navigate('/students')} />
           <div className="space-y-2">
-            {activeStudents.length === 0 && <p className="text-xs text-slate-600 py-4 text-center">No active placements to monitor.</p>}
+            {activeStudents.length === 0 && <p className="text-xs text-gray-400 py-4 text-center">No active placements to monitor.</p>}
             {activeStudents.slice(0, 5).map((app) => {
               const student = app.student
               const slot = app.slot
               const site = slot?.site
               return (
-                <div key={app.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={app.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center text-white text-[10px] font-bold">
+                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-[10px] font-bold">
                       {(student?.first_name)?.[0] || ''}{(student?.last_name)?.[0] || ''}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name}</p>
-                      <p className="text-[11px] text-slate-500">{slot?.title} • {site?.name}</p>
+                      <p className="text-sm font-medium text-gray-900">{student?.first_name} {student?.last_name}</p>
+                      <p className="text-xs text-gray-500">{slot?.title} • {site?.name}</p>
                     </div>
                   </div>
                   <V2Badge color="emerald">Active</V2Badge>
@@ -793,13 +769,13 @@ function ProfessorDashboardV2() {
               const slot = ev.slot
               const preceptor = ev.preceptor
               return (
-                <div key={ev.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                <div key={ev.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                   <div>
-                    <p className="text-sm font-medium text-white">{student?.first_name} {student?.last_name} — {ev.type === 'mid_rotation' ? 'Mid-Rotation' : ev.type === 'final' ? 'Final' : 'Feedback'}</p>
-                    <p className="text-[11px] text-slate-500">{slot?.title} • by {preceptor?.first_name} {preceptor?.last_name}</p>
+                    <p className="text-sm font-medium text-gray-900">{student?.first_name} {student?.last_name} — {ev.type === 'mid_rotation' ? 'Mid-Rotation' : ev.type === 'final' ? 'Final' : 'Feedback'}</p>
+                    <p className="text-xs text-gray-500">{slot?.title} • by {preceptor?.first_name} {preceptor?.last_name}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {ev.overall_score && <span className="text-sm font-bold text-indigo-400">{ev.overall_score}/5</span>}
+                    {ev.overall_score && <span className="text-sm font-bold text-indigo-600">{ev.overall_score}/5</span>}
                     <V2Badge color={ev.is_submitted ? 'emerald' : 'amber'}>{ev.is_submitted ? 'Complete' : 'Pending'}</V2Badge>
                   </div>
                 </div>
@@ -836,12 +812,9 @@ function AdminDashboardV2() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-2 mb-1">
-          <Flame className="w-5 h-5 text-rose-400" />
-          <span className="text-xs font-medium text-rose-400 uppercase tracking-wider">Admin</span>
-        </div>
-        <h1 className="text-2xl font-bold text-white">Welcome, {user?.firstName || 'Admin'}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Platform overview — manage users, sites, and monitor system health.</p>
+        <p className="text-sm text-gray-500 mb-0.5">Admin</p>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome, {user?.firstName || 'Admin'}</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Platform overview — manage users, sites, and monitor system health.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -857,35 +830,35 @@ function AdminDashboardV2() {
       ]} />
 
       {/* Platform Activity */}
-      <V2Card glow="indigo">
+      <V2Card>
         <V2SectionHeader title="Platform Activity" />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="text-center p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-            <Activity className="w-5 h-5 text-indigo-400 mx-auto mb-2" />
-            <p className="text-xl font-bold text-white">{stats?.recent_applications || applications.length}</p>
-            <p className="text-[11px] text-slate-500">Total Applications</p>
+          <div className="text-center p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+            <Activity className="w-5 h-5 text-indigo-600 mx-auto mb-2" />
+            <p className="text-xl font-bold text-gray-900">{stats?.recent_applications || applications.length}</p>
+            <p className="text-xs text-gray-500">Total Applications</p>
           </div>
-          <div className="text-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-            <FileText className="w-5 h-5 text-amber-400 mx-auto mb-2" />
-            <p className="text-xl font-bold text-white">{pendingApps}</p>
-            <p className="text-[11px] text-slate-500">Pending Review</p>
+          <div className="text-center p-4 bg-amber-50 rounded-lg border border-amber-100">
+            <FileText className="w-5 h-5 text-amber-600 mx-auto mb-2" />
+            <p className="text-xl font-bold text-gray-900">{pendingApps}</p>
+            <p className="text-xs text-gray-500">Pending Review</p>
           </div>
-          <div className="text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-            <CalendarDays className="w-5 h-5 text-emerald-400 mx-auto mb-2" />
-            <p className="text-xl font-bold text-white">{openSlots}</p>
-            <p className="text-[11px] text-slate-500">Open Slots</p>
+          <div className="text-center p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+            <CalendarDays className="w-5 h-5 text-emerald-600 mx-auto mb-2" />
+            <p className="text-xl font-bold text-gray-900">{openSlots}</p>
+            <p className="text-xs text-gray-500">Open Slots</p>
           </div>
-          <div className="text-center p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-            <UserCheck className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
-            <p className="text-xl font-bold text-white">{applications.filter((a) => a.status === 'accepted').length}</p>
-            <p className="text-[11px] text-slate-500">Active Placements</p>
+          <div className="text-center p-4 bg-sky-50 rounded-lg border border-sky-100">
+            <UserCheck className="w-5 h-5 text-sky-600 mx-auto mb-2" />
+            <p className="text-xl font-bold text-gray-900">{applications.filter((a) => a.status === 'accepted').length}</p>
+            <p className="text-xs text-gray-500">Active Placements</p>
           </div>
         </div>
       </V2Card>
 
       <div className="grid lg:grid-cols-2 gap-4">
         <V2Card>
-          <h3 className="font-semibold text-white text-sm mb-4">Quick Actions</h3>
+          <h3 className="font-semibold text-gray-900 text-sm mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <V2QuickAction icon={<Users className="w-5 h-5" />} label="Manage Users" onClick={() => navigate('/admin/users')} color="indigo" />
             <V2QuickAction icon={<Building2 className="w-5 h-5" />} label="Sites Directory" onClick={() => navigate('/sites')} color="cyan" />
@@ -903,11 +876,11 @@ function AdminDashboardV2() {
               { label: 'Auth Service', value: 'Active', ok: true },
               { label: 'Email Service', value: 'Active', ok: true },
             ].map(item => (
-              <div key={item.label} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
-                <span className="text-xs text-slate-400">{item.label}</span>
+              <div key={item.label} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-600">{item.label}</span>
                 <div className="flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${item.ok ? 'bg-emerald-400' : 'bg-rose-400'} shadow-lg ${item.ok ? 'shadow-emerald-500/50' : 'shadow-rose-500/50'}`} />
-                  <span className={`text-xs font-medium ${item.ok ? 'text-emerald-400' : 'text-rose-400'}`}>{item.value}</span>
+                  <div className={`w-2 h-2 rounded-full ${item.ok ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                  <span className={`text-xs font-medium ${item.ok ? 'text-emerald-600' : 'text-red-600'}`}>{item.value}</span>
                 </div>
               </div>
             ))}
@@ -920,20 +893,20 @@ function AdminDashboardV2() {
           <V2SectionHeader title="Sites Overview" actionLabel="View All" onAction={() => navigate('/sites')} />
           <div className="space-y-2">
             {sites.slice(0, 4).map((site) => (
-              <div key={site.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+              <div key={site.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100">
                     <Building2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-white">{site.name}</p>
-                    <p className="text-[11px] text-slate-500">{site.city}, {site.state} • {(site.specialties)?.slice(0, 2).join(', ')}</p>
+                    <p className="text-sm font-medium text-gray-900">{site.name}</p>
+                    <p className="text-xs text-gray-500">{site.city}, {site.state} • {(site.specialties)?.slice(0, 2).join(', ')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {site.is_verified && <V2Badge color="emerald">Verified</V2Badge>}
                   {Number(site.rating) > 0 && (
-                    <span className="text-xs text-amber-400 flex items-center gap-1">
+                    <span className="text-xs text-amber-600 flex items-center gap-1">
                       <Star className="w-3 h-3 fill-current" />{Number(site.rating).toFixed(1)}
                     </span>
                   )}

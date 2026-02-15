@@ -73,9 +73,9 @@ describe('MainLayout', () => {
     expect(layoutDiv).toBeInTheDocument()
   })
 
-  it('renders V2 layout with slate-950 background', () => {
+  it('renders V2 layout with gray-50 background', () => {
     const { container } = renderWithProviders('v2')
-    const layoutDiv = container.querySelector('.bg-slate-950')
+    const layoutDiv = container.querySelector('.bg-gray-50')
     expect(layoutDiv).toBeInTheDocument()
   })
 
