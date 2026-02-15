@@ -12,7 +12,7 @@ import {
   Building2, Users, CalendarDays, TrendingUp, Star,
   GraduationCap, ClipboardCheck, BarChart3, BookOpen, Loader2,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
-  UserCheck, Activity, Eye, Settings, Plus, Zap,
+  UserCheck, Activity, Eye, Settings, Plus, Stethoscope,
   ArrowUpRight, Sparkles, Target, Flame,
 } from 'lucide-react'
 

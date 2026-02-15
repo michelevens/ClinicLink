@@ -4,7 +4,7 @@ import {
   Building2, Users, CalendarDays, BookOpen, Settings, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
   MessageSquare, Calendar, BarChart3, FileBarChart, UserSearch,
-  ChevronDown, Bell, Command,
+  Bell, Command,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
