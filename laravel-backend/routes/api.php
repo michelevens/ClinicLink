@@ -84,8 +84,9 @@ Route::get('/exports/compliance/csv', [ExportController::class, 'complianceCsv']
 Route::get('/exports/compliance/pdf', [ExportController::class, 'compliancePdf']);
 Route::get('/accreditation-reports/{report}/download', [AccreditationReportController::class, 'download']);
 
-// Stripe webhook (no auth — signature verified in controller)
+// Stripe webhooks (no auth — signature verified in controller)
 Route::post('/stripe/webhook', [PaymentController::class, 'webhook']);
+Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
