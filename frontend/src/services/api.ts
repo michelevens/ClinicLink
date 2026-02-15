@@ -745,6 +745,11 @@ export interface ApiUniversity {
   student_profiles?: { id: string; user_id: string; university_id: string; program_id: string | null; hours_completed?: number; hours_required?: number; user?: ApiUser; program?: ApiProgram }[]
   ce_policy?: { offers_ce: boolean; accrediting_body: string | null; contact_hours_per_rotation: number; approval_required: boolean; signer_name: string | null; signer_credentials: string | null }
   ce_certificates?: { id: string; status: string; contact_hours: string; preceptor?: ApiUser }[]
+  analytics?: {
+    program_performance: { id: string; name: string; degree_type: string; required_hours: number; student_count: number; avg_hours_completed: number; completion_rate: number }[]
+    agreement_summary: { active: number; pending: number; expiring_soon: number; expired: number }
+    student_overview: { total_enrolled: number; avg_hours_progress: number; nearing_completion: number }
+  }
 }
 
 export interface ApiProgram {

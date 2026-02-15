@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Search, UserSearch, Trophy, ChevronDown, ChevronUp } from 'lucide-react'
 import { usePreceptorDirectory, usePreceptorLeaderboard } from '../hooks/useApi.ts'
 import { PreceptorProfileCard } from '../components/preceptor/PreceptorProfileCard.tsx'
@@ -6,6 +7,7 @@ import { PreceptorProfileCard } from '../components/preceptor/PreceptorProfileCa
 const SPECIALTIES = ['Family Medicine', 'Internal Medicine', 'Pediatrics', 'OB/GYN', 'Psychiatry', 'Surgery', 'Emergency Medicine', 'Cardiology', 'Dermatology', 'Neurology', 'Oncology', 'Orthopedics', 'Radiology', 'Anesthesiology', 'Geriatrics', 'Other']
 
 export function PreceptorDirectory() {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [specialty, setSpecialty] = useState('')
   const [availability, setAvailability] = useState('')
@@ -102,7 +104,7 @@ export function PreceptorDirectory() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {entries.map(entry => <PreceptorProfileCard key={entry.id} entry={entry} />)}
+          {entries.map(entry => <PreceptorProfileCard key={entry.id} entry={entry} onClick={() => navigate(`/preceptor-directory/${entry.user_id}`)} />)}
         </div>
       )}
 

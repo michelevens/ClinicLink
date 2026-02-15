@@ -109,7 +109,7 @@ class UniversityController extends Controller
     public function show(University $university): JsonResponse
     {
         $university->load([
-            'programs',
+            'programs.studentProfiles',
             'affiliationAgreements.site',
             'studentProfiles.user',
             'studentProfiles.program',
@@ -117,7 +117,49 @@ class UniversityController extends Controller
             'ceCertificates.preceptor',
         ])->loadCount('studentProfiles');
 
-        return response()->json($university);
+        $data = $university->toArray();
+
+        // Analytics: program performance, agreement health, student overview
+        $data['analytics'] = [
+            'program_performance' => $university->programs->map(function ($program) {
+                $students = $program->studentProfiles;
+                $studentCount = $students->count();
+                $avgHours = $studentCount > 0 ? round($students->avg('hours_completed') ?? 0, 1) : 0;
+                $requiredHours = $program->required_hours ?: 1;
+                $completedCount = $students->filter(fn ($s) => ($s->hours_completed ?? 0) >= $requiredHours)->count();
+                $completionRate = $studentCount > 0 ? round(($completedCount / $studentCount) * 100, 1) : 0;
+
+                return [
+                    'id' => $program->id,
+                    'name' => $program->name,
+                    'degree_type' => $program->degree_type,
+                    'required_hours' => $program->required_hours,
+                    'student_count' => $studentCount,
+                    'avg_hours_completed' => $avgHours,
+                    'completion_rate' => $completionRate,
+                ];
+            }),
+            'agreement_summary' => [
+                'active' => $university->affiliationAgreements->where('status', 'active')->count(),
+                'pending' => $university->affiliationAgreements->whereIn('status', ['draft', 'pending_review'])->count(),
+                'expiring_soon' => $university->affiliationAgreements->filter(function ($a) {
+                    return $a->status === 'active' && $a->end_date && now()->diffInDays($a->end_date, false) <= 30 && now()->diffInDays($a->end_date, false) >= 0;
+                })->count(),
+                'expired' => $university->affiliationAgreements->whereIn('status', ['expired', 'terminated'])->count(),
+            ],
+            'student_overview' => [
+                'total_enrolled' => $university->student_profiles_count,
+                'avg_hours_progress' => $university->studentProfiles->count() > 0
+                    ? round($university->studentProfiles->avg('hours_completed') ?? 0, 1)
+                    : 0,
+                'nearing_completion' => $university->studentProfiles->filter(function ($sp) {
+                    $required = $sp->program->required_hours ?? 0;
+                    return $required > 0 && ($sp->hours_completed ?? 0) >= ($required * 0.8);
+                })->count(),
+            ],
+        ];
+
+        return response()->json($data);
     }
 
     public function programs(University $university): JsonResponse

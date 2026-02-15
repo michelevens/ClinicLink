@@ -41,6 +41,7 @@ import { Messages } from './pages/Messages.tsx'
 import { Calendar } from './pages/Calendar.tsx'
 import { EvaluationTemplates } from './pages/EvaluationTemplates.tsx'
 import { PreceptorDirectory } from './pages/PreceptorDirectory.tsx'
+import { PreceptorDetail } from './pages/PreceptorDetail.tsx'
 import { Analytics } from './pages/Analytics.tsx'
 import { AccreditationReports } from './pages/AccreditationReports.tsx'
 import { VerifyEmailPrompt, VerifyEmailCallback } from './pages/VerifyEmail.tsx'
@@ -141,6 +142,7 @@ export default function App() {
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
       <Route path="/admin/users/:id" element={<ProtectedRoute roles={['admin']}><UserDetail /></ProtectedRoute>} />
       <Route path="/preceptor-directory" element={<ProtectedRoute><PreceptorDirectory /></ProtectedRoute>} />
+      <Route path="/preceptor-directory/:userId" element={<ProtectedRoute><PreceptorDetail /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Analytics /></ProtectedRoute>} />
       <Route path="/accreditation-reports" element={<ProtectedRoute roles={['coordinator', 'admin']}><AccreditationReports /></ProtectedRoute>} />
 

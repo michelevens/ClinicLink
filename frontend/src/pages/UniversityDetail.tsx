@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Building2, MapPin, Phone, Globe, BookOpen, Users,
-  GraduationCap, Handshake, Award, CheckCircle2, Loader2, Clock
+  GraduationCap, Handshake, Award, CheckCircle2, Loader2, Clock,
+  AlertTriangle, TrendingUp, BarChart3
 } from 'lucide-react'
 import { useUniversity } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
@@ -48,6 +49,7 @@ export function UniversityDetail() {
   const studentProfiles = university.student_profiles || []
   const cePolicy = university.ce_policy
   const ceCertificates = university.ce_certificates || []
+  const analytics = university.analytics
 
   return (
     <div className="space-y-6">
@@ -244,6 +246,111 @@ export function UniversityDetail() {
                 <Badge variant={STATUS_COLORS[cert.status] || 'default'} size="sm">{cert.status}</Badge>
               </div>
             ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Analytics: Program Performance */}
+      {analytics?.program_performance && analytics.program_performance.length > 0 && (
+        <Card>
+          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-primary-500" /> Program Performance
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-stone-500 border-b border-stone-100">
+                  <th className="text-left py-2 pr-4 font-medium">Program</th>
+                  <th className="text-right py-2 px-3 font-medium">Students</th>
+                  <th className="text-left py-2 px-3 font-medium min-w-[140px]">Avg Hours Progress</th>
+                  <th className="text-right py-2 pl-3 font-medium">Completion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.program_performance.map(p => {
+                  const pct = p.required_hours > 0 ? Math.min(100, (p.avg_hours_completed / p.required_hours) * 100) : 0
+                  return (
+                    <tr key={p.id} className="border-b border-stone-50">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-stone-900">{p.name}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${DEGREE_COLORS[p.degree_type] || 'bg-stone-100 text-stone-700'}`}>
+                            {p.degree_type}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="text-right py-3 px-3 text-stone-600">{p.student_count}</td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-stone-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-primary-400 to-primary-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs text-stone-500 w-20 text-right">{p.avg_hours_completed}/{p.required_hours}h</span>
+                        </div>
+                      </td>
+                      <td className="text-right py-3 pl-3">
+                        <span className={`text-xs font-semibold ${p.completion_rate >= 50 ? 'text-green-600' : p.completion_rate >= 25 ? 'text-amber-600' : 'text-stone-500'}`}>
+                          {p.completion_rate}%
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Analytics: Agreement Health */}
+      {analytics?.agreement_summary && (
+        <Card>
+          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+            <Handshake className="w-4 h-4 text-primary-500" /> Agreement Health
+          </h2>
+          {analytics.agreement_summary.expiring_soon > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-3">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <p className="text-xs text-amber-700 font-medium">
+                {analytics.agreement_summary.expiring_soon} agreement{analytics.agreement_summary.expiring_soon !== 1 ? 's' : ''} expiring within 30 days
+              </p>
+            </div>
+          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: 'Active', value: analytics.agreement_summary.active, color: 'text-green-600 bg-green-50' },
+              { label: 'Pending', value: analytics.agreement_summary.pending, color: 'text-amber-600 bg-amber-50' },
+              { label: 'Expiring Soon', value: analytics.agreement_summary.expiring_soon, color: 'text-orange-600 bg-orange-50' },
+              { label: 'Expired', value: analytics.agreement_summary.expired, color: 'text-red-600 bg-red-50' },
+            ].map(s => (
+              <div key={s.label} className={`rounded-xl p-3 text-center ${s.color}`}>
+                <p className="text-2xl font-bold">{s.value}</p>
+                <p className="text-xs font-medium mt-0.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Analytics: Student Overview */}
+      {analytics?.student_overview && (
+        <Card>
+          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary-500" /> Student Overview
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-stone-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-stone-900">{analytics.student_overview.total_enrolled}</p>
+              <p className="text-xs text-stone-500 mt-0.5">Total Enrolled</p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-stone-900">{analytics.student_overview.avg_hours_progress}h</p>
+              <p className="text-xs text-stone-500 mt-0.5">Avg Hours Completed</p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-4 text-center">
+              <p className="text-2xl font-bold text-green-600">{analytics.student_overview.nearing_completion}</p>
+              <p className="text-xs text-stone-500 mt-0.5">Nearing Completion (80%+)</p>
+            </div>
           </div>
         </Card>
       )}
