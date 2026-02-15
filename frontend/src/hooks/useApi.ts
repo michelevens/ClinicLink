@@ -993,10 +993,11 @@ export function useCalendarEvents(start: string | null, end: string | null) {
 }
 
 // --- Bookmarks ---
-export function useBookmarkedSlots(params?: { page?: number }) {
+export function useBookmarkedSlots(params?: { page?: number }, enabled = true) {
   return useQuery({
     queryKey: ['bookmarked-slots', params],
     queryFn: () => bookmarksApi.list(params),
+    enabled,
   })
 }
 
@@ -1412,10 +1413,11 @@ export function useResendSignature() {
 }
 
 // --- Subscriptions ---
-export function useSubscriptionStatus() {
+export function useSubscriptionStatus(enabled = true) {
   return useQuery({
     queryKey: ['subscription-status'],
     queryFn: () => subscriptionApi.status(),
+    enabled,
   })
 }
 

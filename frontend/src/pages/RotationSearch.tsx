@@ -39,7 +39,7 @@ export function RotationSearch() {
   const isStudent = user?.role === 'student'
   const toggleBookmark = useToggleBookmark()
   const subscriptionCheckout = useSubscriptionCheckout()
-  const { data: bookmarkedData } = useBookmarkedSlots()
+  const { data: bookmarkedData } = useBookmarkedSlots(undefined, isAuthenticated)
   const bookmarkedIds = new Set((bookmarkedData?.data || []).map(s => s.id))
   const createSavedSearch = useCreateSavedSearch()
 

@@ -199,7 +199,7 @@ export function Pricing() {
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
   const checkout = useSubscriptionCheckout()
-  const { data: subStatus } = useSubscriptionStatus()
+  const { data: subStatus } = useSubscriptionStatus(isAuthenticated)
 
   const handleSubscribe = (interval: 'month' | 'year') => {
     checkout.mutate({ plan: 'pro', interval }, {
