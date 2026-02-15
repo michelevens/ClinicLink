@@ -7,6 +7,7 @@ use App\Mail\NewUserRegistrationMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
 use App\Models\AuditLog;
+use App\Models\PreceptorProfile;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\StudentProfile;
@@ -58,6 +59,16 @@ class AuthController extends Controller
                 $profileData['program_id'] = $validated['program_id'];
             }
             StudentProfile::create($profileData);
+        }
+
+        // Create preceptor profile so they appear in directory
+        if ($validated['role'] === 'preceptor') {
+            PreceptorProfile::create([
+                'user_id' => $user->id,
+                'specialties' => [],
+                'availability_status' => 'available',
+                'profile_visibility' => 'public',
+            ]);
         }
 
         // Send email verification link
@@ -289,7 +300,14 @@ class AuthController extends Controller
                 break;
 
             case 'preceptor':
-                // Store specialties in a future preceptor_profiles table or as metadata
+                PreceptorProfile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'specialties' => $request->input('specialties', []),
+                        'availability_status' => 'available',
+                        'profile_visibility' => 'public',
+                    ]
+                );
                 break;
 
             case 'coordinator':

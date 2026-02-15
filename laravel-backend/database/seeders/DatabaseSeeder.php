@@ -17,6 +17,7 @@ use App\Models\AffiliationAgreement;
 use App\Models\OnboardingTemplate;
 use App\Models\OnboardingItem;
 use App\Models\OnboardingTask;
+use App\Models\PreceptorProfile;
 use App\Models\SiteInvite;
 use App\Models\UniversityCePolicy;
 use App\Models\CeCertificate;
@@ -239,6 +240,13 @@ class DatabaseSeeder extends Seeder
             'is_active' => false,
             'email_verified' => true,
         ]);
+
+        // Preceptor profiles (so they appear in the directory)
+        PreceptorProfile::create(['user_id' => $demoPreceptor->id, 'specialties' => ['Family Medicine', 'Internal Medicine'], 'bio' => 'Board-certified family medicine physician with 15 years of clinical teaching experience.', 'credentials' => [['type' => 'MD', 'name' => 'Doctor of Medicine', 'issuer' => 'Johns Hopkins', 'year' => 2005]], 'availability_status' => 'available', 'max_students' => 4, 'years_experience' => 15, 'teaching_philosophy' => 'I believe in hands-on learning with graduated autonomy.', 'profile_visibility' => 'public']);
+        PreceptorProfile::create(['user_id' => $preceptor2->id, 'specialties' => ['Pediatrics', 'Geriatrics'], 'bio' => 'Pediatric specialist passionate about mentoring the next generation of healthcare professionals.', 'credentials' => [['type' => 'DO', 'name' => 'Doctor of Osteopathic Medicine', 'issuer' => 'LECOM', 'year' => 2010]], 'availability_status' => 'available', 'max_students' => 3, 'years_experience' => 10, 'profile_visibility' => 'public']);
+        PreceptorProfile::create(['user_id' => $preceptor3->id, 'specialties' => ['Emergency Medicine', 'Surgery'], 'bio' => 'Emergency medicine attending with extensive trauma experience.', 'credentials' => [['type' => 'MD', 'name' => 'Doctor of Medicine', 'issuer' => 'UF College of Medicine', 'year' => 2008]], 'availability_status' => 'limited', 'max_students' => 2, 'years_experience' => 12, 'profile_visibility' => 'public']);
+        PreceptorProfile::create(['user_id' => $preceptor4->id, 'specialties' => ['OB/GYN', 'Family Medicine'], 'bio' => 'OB/GYN specialist committed to women\'s health education and clinical training.', 'credentials' => [['type' => 'MD', 'name' => 'Doctor of Medicine', 'issuer' => 'USF Morsani', 'year' => 2012]], 'availability_status' => 'available', 'max_students' => 5, 'years_experience' => 8, 'profile_visibility' => 'public']);
+        PreceptorProfile::create(['user_id' => $preceptor5->id, 'specialties' => ['Cardiology'], 'bio' => 'Retired cardiologist.', 'credentials' => [['type' => 'MD', 'name' => 'Doctor of Medicine', 'issuer' => 'Emory', 'year' => 1998]], 'availability_status' => 'unavailable', 'max_students' => 0, 'years_experience' => 20, 'profile_visibility' => 'public']);
 
         // Additional site managers
         $siteManager2 = User::create([
