@@ -42,6 +42,7 @@ import { PreceptorDirectory } from './pages/PreceptorDirectory.tsx'
 import { Analytics } from './pages/Analytics.tsx'
 import { AccreditationReports } from './pages/AccreditationReports.tsx'
 import { VerifyEmailPrompt, VerifyEmailCallback } from './pages/VerifyEmail.tsx'
+import { Pricing } from './pages/Pricing.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
 import type { ReactNode } from 'react'
 
@@ -97,6 +98,7 @@ export default function App() {
       <Route path="/verify-email/:token" element={<VerifyEmailCallback />} />
 
       {/* Semi-protected (works for both auth and unauth users) */}
+      <Route path="/pricing" element={<SemiProtectedRoute><Pricing /></SemiProtectedRoute>} />
       <Route path="/rotations" element={<SemiProtectedRoute><RotationSearch /></SemiProtectedRoute>} />
 
       {/* Onboarding (full-screen, no sidebar) */}

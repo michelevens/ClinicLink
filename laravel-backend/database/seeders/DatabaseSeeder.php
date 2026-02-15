@@ -20,6 +20,9 @@ use App\Models\OnboardingTask;
 use App\Models\SiteInvite;
 use App\Models\UniversityCePolicy;
 use App\Models\CeCertificate;
+use App\Models\Conversation;
+use App\Models\ConversationParticipant;
+use App\Models\Message;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -2340,5 +2343,79 @@ class DatabaseSeeder extends Seeder
             'status' => 'pending',
             'verification_uuid' => Str::uuid(),
         ]);
+
+        // =====================================================================
+        // CONVERSATIONS & MESSAGES
+        // =====================================================================
+
+        // --- 1. Student ↔ Preceptor: Rotation questions ---
+        $conv1 = Conversation::create(['subject' => 'Question about ER rotation schedule']);
+        ConversationParticipant::create(['conversation_id' => $conv1->id, 'user_id' => $demoStudent->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv1->id, 'user_id' => $demoPreceptor->id, 'last_read_at' => now()]);
+        Message::create(['conversation_id' => $conv1->id, 'sender_id' => $demoStudent->id, 'body' => 'Hi Dr. Wilson! I\'m confirmed for the ER rotation starting March 3rd. Is there anything I should prepare before day one?', 'created_at' => now()->subDays(5)->setHour(9)]);
+        Message::create(['conversation_id' => $conv1->id, 'sender_id' => $demoPreceptor->id, 'body' => 'Welcome, Sarah! Please review BLS/ACLS protocols and bring your stethoscope, badge, and comfortable shoes. We start rounds at 7 AM sharp.', 'created_at' => now()->subDays(5)->setHour(10)]);
+        Message::create(['conversation_id' => $conv1->id, 'sender_id' => $demoStudent->id, 'body' => 'Got it — I\'ll review the protocols this weekend. Should I also review the EMR system beforehand?', 'created_at' => now()->subDays(4)->setHour(14)]);
+        Message::create(['conversation_id' => $conv1->id, 'sender_id' => $demoPreceptor->id, 'body' => 'Good thinking! We use Epic. The hospital IT team will set up your access on day one, but watching a few tutorial videos won\'t hurt. See you Monday!', 'created_at' => now()->subDays(4)->setHour(15)]);
+
+        // --- 2. Coordinator ↔ Site Manager: Agreement discussion ---
+        $conv2 = Conversation::create(['subject' => 'Affiliation Agreement renewal — UCF ↔ Orlando Health']);
+        ConversationParticipant::create(['conversation_id' => $conv2->id, 'user_id' => $demoCoordinator->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv2->id, 'user_id' => $demoSiteManager->id, 'last_read_at' => now()]);
+        Message::create(['conversation_id' => $conv2->id, 'sender_id' => $demoCoordinator->id, 'body' => 'Hi Maria, our affiliation agreement expires next month. I\'ve uploaded a draft renewal in the Agreements section. Could you review the updated liability language?', 'created_at' => now()->subDays(7)->setHour(11)]);
+        Message::create(['conversation_id' => $conv2->id, 'sender_id' => $demoSiteManager->id, 'body' => 'Thanks Lisa, I\'ll review it today. We may need our legal team to look at the new HIPAA addendum. I\'ll have feedback by Friday.', 'created_at' => now()->subDays(7)->setHour(13)]);
+        Message::create(['conversation_id' => $conv2->id, 'sender_id' => $demoSiteManager->id, 'body' => 'Legal approved with one minor change — they want the indemnification clause to reference our updated insurance policy number. I\'ll send the redline.', 'created_at' => now()->subDays(3)->setHour(10)]);
+        Message::create(['conversation_id' => $conv2->id, 'sender_id' => $demoCoordinator->id, 'body' => 'Perfect, that\'s a simple update. I\'ll revise and upload the final version for e-signature. Thank you for the quick turnaround!', 'created_at' => now()->subDays(3)->setHour(11)]);
+
+        // --- 3. Student ↔ Coordinator: Hour log question ---
+        $conv3 = Conversation::create(['subject' => 'Hour log submission question']);
+        ConversationParticipant::create(['conversation_id' => $conv3->id, 'user_id' => $student2->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv3->id, 'user_id' => $demoCoordinator->id, 'last_read_at' => now()->subDays(2)]);
+        Message::create(['conversation_id' => $conv3->id, 'sender_id' => $student2->id, 'body' => 'Dr. Thompson, I accidentally logged 12 hours instead of 8 for last Tuesday. Can I edit it or do I need to submit a new entry?', 'created_at' => now()->subDays(2)->setHour(16)]);
+        Message::create(['conversation_id' => $conv3->id, 'sender_id' => $demoCoordinator->id, 'body' => 'Hi David, if it hasn\'t been approved yet by your preceptor, you can still edit it from your Hour Log page. If it was already approved, let me know and I\'ll have it returned for correction.', 'created_at' => now()->subDays(2)->setHour(17)]);
+        Message::create(['conversation_id' => $conv3->id, 'sender_id' => $student2->id, 'body' => 'It\'s still pending — I was able to fix it. Thanks for the quick reply!', 'created_at' => now()->subDays(1)->setHour(8)]);
+
+        // --- 4. Admin broadcast: Platform update ---
+        $conv4 = Conversation::create([
+            'subject' => 'New Feature: Calendar & Scheduling',
+            'is_broadcast' => true,
+            'broadcast_by' => $demoAdmin->id,
+        ]);
+        ConversationParticipant::create(['conversation_id' => $conv4->id, 'user_id' => $demoAdmin->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv4->id, 'user_id' => $demoStudent->id]);
+        ConversationParticipant::create(['conversation_id' => $conv4->id, 'user_id' => $demoPreceptor->id]);
+        ConversationParticipant::create(['conversation_id' => $conv4->id, 'user_id' => $demoSiteManager->id]);
+        ConversationParticipant::create(['conversation_id' => $conv4->id, 'user_id' => $demoCoordinator->id]);
+        ConversationParticipant::create(['conversation_id' => $conv4->id, 'user_id' => $demoProfessor->id]);
+        Message::create(['conversation_id' => $conv4->id, 'sender_id' => $demoAdmin->id, 'body' => "We're excited to announce the new Calendar feature! You can now view all your rotations, deadlines, evaluations, and hour logs in one unified calendar view.\n\nKey highlights:\n• Monthly, weekly, and list views\n• Color-coded event types\n• Click any event to navigate to details\n\nAccess it from the Calendar link in your sidebar. Happy scheduling!", 'created_at' => now()->subDays(3)->setHour(9)]);
+
+        // --- 5. Group chat: Rotation cohort ---
+        $conv5 = Conversation::create(['subject' => 'Spring 2026 ER Cohort', 'is_group' => true]);
+        ConversationParticipant::create(['conversation_id' => $conv5->id, 'user_id' => $demoStudent->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv5->id, 'user_id' => $student2->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv5->id, 'user_id' => $student3->id, 'last_read_at' => now()->subDays(1)]);
+        ConversationParticipant::create(['conversation_id' => $conv5->id, 'user_id' => $demoPreceptor->id, 'last_read_at' => now()]);
+        Message::create(['conversation_id' => $conv5->id, 'sender_id' => $demoPreceptor->id, 'body' => 'Welcome to the Spring 2026 ER cohort group! Use this chat for scheduling questions and peer support. Looking forward to working with all of you.', 'created_at' => now()->subDays(6)->setHour(8)]);
+        Message::create(['conversation_id' => $conv5->id, 'sender_id' => $demoStudent->id, 'body' => 'Thanks Dr. Wilson! Quick question — is parking in Lot C or Lot D for students?', 'created_at' => now()->subDays(6)->setHour(9)]);
+        Message::create(['conversation_id' => $conv5->id, 'sender_id' => $student2->id, 'body' => 'I parked in Lot D last semester and it was fine. Just bring your student badge for the gate.', 'created_at' => now()->subDays(6)->setHour(9)->addMinutes(30)]);
+        Message::create(['conversation_id' => $conv5->id, 'sender_id' => $demoPreceptor->id, 'body' => 'Lot D is correct. I\'ll send the parking validation form to your emails by end of day.', 'created_at' => now()->subDays(6)->setHour(10)]);
+        Message::create(['conversation_id' => $conv5->id, 'sender_id' => $student3->id, 'body' => 'Thanks everyone! Excited to start 🎉', 'created_at' => now()->subDays(5)->setHour(11)]);
+
+        // --- 6. Professor ↔ Coordinator: Student progress ---
+        $conv6 = Conversation::create(['subject' => 'Student progress — Sarah Chen']);
+        ConversationParticipant::create(['conversation_id' => $conv6->id, 'user_id' => $demoProfessor->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv6->id, 'user_id' => $demoCoordinator->id, 'last_read_at' => now()]);
+        Message::create(['conversation_id' => $conv6->id, 'sender_id' => $demoProfessor->id, 'body' => 'Lisa, I noticed Sarah Chen has completed 120 of her 200 required hours. She\'s ahead of schedule — any concerns from the site about her performance?', 'created_at' => now()->subDays(4)->setHour(14)]);
+        Message::create(['conversation_id' => $conv6->id, 'sender_id' => $demoCoordinator->id, 'body' => 'No concerns at all. Dr. Wilson gave her excellent marks on her midpoint evaluation. She\'s one of our strongest students this semester.', 'created_at' => now()->subDays(4)->setHour(15)]);
+        Message::create(['conversation_id' => $conv6->id, 'sender_id' => $demoProfessor->id, 'body' => 'Great to hear. I\'ll note that in my semester report. Thanks for the update!', 'created_at' => now()->subDays(4)->setHour(16)]);
+
+        // --- 7. Site Manager ↔ Preceptor: Site logistics ---
+        $conv7 = Conversation::create(['subject' => 'New student orientation — March cohort']);
+        ConversationParticipant::create(['conversation_id' => $conv7->id, 'user_id' => $demoSiteManager->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv7->id, 'user_id' => $demoPreceptor->id, 'last_read_at' => now()]);
+        ConversationParticipant::create(['conversation_id' => $conv7->id, 'user_id' => $preceptor2->id, 'last_read_at' => now()->subDays(1)]);
+        Message::create(['conversation_id' => $conv7->id, 'sender_id' => $demoSiteManager->id, 'body' => 'Heads up — we have 4 new students starting March 3rd. I\'ve assigned 2 to Dr. Wilson (ER) and 2 to Dr. Brooks (Peds). Orientation is at 8 AM in Conference Room B.', 'created_at' => now()->subDays(8)->setHour(15)]);
+        Message::create(['conversation_id' => $conv7->id, 'sender_id' => $demoPreceptor->id, 'body' => 'Confirmed. I\'ll prepare the ER orientation packet and have badge access set up by Friday.', 'created_at' => now()->subDays(8)->setHour(16)]);
+        Message::create(['conversation_id' => $conv7->id, 'sender_id' => $preceptor2->id, 'body' => 'Same here — Peds orientation materials are ready. Maria, can you confirm the students have completed their onboarding checklists?', 'created_at' => now()->subDays(7)->setHour(9)]);
+        Message::create(['conversation_id' => $conv7->id, 'sender_id' => $demoSiteManager->id, 'body' => 'Checking now... 3 of 4 are complete. I\'ll follow up with the remaining student today.', 'created_at' => now()->subDays(7)->setHour(10)]);
     }
 }

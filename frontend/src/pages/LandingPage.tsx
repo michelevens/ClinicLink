@@ -41,6 +41,7 @@ export function LandingPage() {
             <a href="#features" className="hover:text-primary-600 transition-colors">Features</a>
             <a href="#roles" className="hover:text-primary-600 transition-colors">Who It's For</a>
             <a href="#demo" className="hover:text-primary-600 transition-colors">Demo</a>
+            <button onClick={() => navigate('/pricing')} className="hover:text-primary-600 transition-colors">Pricing</button>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <button className="inline-flex items-center justify-center font-medium rounded-xl px-3 py-1.5 text-sm text-stone-600 hover:bg-stone-100 transition-all duration-300" onClick={() => navigate('/login')}>Sign In</button>
@@ -440,6 +441,7 @@ export function LandingPage() {
                 <li><button onClick={() => navigate('/rotations')} className="hover:text-white transition-colors">Search Rotations</button></li>
                 <li><button onClick={() => navigate('/register')} className="hover:text-white transition-colors">Create Account</button></li>
                 <li><button onClick={() => navigate('/login')} className="hover:text-white transition-colors">Sign In</button></li>
+                <li><button onClick={() => navigate('/pricing')} className="hover:text-white transition-colors">Pricing</button></li>
               </ul>
             </div>
             <div>

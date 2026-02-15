@@ -13,16 +13,19 @@ import { QRCodeSVG } from 'qrcode.react'
 import {
   User, Shield, Bell, GraduationCap, FileCheck,
   Mail, Phone, Save, Loader2, Trash2, Plus, Calendar,
-  Upload, Download, Paperclip, ShieldCheck, ShieldOff, Copy, Check, Key
+  Upload, Download, Paperclip, ShieldCheck, ShieldOff, Copy, Check, Key,
+  CreditCard, ExternalLink, CheckCircle, AlertCircle, RefreshCw
 } from 'lucide-react'
 import { studentApi } from '../services/api.ts'
+import { useConnectStatus, useCreateConnectAccount, useRefreshConnectLink, usePaymentHistory } from '../hooks/useApi.ts'
 
-type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications'
+type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications' | 'payments'
 
 const TABS: { key: Tab; label: string; icon: typeof User; roles?: string[] }[] = [
   { key: 'profile', label: 'Profile', icon: User },
   { key: 'academic', label: 'Academic', icon: GraduationCap, roles: ['student'] },
   { key: 'credentials', label: 'Credentials', icon: FileCheck, roles: ['student'] },
+  { key: 'payments', label: 'Payments', icon: CreditCard, roles: ['site_manager'] },
   { key: 'security', label: 'Security', icon: Shield },
   { key: 'notifications', label: 'Notifications', icon: Bell },
 ]
@@ -37,7 +40,10 @@ const SPECIALTIES = [
 
 export function Settings() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState<Tab>('profile')
+  // Support URL params for Stripe Connect callback (e.g., ?tab=payments&connected=1)
+  const urlParams = new URLSearchParams(window.location.search)
+  const initialTab = (urlParams.get('tab') as Tab) || 'profile'
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
 
   const visibleTabs = TABS.filter(t => !t.roles || t.roles.includes(user?.role || ''))
 
@@ -79,6 +85,7 @@ export function Settings() {
           {activeTab === 'profile' && <ProfileTab />}
           {activeTab === 'academic' && <AcademicTab />}
           {activeTab === 'credentials' && <CredentialsTab />}
+          {activeTab === 'payments' && <PaymentsTab />}
           {activeTab === 'security' && <SecurityTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
         </div>
@@ -925,6 +932,201 @@ function MfaSection() {
         <ShieldCheck className="w-4 h-4" /> Enable Two-Factor Authentication
       </Button>
     </Card>
+  )
+}
+
+function PaymentsTab() {
+  const { data: connectStatus, isLoading: statusLoading } = useConnectStatus()
+  const createAccount = useCreateConnectAccount()
+  const refreshLink = useRefreshConnectLink()
+  const { data: historyData, isLoading: historyLoading } = usePaymentHistory()
+
+  const urlParams = new URLSearchParams(window.location.search)
+  const justConnected = urlParams.get('connected') === '1'
+
+  const handleConnect = async () => {
+    try {
+      const res = await createAccount.mutateAsync()
+      window.location.href = res.url
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to create Stripe account'
+      toast.error(message)
+    }
+  }
+
+  const handleRefreshLink = async () => {
+    try {
+      const res = await refreshLink.mutateAsync()
+      window.location.href = res.url
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to refresh onboarding link'
+      toast.error(message)
+    }
+  }
+
+  const payments = historyData?.data || []
+
+  const statusColor = (s: string) => {
+    switch (s) {
+      case 'completed': return 'success'
+      case 'pending': case 'processing': return 'warning'
+      case 'failed': return 'danger'
+      case 'refunded': return 'default'
+      default: return 'default'
+    }
+  }
+
+  if (statusLoading) {
+    return (
+      <Card>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        </div>
+      </Card>
+    )
+  }
+
+  const isOnboarded = connectStatus?.stripe_onboarded
+  const hasAccount = !!connectStatus?.stripe_account_id
+
+  return (
+    <div className="space-y-6">
+      {/* Stripe Connect Status */}
+      <Card>
+        <h2 className="text-lg font-semibold text-stone-900 mb-2 flex items-center gap-2">
+          <CreditCard className="w-5 h-5 text-primary-500" /> Stripe Connect
+        </h2>
+        <p className="text-sm text-stone-500 mb-6">
+          Connect your Stripe account to receive payments from students for rotation placements.
+        </p>
+
+        {justConnected && (
+          <div className="flex items-center gap-2 p-3 mb-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            Stripe account connected successfully! It may take a moment for status to update.
+          </div>
+        )}
+
+        {isOnboarded ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+              <div>
+                <p className="font-medium text-green-900 text-sm">Stripe Account Connected</p>
+                <p className="text-xs text-green-700 mt-0.5">
+                  Account ID: {connectStatus?.stripe_account_id}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+                <span className="text-sm text-stone-600">Charges</span>
+                <Badge variant={connectStatus?.charges_enabled ? 'success' : 'warning'} size="sm">
+                  {connectStatus?.charges_enabled ? 'Enabled' : 'Pending'}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
+                <span className="text-sm text-stone-600">Payouts</span>
+                <Badge variant={connectStatus?.payouts_enabled ? 'success' : 'warning'} size="sm">
+                  {connectStatus?.payouts_enabled ? 'Enabled' : 'Pending'}
+                </Badge>
+              </div>
+            </div>
+
+            {(!connectStatus?.charges_enabled || !connectStatus?.payouts_enabled) && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                Some features are still pending. You may need to complete additional verification in Stripe.
+              </div>
+            )}
+          </div>
+        ) : hasAccount ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <p className="font-medium text-amber-900 text-sm">Onboarding Incomplete</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Your Stripe account has been created but onboarding isn't finished yet.
+                </p>
+              </div>
+            </div>
+            <Button onClick={handleRefreshLink} isLoading={refreshLink.isPending}>
+              <RefreshCw className="w-4 h-4" /> Continue Onboarding
+              <ExternalLink className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-stone-50 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-stone-900">Accept Payments</p>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    Set up Stripe Connect to accept payments directly for rotation placements. Stripe handles all payment processing, compliance, and payouts.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <Button onClick={handleConnect} isLoading={createAccount.isPending}>
+              <CreditCard className="w-4 h-4" /> Connect with Stripe
+              <ExternalLink className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </div>
+        )}
+      </Card>
+
+      {/* Payment History */}
+      <Card>
+        <h2 className="text-lg font-semibold text-stone-900 mb-4">Payment History</h2>
+
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="text-center py-8 text-stone-400">
+            <CreditCard className="w-10 h-10 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">No payments yet</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {payments.map(payment => (
+              <div key={payment.id} className="flex items-center justify-between p-4 rounded-xl border border-stone-200 hover:border-stone-300 transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                    payment.status === 'completed' ? 'bg-green-50 text-green-600' :
+                    payment.status === 'refunded' ? 'bg-stone-100 text-stone-500' :
+                    'bg-amber-50 text-amber-600'
+                  }`}>
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-stone-900">
+                      ${(payment.amount / 100).toFixed(2)} {payment.currency.toUpperCase()}
+                    </p>
+                    <p className="text-xs text-stone-500 truncate">
+                      {payment.paid_at
+                        ? new Date(payment.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      }
+                      {payment.platform_fee > 0 && ` · Fee: $${(payment.platform_fee / 100).toFixed(2)}`}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant={statusColor(payment.status) as 'success' | 'warning' | 'danger' | 'default'} size="sm">
+                  {payment.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   )
 }
 

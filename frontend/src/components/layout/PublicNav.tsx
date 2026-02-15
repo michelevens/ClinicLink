@@ -16,6 +16,7 @@ export function PublicNav() {
         </button>
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-stone-600">
           <button onClick={() => navigate('/rotations')} className="hover:text-primary-600 transition-colors">Browse Rotations</button>
+          <button onClick={() => navigate('/pricing')} className="hover:text-primary-600 transition-colors">Pricing</button>
           <button onClick={() => navigate('/')} className="hover:text-primary-600 transition-colors">Home</button>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
