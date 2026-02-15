@@ -127,7 +127,7 @@ export function Sidebar() {
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-medium transition-all duration-200 ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-lg font-medium transition-all duration-200 ${
                 isActive || location.pathname === item.path
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
@@ -154,7 +154,7 @@ export function Sidebar() {
       <div className="border-t border-stone-200 p-2 shrink-0">
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-base font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition-all w-full"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-lg font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition-all w-full"
         >
           <LogOut className="w-5 h-5" />
           <span>Logout</span>
