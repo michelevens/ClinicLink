@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
-import { universitiesApi, sitesApi, type ApiUniversity, type ApiProgram, type ApiSite } from '../services/api.ts'
+import { universitiesApi, sitesApi, type ApiUniversity, type ApiProgram, type ApiSite, type NpiResult } from '../services/api.ts'
+import { NpiLookup } from '../components/ui/NpiLookup.tsx'
 import { toast } from 'sonner'
 import {
   Stethoscope, User, GraduationCap, Heart, ShieldCheck,
@@ -254,6 +255,9 @@ export function Onboarding() {
   const [siteSearch, setSiteSearch] = useState('')
   const [selectedSiteId, setSelectedSiteId] = useState('')
 
+  // NPI (optional — for preceptors and site managers)
+  const [npiNumber, setNpiNumber] = useState('')
+
   // Site manager — facility
   const [facilityName, setFacilityName] = useState('')
   const [facilityAddress, setFacilityAddress] = useState('')
@@ -352,6 +356,7 @@ export function Onboarding() {
       } else if (role === 'preceptor') {
         data.clinical_interests = selectedInterests
         data.site_id = selectedSiteId || undefined
+        if (npiNumber) data.npi_number = npiNumber
       } else if (role === 'site_manager') {
         data.facility_name = facilityName
         data.facility_address = facilityAddress
@@ -362,6 +367,7 @@ export function Onboarding() {
         data.facility_description = facilityDescription
         data.facility_specialties = facilitySpecialties
         data.ehr_system = ehrSystem || undefined
+        if (npiNumber) data.npi_number = npiNumber
       } else if (role === 'coordinator' || role === 'professor') {
         data.university_id = coordUniversityId || undefined
         data.department = department || undefined
@@ -563,6 +569,25 @@ export function Onboarding() {
                   onChange={e => setPhone(e.target.value)}
                   icon={<Phone className="w-4 h-4" />}
                 />
+
+                {role === 'preceptor' && (
+                  <NpiLookup
+                    entityType="individual"
+                    onVerified={(result, npi) => {
+                      setNpiNumber(npi)
+                      if (result.taxonomy) {
+                        const matchedSpecialty = SPECIALTIES.find(s =>
+                          result.taxonomy.toLowerCase().includes(s.toLowerCase()) ||
+                          s.toLowerCase().includes(result.taxonomy.split(' ')[0].toLowerCase())
+                        )
+                        if (matchedSpecialty && !selectedInterests.includes(matchedSpecialty)) {
+                          setSelectedInterests(prev => [...prev, matchedSpecialty])
+                        }
+                      }
+                    }}
+                    onClear={() => setNpiNumber('')}
+                  />
+                )}
 
                 {role === 'student' && (
                   <div className="space-y-1.5">
@@ -828,6 +853,23 @@ export function Onboarding() {
                     className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm bg-white/80 backdrop-blur-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none resize-none transition-all duration-200"
                   />
                 </div>
+
+                <NpiLookup
+                  entityType="organization"
+                  label="Facility NPI (Optional)"
+                  onVerified={(result, npi) => {
+                    setNpiNumber(npi)
+                    if (result.name && !facilityName) setFacilityName(result.name)
+                    if (result.address) {
+                      if (result.address.line1 && !facilityAddress) setFacilityAddress(result.address.line1)
+                      if (result.address.city && !facilityCity) setFacilityCity(result.address.city)
+                      if (result.address.state && !facilityState) setFacilityState(result.address.state)
+                      if (result.address.zip && !facilityZip) setFacilityZip(result.address.zip)
+                    }
+                    if (result.phone && !facilityPhone) setFacilityPhone(result.phone)
+                  }}
+                  onClear={() => setNpiNumber('')}
+                />
               </div>
             )}
 

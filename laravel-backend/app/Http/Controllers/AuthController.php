@@ -282,31 +282,39 @@ class AuthController extends Controller
 
             case 'site_manager':
                 if ($request->filled('facility_name')) {
+                    $siteData = [
+                        'name' => $request->input('facility_name'),
+                        'address' => $request->input('facility_address', ''),
+                        'city' => $request->input('facility_city', ''),
+                        'state' => $request->input('facility_state', ''),
+                        'zip' => $request->input('facility_zip', ''),
+                        'phone' => $request->input('facility_phone', ''),
+                        'description' => $request->input('facility_description'),
+                        'specialties' => $request->input('facility_specialties', []),
+                        'ehr_system' => $request->input('ehr_system'),
+                    ];
+                    if ($request->filled('npi_number')) {
+                        $siteData['npi_number'] = $request->input('npi_number');
+                    }
                     RotationSite::updateOrCreate(
                         ['manager_id' => $user->id],
-                        [
-                            'name' => $request->input('facility_name'),
-                            'address' => $request->input('facility_address', ''),
-                            'city' => $request->input('facility_city', ''),
-                            'state' => $request->input('facility_state', ''),
-                            'zip' => $request->input('facility_zip', ''),
-                            'phone' => $request->input('facility_phone', ''),
-                            'description' => $request->input('facility_description'),
-                            'specialties' => $request->input('facility_specialties', []),
-                            'ehr_system' => $request->input('ehr_system'),
-                        ]
+                        $siteData
                     );
                 }
                 break;
 
             case 'preceptor':
+                $profileData = [
+                    'specialties' => $request->input('clinical_interests', []),
+                    'availability_status' => 'available',
+                    'profile_visibility' => 'public',
+                ];
+                if ($request->filled('npi_number')) {
+                    $profileData['npi_number'] = $request->input('npi_number');
+                }
                 PreceptorProfile::updateOrCreate(
                     ['user_id' => $user->id],
-                    [
-                        'specialties' => $request->input('specialties', []),
-                        'availability_status' => 'available',
-                        'profile_visibility' => 'public',
-                    ]
+                    $profileData
                 );
                 break;
 

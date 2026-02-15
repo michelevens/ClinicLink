@@ -27,6 +27,9 @@ class RotationSite extends Model
         'review_count',
         'is_verified',
         'is_active',
+        'npi_number',
+        'npi_verified_at',
+        'npi_data',
     ];
 
     protected function casts(): array
@@ -37,6 +40,8 @@ class RotationSite extends Model
             'rating' => 'decimal:1',
             'is_verified' => 'boolean',
             'is_active' => 'boolean',
+            'npi_data' => 'array',
+            'npi_verified_at' => 'datetime',
         ];
     }
 

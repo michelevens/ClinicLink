@@ -633,6 +633,8 @@ export interface ApiSite {
   review_count: number
   is_verified: boolean
   is_active: boolean
+  npi_number?: string | null
+  npi_verified_at?: string | null
   created_at: string
   manager?: ApiUser
   slots?: ApiSlot[]
@@ -1428,6 +1430,9 @@ export interface ApiPreceptorProfile {
   total_students_mentored: number
   total_hours_supervised: number
   profile_visibility: 'public' | 'university_only' | 'private'
+  npi_number?: string | null
+  npi_verified_at?: string | null
+  is_npi_verified?: boolean
   created_at: string
   updated_at: string
   user?: ApiUser
@@ -1447,6 +1452,8 @@ export interface PreceptorDirectoryEntry {
   years_experience: number | null
   average_rating: number | null
   review_count: number
+  npi_number?: string | null
+  is_npi_verified?: boolean
 }
 
 export const preceptorProfilesApi = {
@@ -1679,4 +1686,35 @@ export const subscriptionApi = {
     api.post<{ url: string }>('/subscription/checkout', data),
   portal: () =>
     api.post<{ url: string }>('/subscription/portal'),
+}
+
+// --- NPI Verification ---
+export interface NpiResult {
+  npi: string
+  enumeration_type: string
+  first_name: string
+  last_name: string
+  organization_name?: string | null
+  name: string
+  credential?: string | null
+  taxonomy: string
+  taxonomy_code: string
+  address: { line1: string; line2?: string; city: string; state: string; zip: string }
+  phone?: string | null
+}
+
+export const npiApi = {
+  lookup: (npiNumber: string) =>
+    api.get<{ result: NpiResult | null }>(`/npi/lookup?number=${npiNumber}`),
+  search: (params: { first_name?: string; last_name?: string; organization_name?: string; state?: string; type?: 'individual' | 'organization' }) => {
+    const qs = new URLSearchParams()
+    if (params.first_name) qs.set('first_name', params.first_name)
+    if (params.last_name) qs.set('last_name', params.last_name)
+    if (params.organization_name) qs.set('organization_name', params.organization_name)
+    if (params.state) qs.set('state', params.state)
+    if (params.type) qs.set('type', params.type)
+    return api.get<{ results: NpiResult[] }>(`/npi/search?${qs}`)
+  },
+  verify: (data: { npi_number: string; entity_type: 'preceptor' | 'site'; site_id?: string }) =>
+    api.post<{ verified: boolean; data: NpiResult }>('/npi/verify', data),
 }

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Star, Users, Clock, Award, BookOpen, MessageSquare,
   Loader2, UserSearch, Shield, CalendarDays, GraduationCap, CheckCircle2,
-  Zap, Sparkles, Target, Heart
+  Zap, Sparkles, Target, Heart, ShieldCheck
 } from 'lucide-react'
 import { useState } from 'react'
 import { usePreceptorProfile, usePreceptorReviews, usePreceptorReviewStats } from '../hooks/useApi.ts'
@@ -90,6 +90,11 @@ export function PreceptorDetail() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-stone-900">{firstName} {lastName}</h1>
+              {profile.is_npi_verified && (
+                <span className="flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">
+                  <ShieldCheck className="w-3.5 h-3.5" /> NPI Verified
+                </span>
+              )}
               <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
                 profile.availability_status === 'available' ? 'bg-green-100 text-green-700'
                 : profile.availability_status === 'limited' ? 'bg-yellow-100 text-yellow-700'
@@ -270,6 +275,26 @@ export function PreceptorDetail() {
               </div>
             </div>
           </Card>
+
+          {/* NPI Verification */}
+          {profile.npi_number && (
+            <Card>
+              <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-teal-500" /> NPI Verification
+              </h2>
+              <div className="flex items-center justify-between p-3 bg-teal-50 rounded-xl">
+                <div>
+                  <p className="text-sm font-medium text-stone-900">NPI #{profile.npi_number}</p>
+                  <p className="text-xs text-stone-500">
+                    {profile.is_npi_verified ? 'Verified against NPPES registry' : 'Pending verification'}
+                  </p>
+                </div>
+                {profile.is_npi_verified && (
+                  <ShieldCheck className="w-5 h-5 text-teal-600" />
+                )}
+              </div>
+            </Card>
+          )}
 
           {/* Badges & Achievements */}
           {profile.badges && profile.badges.length > 0 && (

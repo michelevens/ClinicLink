@@ -1,4 +1,4 @@
-import { Star, Users, Clock, MapPin } from 'lucide-react'
+import { Star, Users, Clock, MapPin, ShieldCheck } from 'lucide-react'
 import type { PreceptorDirectoryEntry } from '../../services/api.ts'
 
 const BADGE_LABELS: Record<string, { label: string; color: string }> = {
@@ -33,6 +33,11 @@ export function PreceptorProfileCard({ entry, onClick }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-stone-900 truncate">{entry.first_name} {entry.last_name}</h3>
+            {entry.is_npi_verified && (
+              <span className="flex items-center gap-1 px-1.5 py-0.5 bg-teal-50 text-teal-700 rounded-full text-[10px] font-medium shrink-0" title="NPI Verified">
+                <ShieldCheck className="w-3 h-3" /> NPI
+              </span>
+            )}
             <span className={`w-2.5 h-2.5 rounded-full ${availColor} shrink-0`} title={availLabel} />
           </div>
           <div className="flex items-center gap-1 mt-0.5">

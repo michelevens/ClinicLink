@@ -24,6 +24,9 @@ class PreceptorProfile extends Model
         'total_students_mentored',
         'total_hours_supervised',
         'profile_visibility',
+        'npi_number',
+        'npi_verified_at',
+        'npi_data',
     ];
 
     protected function casts(): array
@@ -33,6 +36,8 @@ class PreceptorProfile extends Model
             'credentials' => 'array',
             'badges' => 'array',
             'total_hours_supervised' => 'decimal:2',
+            'npi_data' => 'array',
+            'npi_verified_at' => 'datetime',
         ];
     }
 

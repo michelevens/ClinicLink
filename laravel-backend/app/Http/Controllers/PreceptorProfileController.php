@@ -55,6 +55,8 @@ class PreceptorProfileController extends Controller
                 'total_hours_supervised' => $profile->total_hours_supervised,
                 'average_rating' => round($reviews->avg('overall_score') ?? 0, 1) ?: null,
                 'review_count' => $reviews->count(),
+                'npi_number' => $profile->npi_number,
+                'is_npi_verified' => !is_null($profile->npi_verified_at),
             ];
         });
 
@@ -90,6 +92,9 @@ class PreceptorProfileController extends Controller
                 'total_students_mentored' => $profile->total_students_mentored,
                 'total_hours_supervised' => $profile->total_hours_supervised,
                 'profile_visibility' => $profile->profile_visibility,
+                'npi_number' => $profile->npi_number,
+                'npi_verified_at' => $profile->npi_verified_at,
+                'is_npi_verified' => !is_null($profile->npi_verified_at),
                 'created_at' => $profile->created_at,
                 'updated_at' => $profile->updated_at,
                 'user' => [

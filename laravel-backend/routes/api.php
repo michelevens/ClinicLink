@@ -35,6 +35,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AccreditationReportController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\NpiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -87,6 +88,10 @@ Route::get('/accreditation-reports/{report}/download', [AccreditationReportContr
 // Stripe webhooks (no auth — signature verified in controller)
 Route::post('/stripe/webhook', [PaymentController::class, 'webhook']);
 Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook']);
+
+// NPI lookup (public, rate-limited)
+Route::get('/npi/lookup', [NpiController::class, 'lookup']);
+Route::get('/npi/search', [NpiController::class, 'search']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -363,6 +368,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/subscription/status', [SubscriptionController::class, 'status']);
     Route::post('/subscription/checkout', [SubscriptionController::class, 'createCheckout']);
     Route::post('/subscription/portal', [SubscriptionController::class, 'portal']);
+
+    // NPI Verification (authenticated)
+    Route::middleware('role:preceptor,site_manager,admin')->post('/npi/verify', [NpiController::class, 'verify']);
 
     // Preceptor Profiles
     Route::get('/preceptor-profiles', [PreceptorProfileController::class, 'directory']);

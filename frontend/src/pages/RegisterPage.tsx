@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, Building2, Search, Loader2, BookOpen } from 'lucide-react'
+import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, Building2, Search, Loader2, BookOpen, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
 import { universitiesApi, api } from '../services/api.ts'
@@ -61,7 +61,7 @@ export function RegisterPage() {
   const prefillRole = (searchParams.get('role') as UserRole) || 'student'
 
   const navigate = useNavigate()
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '' })
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '', npiNumber: '' })
   const [showPassword, setShowPassword] = useState(false)
   const { register, isLoading } = useAuth()
 
@@ -350,6 +350,33 @@ export function RegisterPage() {
                     ? 'Select the school you are enrolled in'
                     : 'Select the school or organization you are affiliated with'}
                 </p>
+              </div>
+            )}
+
+            {/* Optional NPI for preceptors */}
+            {form.role === 'preceptor' && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-stone-700">NPI Number (Optional)</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={form.npiNumber}
+                    onChange={e => {
+                      const v = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      setForm(f => ({ ...f, npiNumber: v }))
+                    }}
+                    placeholder="10-digit NPI number"
+                    maxLength={10}
+                    className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                  />
+                </div>
+                <p className="text-xs text-stone-400">If you have an NPI, enter it here. You can also add it later during onboarding.</p>
+                {form.npiNumber && form.npiNumber.length > 0 && form.npiNumber.length !== 10 && (
+                  <p className="text-xs text-amber-600">NPI must be exactly 10 digits</p>
+                )}
               </div>
             )}
 
