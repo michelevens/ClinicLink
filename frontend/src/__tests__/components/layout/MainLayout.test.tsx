@@ -25,6 +25,10 @@ vi.mock('../../../contexts/AuthContext.tsx', () => ({
 vi.mock('../../../hooks/useApi.ts', () => ({
   useMessageUnreadCount: () => ({ data: { count: 0 } }),
   useMyPendingSignatures: () => ({ data: { data: [] } }),
+  useUnreadCount: () => ({ data: { count: 0 } }),
+  useNotifications: () => ({ data: { data: [] } }),
+  useMarkAsRead: () => ({ mutateAsync: vi.fn() }),
+  useMarkAllAsRead: () => ({ mutateAsync: vi.fn() }),
 }))
 
 function renderWithProviders(initialVersion: 'v1' | 'v2' = 'v1') {
