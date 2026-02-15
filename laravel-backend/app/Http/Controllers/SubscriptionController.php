@@ -55,46 +55,50 @@ class SubscriptionController extends Controller
 
         $interval = $validated['interval'] ?? 'month';
 
-        // Get or create Stripe customer
-        if (!$user->stripe_customer_id) {
-            $customer = Customer::create([
-                'email' => $user->email,
-                'name' => $user->full_name,
-                'metadata' => ['cliniclink_user_id' => $user->id],
-            ]);
-            $user->update(['stripe_customer_id' => $customer->id]);
-        }
+        try {
+            // Get or create Stripe customer
+            if (!$user->stripe_customer_id) {
+                $customer = Customer::create([
+                    'email' => $user->email,
+                    'name' => $user->full_name,
+                    'metadata' => ['cliniclink_user_id' => $user->id],
+                ]);
+                $user->update(['stripe_customer_id' => $customer->id]);
+            }
 
-        $priceId = $interval === 'year'
-            ? config('services.stripe.prices.student_pro_yearly')
-            : config('services.stripe.prices.student_pro_monthly');
+            $priceId = $interval === 'year'
+                ? config('services.stripe.prices.student_pro_yearly')
+                : config('services.stripe.prices.student_pro_monthly');
 
-        if (!$priceId) {
-            return response()->json(['message' => 'Subscription pricing not configured.'], 500);
-        }
+            if (!$priceId) {
+                return response()->json(['message' => 'Subscription pricing not configured.'], 500);
+            }
 
-        $session = StripeSession::create([
-            'customer' => $user->stripe_customer_id,
-            'mode' => 'subscription',
-            'line_items' => [[
-                'price' => $priceId,
-                'quantity' => 1,
-            ]],
-            'success_url' => config('app.frontend_url') . '/settings?tab=payments&subscribed=1',
-            'cancel_url' => config('app.frontend_url') . '/pricing',
-            'metadata' => [
-                'user_id' => $user->id,
-                'plan' => 'pro',
-            ],
-            'subscription_data' => [
+            $session = StripeSession::create([
+                'customer' => $user->stripe_customer_id,
+                'mode' => 'subscription',
+                'line_items' => [[
+                    'price' => $priceId,
+                    'quantity' => 1,
+                ]],
+                'success_url' => config('app.frontend_url') . '/settings?tab=subscription&subscribed=1',
+                'cancel_url' => config('app.frontend_url') . '/pricing',
                 'metadata' => [
                     'user_id' => $user->id,
                     'plan' => 'pro',
                 ],
-            ],
-        ]);
+                'subscription_data' => [
+                    'metadata' => [
+                        'user_id' => $user->id,
+                        'plan' => 'pro',
+                    ],
+                ],
+            ]);
 
-        return response()->json(['url' => $session->url]);
+            return response()->json(['url' => $session->url]);
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            return response()->json(['message' => 'Stripe error: ' . $e->getMessage()], 422);
+        }
     }
 
     /**
