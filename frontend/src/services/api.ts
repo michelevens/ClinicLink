@@ -1613,15 +1613,12 @@ export interface AnalyticsSummary {
   [key: string]: unknown
 }
 
-export interface AnalyticsTimeSeries {
-  labels: string[]
-  datasets: { label: string; data: number[]; color?: string }[]
-}
+export type AnalyticsTimeSeries = { date: string; placements: number }[]
 
 export interface AnalyticsMetrics {
   summary: AnalyticsSummary
   time_series?: AnalyticsTimeSeries
-  specialty_demand?: { specialty: string; count: number }[]
+  specialty_demand?: { specialty: string; demand: number }[]
   top_sites?: { site_id: string; site_name: string; placements: number; fill_rate: number }[]
   top_programs?: { program_id: string; program_name: string; students: number; placement_rate: number }[]
   [key: string]: unknown
@@ -1654,7 +1651,7 @@ export const analyticsApi = {
   demandHeatMap: () =>
     api.get<{ states: { state: string; count: number }[] }>('/analytics/demand-map'),
   specialtyDemand: () =>
-    api.get<{ specialties: { specialty: string; count: number }[] }>('/analytics/specialty-demand'),
+    api.get<{ specialties: { specialty: string; demand: number }[] }>('/analytics/specialty-demand'),
 }
 
 // --- Accreditation Reports ---
