@@ -123,7 +123,6 @@ export function AdminUsers() {
                 <tr className="border-b border-stone-200 bg-stone-50">
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">User</th>
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">Role</th>
-                  <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden lg:table-cell">Affiliation</th>
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">Status</th>
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden md:table-cell">MFA</th>
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden md:table-cell">Onboarding</th>
@@ -150,25 +149,23 @@ export function AdminUsers() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <button onClick={e => { e.stopPropagation(); setEditRole(user); setNewRole(user.role) }}>
-                        <Badge variant={ROLE_COLORS[user.role] || 'default'} size="sm">
-                          {ROLE_LABELS[user.role] || user.role}
-                        </Badge>
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
-                      {(user as ApiUser & { affiliation?: string }).affiliation ? (
-                        <div className="flex items-center gap-1.5 text-sm text-stone-600">
-                          {['student', 'coordinator', 'professor'].includes(user.role) ? (
-                            <GraduationCap className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                          ) : (
-                            <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                          )}
-                          <span className="truncate max-w-[160px]">{(user as ApiUser & { affiliation?: string }).affiliation}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-stone-300">&mdash;</span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <button onClick={e => { e.stopPropagation(); setEditRole(user); setNewRole(user.role) }}>
+                          <Badge variant={ROLE_COLORS[user.role] || 'default'} size="sm">
+                            {ROLE_LABELS[user.role] || user.role}
+                          </Badge>
+                        </button>
+                        {(user as ApiUser & { affiliation?: string }).affiliation && (
+                          <div className="flex items-center gap-1.5 text-xs text-stone-500">
+                            {['student', 'coordinator', 'professor'].includes(user.role) ? (
+                              <GraduationCap className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                            ) : (
+                              <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                            )}
+                            <span className="truncate max-w-[160px]">{(user as ApiUser & { affiliation?: string }).affiliation}</span>
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <button
