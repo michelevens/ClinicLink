@@ -32,6 +32,7 @@ import { VerifyCertificate } from './pages/VerifyCertificate.tsx'
 import { SitePreceptors } from './pages/SitePreceptors.tsx'
 import { StudentDetail } from './pages/StudentDetail.tsx'
 import { AcceptInvite } from './pages/AcceptInvite.tsx'
+import { AcceptStudentInvite } from './pages/AcceptStudentInvite.tsx'
 import { Agreements } from './pages/Agreements.tsx'
 import { ComplianceDashboard } from './pages/ComplianceDashboard.tsx'
 import { CeCredits } from './pages/CeCredits.tsx'
@@ -103,6 +104,7 @@ export default function App() {
       <Route path="/verify/:certificateNumber" element={<VerifyCertificate />} />
       <Route path="/verify-ce/:uuid" element={<VerifyCeCertificate />} />
       <Route path="/invite/:token" element={<AcceptInvite />} />
+      <Route path="/student-invite/:token" element={<AcceptStudentInvite />} />
       <Route path="/verify-email" element={<VerifyEmailPrompt />} />
       <Route path="/verify-email/:token" element={<VerifyEmailCallback />} />
 

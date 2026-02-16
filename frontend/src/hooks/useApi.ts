@@ -6,7 +6,7 @@ import {
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
-  signaturesApi, subscriptionApi, aiChatApi,
+  signaturesApi, subscriptionApi, aiChatApi, studentInvitesApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -870,6 +870,55 @@ export function useRevokeInvite() {
   return useMutation({
     mutationFn: siteInvitesApi.revoke,
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['site-invites'] }) },
+  })
+}
+
+// --- Student Invites ---
+export function useStudentInvites() {
+  return useQuery({
+    queryKey: ['student-invites'],
+    queryFn: () => studentInvitesApi.list(),
+  })
+}
+
+export function useCreateStudentInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: studentInvitesApi.create,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['student-invites'] }) },
+  })
+}
+
+export function useBulkCreateStudentInvites() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: studentInvitesApi.bulkCreate,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['student-invites'] }) },
+  })
+}
+
+export function useAcceptStudentInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: studentInvitesApi.accept,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['auth-me'] })
+      qc.invalidateQueries({ queryKey: ['student-invites'] })
+    },
+  })
+}
+
+export function useResendStudentInvite() {
+  return useMutation({
+    mutationFn: studentInvitesApi.resend,
+  })
+}
+
+export function useRevokeStudentInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: studentInvitesApi.revoke,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['student-invites'] }) },
   })
 }
 

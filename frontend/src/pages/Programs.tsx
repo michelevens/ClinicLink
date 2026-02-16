@@ -2,15 +2,19 @@ import { useState, useMemo } from 'react'
 import {
   BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2, Plus,
   Users, MapPin, Phone, Globe, CheckCircle2, UserPlus, KeyRound, Copy, Check, ExternalLink,
+  Mail, Send, X, Link, RefreshCw, Upload,
 } from 'lucide-react'
-import { useCreateProgram, useMyStudents, useAssignStudentProgram, useMyUniversityLicenseCodes } from '../hooks/useApi.ts'
+import {
+  useCreateProgram, useMyStudents, useAssignStudentProgram, useMyUniversityLicenseCodes,
+  useStudentInvites, useCreateStudentInvite, useBulkCreateStudentInvites, useResendStudentInvite, useRevokeStudentInvite,
+} from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { api } from '../services/api.ts'
-import type { ApiUniversity, ApiProgram, ApiMyStudent, ApiLicenseCode } from '../services/api.ts'
+import type { ApiUniversity, ApiProgram, ApiMyStudent, ApiLicenseCode, ApiStudentInvite } from '../services/api.ts'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -240,6 +244,9 @@ function CoordinatorMyUniversity({ universityId }: { universityId: string }) {
       {/* License Codes */}
       <LicenseCodesSection />
 
+      {/* Student Invites */}
+      <StudentInvitesSection programs={programs} />
+
       {/* Add Program Modal */}
       {showAddProgram && (
         <AddProgramModal
@@ -362,6 +369,479 @@ function LicenseCodesSection() {
         </Card>
       )}
     </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// Student Invites Section (Coordinator view)
+// ──────────────────────────────────────────
+function StudentInvitesSection({ programs }: { programs: ApiProgram[] }) {
+  const { data, isLoading } = useStudentInvites()
+  const createInvite = useCreateStudentInvite()
+  const bulkCreate = useBulkCreateStudentInvites()
+  const resendInvite = useResendStudentInvite()
+  const revokeInvite = useRevokeStudentInvite()
+
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+
+  const invites: ApiStudentInvite[] = data?.invites || []
+  const pendingInvites = invites.filter(i => i.status === 'pending')
+  const acceptedInvites = invites.filter(i => i.status === 'accepted')
+  const expiredOrRevoked = invites.filter(i => i.status === 'expired' || i.status === 'revoked')
+
+  const copyLink = (token: string) => {
+    const url = `${window.location.origin}/student-invite/${token}`
+    navigator.clipboard.writeText(url)
+    setCopiedToken(token)
+    toast.success('Invite link copied')
+    setTimeout(() => setCopiedToken(null), 2000)
+  }
+
+  const handleResend = (id: string) => {
+    resendInvite.mutate(id, {
+      onSuccess: (res: { message: string }) => toast.success(res.message),
+      onError: (err: Error) => toast.error(err.message || 'Failed to resend'),
+    })
+  }
+
+  const handleRevoke = (id: string) => {
+    revokeInvite.mutate(id, {
+      onSuccess: () => toast.success('Invite revoked'),
+      onError: (err: Error) => toast.error(err.message || 'Failed to revoke'),
+    })
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending': return <Badge variant="warning" size="sm">Pending</Badge>
+      case 'accepted': return <Badge variant="success" size="sm">Accepted</Badge>
+      case 'expired': return <Badge variant="danger" size="sm">Expired</Badge>
+      case 'revoked': return <Badge variant="default" size="sm">Revoked</Badge>
+      default: return <Badge variant="default" size="sm">{status}</Badge>
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex justify-center py-6">
+          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+          <Mail className="w-5 h-5 text-primary-500" /> Student Invites
+        </h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowBulkModal(true)}>
+            <Upload className="w-3.5 h-3.5 mr-1" /> Bulk Invite
+          </Button>
+          <Button size="sm" onClick={() => setShowInviteModal(true)}>
+            <Send className="w-3.5 h-3.5 mr-1" /> Invite Student
+          </Button>
+        </div>
+      </div>
+
+      {invites.length === 0 ? (
+        <Card>
+          <div className="text-center py-8">
+            <Mail className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+            <h3 className="font-semibold text-stone-900 mb-1">No invites sent yet</h3>
+            <p className="text-sm text-stone-500 mb-4">Invite students to join your university on ClinicLink.</p>
+            <Button onClick={() => setShowInviteModal(true)} variant="outline">
+              <Send className="w-4 h-4 mr-1" /> Send First Invite
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          {/* Pending Invites */}
+          {pendingInvites.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-stone-700 mb-2">Pending ({pendingInvites.length})</h3>
+              <div className="space-y-2">
+                {pendingInvites.map(invite => (
+                  <div key={invite.id} className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-900 truncate">
+                        {invite.email || 'Open invite link'}
+                      </p>
+                      <div className="flex flex-wrap gap-x-3 text-xs text-stone-500 mt-0.5">
+                        {invite.program_name && <span>{invite.program_name}</span>}
+                        <span>Expires {new Date(invite.expires_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => copyLink(invite.token)}
+                        className="p-1.5 text-stone-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-white"
+                        title="Copy invite link"
+                      >
+                        {copiedToken === invite.token ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Link className="w-3.5 h-3.5" />}
+                      </button>
+                      {invite.email && (
+                        <button
+                          onClick={() => handleResend(invite.id)}
+                          className="p-1.5 text-stone-400 hover:text-primary-500 transition-colors rounded-lg hover:bg-white"
+                          title="Resend email"
+                          disabled={resendInvite.isPending}
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${resendInvite.isPending ? 'animate-spin' : ''}`} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRevoke(invite.id)}
+                        className="p-1.5 text-stone-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
+                        title="Revoke invite"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Accepted Invites */}
+          {acceptedInvites.length > 0 && (
+            <div className={pendingInvites.length > 0 ? 'pt-4 border-t border-stone-100' : ''}>
+              <h3 className="text-sm font-semibold text-stone-700 mb-2">Accepted ({acceptedInvites.length})</h3>
+              <div className="space-y-2">
+                {acceptedInvites.map(invite => (
+                  <div key={invite.id} className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-stone-900 truncate">
+                        {invite.accepted_by?.name || invite.email || 'Student'}
+                      </p>
+                      <p className="text-xs text-stone-500">
+                        {invite.accepted_by?.email}{invite.program_name ? ` · ${invite.program_name}` : ''}
+                      </p>
+                    </div>
+                    {getStatusBadge(invite.status)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Expired/Revoked */}
+          {expiredOrRevoked.length > 0 && (
+            <div className={(pendingInvites.length > 0 || acceptedInvites.length > 0) ? 'pt-4 border-t border-stone-100 mt-4' : ''}>
+              <h3 className="text-sm font-semibold text-stone-500 mb-2">Expired / Revoked ({expiredOrRevoked.length})</h3>
+              <div className="space-y-1">
+                {expiredOrRevoked.map(invite => (
+                  <div key={invite.id} className="flex items-center gap-3 px-3 py-2 text-stone-400">
+                    <p className="text-sm truncate flex-1">{invite.email || 'Open invite'}</p>
+                    {getStatusBadge(invite.status)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-3 pt-3 border-t border-stone-100 text-xs text-stone-500">
+            {invites.length} invite{invites.length !== 1 ? 's' : ''} total
+          </div>
+        </Card>
+      )}
+
+      {/* Single Invite Modal */}
+      {showInviteModal && (
+        <InviteStudentModal
+          programs={programs}
+          onClose={() => setShowInviteModal(false)}
+          createInvite={createInvite}
+        />
+      )}
+
+      {/* Bulk Invite Modal */}
+      {showBulkModal && (
+        <BulkInviteStudentsModal
+          programs={programs}
+          onClose={() => setShowBulkModal(false)}
+          bulkCreate={bulkCreate}
+        />
+      )}
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// Single Student Invite Modal
+// ──────────────────────────────────────────
+function InviteStudentModal({ programs, onClose, createInvite }: {
+  programs: ApiProgram[]
+  onClose: () => void
+  createInvite: ReturnType<typeof useCreateStudentInvite>
+}) {
+  const [email, setEmail] = useState('')
+  const [programId, setProgramId] = useState('')
+  const [message, setMessage] = useState('')
+  const [result, setResult] = useState<{ url: string; email_sent: boolean } | null>(null)
+  const [copiedUrl, setCopiedUrl] = useState(false)
+
+  const handleSubmit = () => {
+    createInvite.mutate(
+      {
+        email: email.trim() || undefined,
+        program_id: programId || undefined,
+        message: message.trim() || undefined,
+      },
+      {
+        onSuccess: (res: { invite: { url: string; email: string | null; email_sent: boolean } }) => {
+          setResult({ url: res.invite.url, email_sent: res.invite.email_sent })
+          if (res.invite.email_sent) {
+            toast.success(`Invite sent to ${res.invite.email}`)
+          } else if (res.invite.email) {
+            toast.warning('Invite created but email failed to send. Share the link manually.')
+          } else {
+            toast.success('Open invite link created!')
+          }
+        },
+        onError: (err: Error) => toast.error(err.message || 'Failed to create invite'),
+      }
+    )
+  }
+
+  const copyUrl = () => {
+    if (result?.url) {
+      navigator.clipboard.writeText(result.url)
+      setCopiedUrl(true)
+      toast.success('Link copied')
+      setTimeout(() => setCopiedUrl(false), 2000)
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Invite Student" size="md">
+      {result ? (
+        <div className="space-y-4">
+          <div className="text-center">
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="w-7 h-7 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-stone-900">Invite Created!</h3>
+            <p className="text-sm text-stone-500 mt-1">
+              {result.email_sent ? 'Email sent successfully.' : 'Share the link below with the student.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 p-3 bg-stone-50 rounded-xl">
+            <input
+              type="text"
+              readOnly
+              value={result.url}
+              className="flex-1 text-xs font-mono bg-transparent text-stone-700 border-none outline-none"
+            />
+            <button onClick={copyUrl} className="text-primary-500 hover:text-primary-600 shrink-0">
+              {copiedUrl ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            </button>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={onClose}>Done</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Student Email (optional)</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="student@example.edu"
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+            <p className="text-xs text-stone-400 mt-1">Leave blank to create a shareable open invite link.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Program (optional)</label>
+            <select
+              value={programId}
+              onChange={e => setProgramId(e.target.value)}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">-- No program assigned --</option>
+              {programs.map(p => (
+                <option key={p.id} value={p.id}>{p.name} ({p.degree_type})</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Personal Message (optional)</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Welcome to our program! We're excited to have you."
+              rows={3}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} isLoading={createInvite.isPending}>
+              <Send className="w-4 h-4 mr-1" /> {email.trim() ? 'Send Invite' : 'Create Link'}
+            </Button>
+          </div>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+// ──────────────────────────────────────────
+// Bulk Student Invite Modal
+// ──────────────────────────────────────────
+function BulkInviteStudentsModal({ programs, onClose, bulkCreate }: {
+  programs: ApiProgram[]
+  onClose: () => void
+  bulkCreate: ReturnType<typeof useBulkCreateStudentInvites>
+}) {
+  const [emailsText, setEmailsText] = useState('')
+  const [programId, setProgramId] = useState('')
+  const [message, setMessage] = useState('')
+  const [results, setResults] = useState<{ sent: number; skipped: number; failed: number } | null>(null)
+
+  const extractEmails = (text: string): string[] => {
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
+    return [...new Set(text.match(emailRegex) || [])]
+  }
+
+  const parsedEmails = extractEmails(emailsText)
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      setEmailsText((prev: string) => prev ? `${prev}\n${text}` : text)
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const handleSubmit = () => {
+    if (parsedEmails.length === 0) {
+      toast.error('No valid email addresses found.')
+      return
+    }
+    bulkCreate.mutate(
+      {
+        emails: parsedEmails,
+        program_id: programId || undefined,
+        message: message.trim() || undefined,
+      },
+      {
+        onSuccess: (res: { message: string; summary: { sent: number; skipped: number; failed: number } }) => {
+          setResults(res.summary)
+          toast.success(res.message)
+        },
+        onError: (err: Error) => toast.error(err.message || 'Bulk invite failed'),
+      }
+    )
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Bulk Invite Students" size="md">
+      {results ? (
+        <div className="space-y-4">
+          <div className="text-center">
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="w-7 h-7 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-stone-900">Bulk Invite Complete</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-3 bg-green-50 rounded-xl">
+              <p className="text-lg font-bold text-green-600">{results.sent}</p>
+              <p className="text-xs text-stone-500">Sent</p>
+            </div>
+            <div className="text-center p-3 bg-amber-50 rounded-xl">
+              <p className="text-lg font-bold text-amber-600">{results.skipped}</p>
+              <p className="text-xs text-stone-500">Skipped</p>
+            </div>
+            <div className="text-center p-3 bg-red-50 rounded-xl">
+              <p className="text-lg font-bold text-red-600">{results.failed}</p>
+              <p className="text-xs text-stone-500">Failed</p>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={onClose}>Done</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">
+              Student Emails
+              {parsedEmails.length > 0 && (
+                <span className="ml-2 text-xs font-normal text-primary-500">{parsedEmails.length} email{parsedEmails.length !== 1 ? 's' : ''} found</span>
+              )}
+            </label>
+            <textarea
+              value={emailsText}
+              onChange={e => setEmailsText(e.target.value)}
+              placeholder="Paste emails here (one per line, comma-separated, or any text containing emails)..."
+              rows={5}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+            />
+            <div className="flex items-center gap-2 mt-1.5">
+              <label className="cursor-pointer text-xs text-primary-500 hover:text-primary-600 flex items-center gap-1">
+                <Upload className="w-3 h-3" /> Upload CSV
+                <input type="file" accept=".csv,.txt" onChange={handleFileUpload} className="hidden" />
+              </label>
+              <span className="text-xs text-stone-400">or paste emails above</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Program (optional)</label>
+            <select
+              value={programId}
+              onChange={e => setProgramId(e.target.value)}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">-- No program assigned --</option>
+              {programs.map(p => (
+                <option key={p.id} value={p.id}>{p.name} ({p.degree_type})</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Message (optional)</label>
+            <textarea
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              placeholder="Welcome to our program!"
+              rows={2}
+              className="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} isLoading={bulkCreate.isPending} disabled={parsedEmails.length === 0}>
+              <Send className="w-4 h-4 mr-1" /> Send {parsedEmails.length} Invite{parsedEmails.length !== 1 ? 's' : ''}
+            </Button>
+          </div>
+        </div>
+      )}
+    </Modal>
   )
 }
 

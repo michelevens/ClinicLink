@@ -37,6 +37,7 @@ use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\NpiController;
+use App\Http\Controllers\StudentInviteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -71,6 +72,7 @@ Route::get('/verify-ce/{uuid}', [CeCertificateController::class, 'publicVerify']
 
 // Public invite validation
 Route::get('/invite/{token}', [SiteInviteController::class, 'show']);
+Route::get('/student-invite/{token}', [StudentInviteController::class, 'show']);
 
 // File downloads (auth handled via query token in controller for window.open() browser tabs)
 Route::get('/certificates/{certificate}/pdf', [CertificateController::class, 'downloadPdf']);
@@ -279,6 +281,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/invite/{token}/accept', [SiteInviteController::class, 'accept']);
     Route::get('/my-pending-invites', [SiteInviteController::class, 'myPendingInvites']);
+
+    // Student Invites (coordinator creates; student accepts)
+    Route::middleware('role:coordinator,admin')->group(function () {
+        Route::get('/student-invites', [StudentInviteController::class, 'index']);
+        Route::post('/student-invites', [StudentInviteController::class, 'store']);
+        Route::post('/student-invites/bulk', [StudentInviteController::class, 'bulkStore']);
+        Route::post('/student-invites/{invite}/resend', [StudentInviteController::class, 'resend']);
+        Route::delete('/student-invites/{invite}', [StudentInviteController::class, 'destroy']);
+    });
+    Route::post('/student-invite/{token}/accept', [StudentInviteController::class, 'accept']);
 
     // Site Join Requests (preceptor requests to join a site; manager/admin reviews)
     Route::middleware('role:preceptor')->group(function () {

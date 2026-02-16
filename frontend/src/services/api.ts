@@ -249,6 +249,29 @@ export interface BulkInviteResult {
   reason?: string
 }
 
+export interface ApiStudentInvite {
+  id: string
+  university_id: string
+  program_id: string | null
+  program_name: string | null
+  token: string
+  email: string | null
+  status: 'pending' | 'accepted' | 'expired' | 'revoked'
+  accepted_by: { id: string; name: string; email: string } | null
+  accepted_at: string | null
+  expires_at: string
+  created_at: string
+}
+
+export interface ApiStudentInviteDetail {
+  id: string
+  email: string | null
+  university: { id: string; name: string; city: string; state: string }
+  program: { id: string; name: string; degree_type: string } | null
+  invited_by: string | null
+  expires_at: string
+}
+
 export const siteInvitesApi = {
   list: () => api.get<{ invites: ApiSiteInvite[] }>('/site-invites'),
   create: (data: { site_id: string; email?: string; expires_in_days?: number; message?: string }) =>
@@ -260,6 +283,18 @@ export const siteInvitesApi = {
   resend: (id: string) => api.post<{ message: string }>(`/site-invites/${id}/resend`, {}),
   revoke: (id: string) => api.delete(`/site-invites/${id}`),
   myPending: () => api.get<{ invites: { id: string; token: string; email: string; site: { id: string; name: string; city: string; state: string; specialties: string[] }; invited_by: string | null; expires_at: string; created_at: string }[] }>('/my-pending-invites'),
+}
+
+export const studentInvitesApi = {
+  list: () => api.get<{ invites: ApiStudentInvite[] }>('/student-invites'),
+  create: (data: { email?: string; program_id?: string; expires_in_days?: number; message?: string }) =>
+    api.post<{ invite: { id: string; token: string; url: string; email: string | null; university_name: string; expires_at: string; email_sent: boolean } }>('/student-invites', data),
+  bulkCreate: (data: { emails: string[]; program_id?: string; message?: string; expires_in_days?: number }) =>
+    api.post<{ message: string; summary: { sent: number; skipped: number; failed: number; total: number }; results: BulkInviteResult[] }>('/student-invites/bulk', data),
+  validate: (token: string) => api.get<{ invite: ApiStudentInviteDetail; already_accepted?: boolean; university_name?: string; message?: string }>(`/student-invite/${token}`),
+  accept: (token: string) => api.post<{ message: string; university: { id: string; name: string } }>(`/student-invite/${token}/accept`),
+  resend: (id: string) => api.post<{ message: string }>(`/student-invites/${id}/resend`, {}),
+  revoke: (id: string) => api.delete(`/student-invites/${id}`),
 }
 
 // --- Applications ---
