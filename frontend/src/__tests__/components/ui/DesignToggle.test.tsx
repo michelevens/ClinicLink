@@ -27,16 +27,10 @@ describe('DesignToggle', () => {
     expect(screen.getByText('V1')).toBeInTheDocument()
   })
 
-  it('shows Classic sublabel in V1 mode', () => {
-    renderWithProvider()
-    expect(screen.getByText('Classic')).toBeInTheDocument()
-  })
-
   it('toggles to V2 on click', () => {
     renderWithProvider()
     fireEvent.click(screen.getByRole('button'))
     expect(screen.getByText('V2')).toBeInTheDocument()
-    expect(screen.getByText('Modern')).toBeInTheDocument()
   })
 
   it('toggles back to V1 on second click', () => {

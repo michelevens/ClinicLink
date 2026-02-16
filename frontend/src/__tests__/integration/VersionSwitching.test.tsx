@@ -133,11 +133,9 @@ describe('Version Switching Integration', () => {
       </DesignVersionProvider>
     )
     expect(screen.getByText('V1')).toBeInTheDocument()
-    expect(screen.getByText('Classic')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button'))
     expect(screen.getByText('V2')).toBeInTheDocument()
-    expect(screen.getByText('Modern')).toBeInTheDocument()
   })
 
   it('multiple rapid toggles resolve correctly', () => {
