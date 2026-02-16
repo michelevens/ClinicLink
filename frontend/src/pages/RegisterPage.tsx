@@ -1,6 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { Button } from '../components/ui/Button.tsx'
+import { Input } from '../components/ui/Input.tsx'
+import { Card } from '../components/ui/Card.tsx'
 import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, Building2, Search, Loader2, BookOpen, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
@@ -152,94 +155,34 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-16">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-secondary-50 px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="w-9 h-9 rounded-lg bg-primary-600 flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-white" />
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
+              <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-semibold text-slate-900 heading-serif">ClinicLink</span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+              ClinicLink
+            </span>
           </Link>
-          <h1 className="text-2xl text-slate-900 heading-serif">Create your account</h1>
-          <p className="text-slate-500 mt-2 text-sm">Join the clinical placement network</p>
+          <h1 className="text-2xl font-bold text-stone-900">Create your account</h1>
+          <p className="text-stone-500 mt-1">Join the clinical placement network</p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name Fields */}
+        <Card>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700">First Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Sarah"
-                    value={form.firstName}
-                    onChange={e => setForm({ ...form, firstName: e.target.value })}
-                    required
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700">Last Name</label>
-                <input
-                  type="text"
-                  placeholder="Chen"
-                  value={form.lastName}
-                  onChange={e => setForm({ ...form, lastName: e.target.value })}
-                  required
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
-                />
-              </div>
+              <Input label="First Name" placeholder="Sarah" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} icon={<User className="w-4 h-4" />} required />
+              <Input label="Last Name" placeholder="Chen" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required />
             </div>
-
-            {/* Username */}
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">Username</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <AtSign className="w-4 h-4" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="sarahchen"
-                  value={form.username}
-                  onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })}
-                  required
-                  className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">Email</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <input
-                  type="email"
-                  placeholder="you@university.edu"
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  required
-                  className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
-                />
-              </div>
-            </div>
+            <Input label="Username" placeholder="sarahchen" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })} icon={<AtSign className="w-4 h-4" />} required />
+            <Input label="Email" type="email" placeholder="you@university.edu" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} icon={<Mail className="w-4 h-4" />} required />
 
             {/* Password with strength meter */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-slate-700">Password</label>
+                <label className="block text-sm font-medium text-stone-700">Password</label>
                 <button
                   type="button"
                   onClick={handleGeneratePassword}
@@ -249,7 +192,7 @@ export function RegisterPage() {
                 </button>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -258,12 +201,12 @@ export function RegisterPage() {
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
                   required
-                  className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-10 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                  className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-10 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400 hover:text-stone-600"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -273,12 +216,12 @@ export function RegisterPage() {
               {form.password && (
                 <div className="space-y-2 pt-1">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden flex gap-0.5">
+                    <div className="flex-1 h-1.5 bg-stone-200 rounded-full overflow-hidden flex gap-0.5">
                       {[1, 2, 3, 4, 5].map(i => (
                         <div
                           key={i}
                           className={`flex-1 rounded-full transition-colors ${
-                            i <= strength.score ? strength.color : 'bg-slate-100'
+                            i <= strength.score ? strength.color : 'bg-stone-200'
                           }`}
                         />
                       ))}
@@ -295,9 +238,9 @@ export function RegisterPage() {
                       <div key={check.label} className="flex items-center gap-1.5">
                         {check.pass
                           ? <Check className="w-3 h-3 text-green-500" />
-                          : <X className="w-3 h-3 text-slate-300" />
+                          : <X className="w-3 h-3 text-stone-300" />
                         }
-                        <span className={`text-xs ${check.pass ? 'text-green-600' : 'text-slate-400'}`}>{check.label}</span>
+                        <span className={`text-xs ${check.pass ? 'text-green-600' : 'text-stone-400'}`}>{check.label}</span>
                       </div>
                     ))}
                   </div>
@@ -305,17 +248,16 @@ export function RegisterPage() {
               )}
             </div>
 
-            {/* Role Selection */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">I am a...</label>
+              <label className="block text-sm font-medium text-stone-700">I am a...</label>
               <div className="space-y-2">
                 {ROLE_OPTIONS.map(opt => (
                   <label
                     key={opt.value}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                       form.role === opt.value
-                        ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500/20'
-                        : 'border-slate-200 hover:border-slate-300'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500/20'
+                        : 'border-stone-200 hover:border-stone-300'
                     }`}
                   >
                     <input
@@ -327,13 +269,13 @@ export function RegisterPage() {
                       className="sr-only"
                     />
                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                      form.role === opt.value ? 'border-primary-500' : 'border-slate-300'
+                      form.role === opt.value ? 'border-primary-500' : 'border-stone-300'
                     }`}>
                       {form.role === opt.value && <div className="w-2 h-2 rounded-full bg-primary-500" />}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{opt.label}</p>
-                      <p className="text-xs text-slate-500">{opt.desc}</p>
+                      <p className="text-sm font-medium text-stone-900">{opt.label}</p>
+                      <p className="text-xs text-stone-500">{opt.desc}</p>
                     </div>
                   </label>
                 ))}
@@ -343,26 +285,26 @@ export function RegisterPage() {
             {/* Organization Search */}
             {needsOrg && (
               <div className="space-y-1.5" ref={uniRef}>
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-stone-700">
                   {form.role === 'student' ? 'Your School / University' : 'Affiliated Organization'}
                 </label>
                 {selectedUni ? (
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-primary-200 bg-primary-50">
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-primary-300 bg-primary-50">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-primary-600" />
-                      <span className="text-sm font-medium text-slate-900">{selectedUni.name}</span>
+                      <span className="text-sm font-medium text-stone-900">{selectedUni.name}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => { setSelectedUni(null); setForm(f => ({ ...f, universityId: '', programId: '' })); setUniSearch(''); setPrograms([]) }}
-                      className="text-slate-400 hover:text-red-500"
+                      className="text-stone-400 hover:text-red-500"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                       {uniLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                     </div>
                     <input
@@ -371,10 +313,10 @@ export function RegisterPage() {
                       onChange={e => { setUniSearch(e.target.value); setShowUniDropdown(true) }}
                       onFocus={() => uniResults.length > 0 && setShowUniDropdown(true)}
                       placeholder="Search for your school or organization..."
-                      className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                      className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
                     />
                     {showUniDropdown && uniResults.length > 0 && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                         {uniResults.map(u => (
                           <button
                             key={u.id}
@@ -385,25 +327,25 @@ export function RegisterPage() {
                               setShowUniDropdown(false)
                               setUniSearch('')
                             }}
-                            className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-slate-100 last:border-0"
+                            className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0"
                           >
-                            <p className="text-sm font-medium text-slate-900">{u.name}</p>
+                            <p className="text-sm font-medium text-stone-900">{u.name}</p>
                             {(u.city || u.state) && (
-                              <p className="text-xs text-slate-500">{[u.city, u.state].filter(Boolean).join(', ')}</p>
+                              <p className="text-xs text-stone-500">{[u.city, u.state].filter(Boolean).join(', ')}</p>
                             )}
                           </button>
                         ))}
                       </div>
                     )}
                     {showUniDropdown && uniSearch.length >= 2 && !uniLoading && uniResults.length === 0 && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg p-4 text-center">
-                        <p className="text-sm text-slate-500">No organizations found for "{uniSearch}"</p>
-                        <p className="text-xs text-slate-400 mt-1">You can add your organization after registration</p>
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg p-4 text-center">
+                        <p className="text-sm text-stone-500">No organizations found for "{uniSearch}"</p>
+                        <p className="text-xs text-stone-400 mt-1">You can add your organization after registration</p>
                       </div>
                     )}
                   </div>
                 )}
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-stone-400">
                   {form.role === 'student'
                     ? 'Select the school you are enrolled in'
                     : 'Select the school or organization you are affiliated with'}
@@ -414,9 +356,9 @@ export function RegisterPage() {
             {/* Optional NPI for preceptors */}
             {form.role === 'preceptor' && (
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700">NPI Number (Optional)</label>
+                <label className="block text-sm font-medium text-stone-700">NPI Number (Optional)</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <input
@@ -428,10 +370,10 @@ export function RegisterPage() {
                     }}
                     placeholder="10-digit NPI number"
                     maxLength={10}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                    className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
                   />
                 </div>
-                <p className="text-xs text-slate-400">If you have an NPI, enter it here. You can also add it later during onboarding.</p>
+                <p className="text-xs text-stone-400">If you have an NPI, enter it here. You can also add it later during onboarding.</p>
                 {form.npiNumber && form.npiNumber.length > 0 && form.npiNumber.length !== 10 && (
                   <p className="text-xs text-amber-600">NPI must be exactly 10 digits</p>
                 )}
@@ -441,26 +383,26 @@ export function RegisterPage() {
             {/* Program Selection (students only, after university selected) */}
             {showProgramSelect && (
               <div className="space-y-1.5">
-                <label className="block text-sm font-medium text-slate-700">Your Program</label>
+                <label className="block text-sm font-medium text-stone-700">Your Program</label>
                 {programsLoading ? (
-                  <div className="flex items-center gap-2 p-3 rounded-xl border border-slate-200">
-                    <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
-                    <span className="text-sm text-slate-500">Loading programs...</span>
+                  <div className="flex items-center gap-2 p-3 rounded-xl border border-stone-200">
+                    <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                    <span className="text-sm text-stone-500">Loading programs...</span>
                   </div>
                 ) : programs.length === 0 ? (
-                  <div className="p-3 rounded-xl border border-slate-200 bg-slate-50">
-                    <p className="text-sm text-slate-500">No programs found for this university.</p>
-                    <p className="text-xs text-slate-400 mt-1">Your coordinator can assign you to a program later.</p>
+                  <div className="p-3 rounded-xl border border-stone-200 bg-stone-50">
+                    <p className="text-sm text-stone-500">No programs found for this university.</p>
+                    <p className="text-xs text-stone-400 mt-1">Your coordinator can assign you to a program later.</p>
                   </div>
                 ) : (
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                       <BookOpen className="w-4 h-4" />
                     </div>
                     <select
                       value={form.programId}
                       onChange={e => setForm(f => ({ ...f, programId: e.target.value }))}
-                      className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200 appearance-none"
+                      className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200 appearance-none"
                     >
                       <option value="">-- Select your program --</option>
                       {programs.map(p => (
@@ -471,28 +413,22 @@ export function RegisterPage() {
                     </select>
                   </div>
                 )}
-                <p className="text-xs text-slate-400">Select the clinical program you are enrolled in</p>
+                <p className="text-xs text-stone-400">Select the clinical program you are enrolled in</p>
               </div>
             )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full font-medium rounded-xl px-6 py-3 text-sm bg-primary-600 text-white hover:bg-primary-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Button type="submit" isLoading={isLoading} className="w-full">
               Create Account
-            </button>
+            </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-stone-500">
               Already have an account?{' '}
               <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">Sign in</Link>
             </p>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   )

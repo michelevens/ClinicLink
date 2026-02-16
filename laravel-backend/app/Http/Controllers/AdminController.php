@@ -212,7 +212,7 @@ class AdminController extends Controller
             'managed_sites_count' => $user->managedSites()->count(),
             'preceptor_slots_count' => $user->preceptorSlots()->count(),
             'reviews_received_count' => $user->preceptorReviewsReceived()->count(),
-            'average_rating' => round((float) $user->preceptorReviewsReceived()->avg('overall_rating'), 1),
+            'average_rating' => round((float) $user->preceptorReviewsReceived()->avg('overall_score'), 1),
             'messages_sent_count' => $user->sentMessages()->count(),
             'conversations_count' => $user->conversations()->count(),
             'total_students_mentored' => $user->preceptorProfile?->total_students_mentored ?? 0,
