@@ -175,19 +175,27 @@ class PaymentController extends Controller
         ]);
 
         // Create Stripe PaymentIntent
-        $paymentIntent = PaymentIntent::create([
-            'amount' => $amount,
-            'currency' => 'usd',
-            'application_fee_amount' => $platformFee,
-            'transfer_data' => [
-                'destination' => $siteManager->stripe_account_id,
-            ],
-            'metadata' => [
-                'payment_id' => $payment->id,
-                'application_id' => $application->id,
-                'student_id' => $user->id,
-            ],
-        ]);
+        try {
+            $paymentIntent = PaymentIntent::create([
+                'amount' => $amount,
+                'currency' => 'usd',
+                'application_fee_amount' => $platformFee,
+                'transfer_data' => [
+                    'destination' => $siteManager->stripe_account_id,
+                ],
+                'metadata' => [
+                    'payment_id' => $payment->id,
+                    'application_id' => $application->id,
+                    'student_id' => $user->id,
+                ],
+            ]);
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            $payment->update(['status' => 'failed']);
+            $application->update(['payment_status' => null]);
+            return response()->json([
+                'message' => 'Payment processing error: ' . $e->getMessage(),
+            ], 422);
+        }
 
         $payment->update(['stripe_payment_intent_id' => $paymentIntent->id]);
 
