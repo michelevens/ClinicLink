@@ -249,6 +249,8 @@ class AdminController extends Controller
             'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users,username,' . $user->id, 'regex:/^[a-z0-9._-]+$/'],
             'role' => ['sometimes', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
             'is_active' => ['sometimes', 'boolean'],
+            'plan' => ['sometimes', 'in:free,pro'],
+            'stripe_onboarded' => ['sometimes', 'boolean'],
         ]);
 
         // Detect activation: is_active changing from false to true
