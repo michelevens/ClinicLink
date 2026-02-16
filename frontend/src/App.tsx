@@ -46,6 +46,7 @@ import { PreceptorDirectory } from './pages/PreceptorDirectory.tsx'
 import { PreceptorDetail } from './pages/PreceptorDetail.tsx'
 import { Analytics } from './pages/Analytics.tsx'
 import { AccreditationReports } from './pages/AccreditationReports.tsx'
+import { SitesMap } from './pages/SitesMap.tsx'
 import { VerifyEmailPrompt, VerifyEmailCallback } from './pages/VerifyEmail.tsx'
 import { Pricing } from './pages/Pricing.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
@@ -149,6 +150,7 @@ export default function App() {
       <Route path="/preceptor-directory/:userId" element={<ProtectedRoute><PreceptorDetail /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Analytics /></ProtectedRoute>} />
       <Route path="/accreditation-reports" element={<ProtectedRoute roles={['coordinator', 'admin']}><AccreditationReports /></ProtectedRoute>} />
+      <Route path="/sites-map" element={<ProtectedRoute roles={['coordinator', 'admin']}><SitesMap /></ProtectedRoute>} />
 
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

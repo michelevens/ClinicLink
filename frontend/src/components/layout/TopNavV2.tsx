@@ -4,7 +4,7 @@ import {
   Building2, Users, CalendarDays, BookOpen, Settings, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
   MessageSquare, Calendar, BarChart3, FileBarChart, UserSearch,
-  Bell, Command,
+  Bell, Command, Map,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
@@ -40,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'My University', path: '/programs', icon: <BookOpen className="w-4 h-4" />, roles: ['coordinator'], group: 'manage' },
   { label: 'Placements', path: '/placements', icon: <GraduationCap className="w-4 h-4" />, roles: ['coordinator', 'professor'], group: 'main' },
   { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-4 h-4" />, roles: ['coordinator', 'admin'], group: 'manage' },
+  { label: 'Sites Map', path: '/sites-map', icon: <Map className="w-4 h-4" />, roles: ['coordinator', 'admin'], group: 'manage' },
   { label: 'Universities', path: '/universities', icon: <BookOpen className="w-4 h-4" />, roles: ['admin'], group: 'admin' },
   { label: 'All Users', path: '/admin/users', icon: <Users className="w-4 h-4" />, roles: ['admin'], group: 'admin' },
   { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-4 h-4" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'admin' },

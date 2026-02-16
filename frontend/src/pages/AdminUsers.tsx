@@ -149,21 +149,21 @@ export function AdminUsers() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
+                      <div>
                         <button onClick={e => { e.stopPropagation(); setEditRole(user); setNewRole(user.role) }}>
                           <Badge variant={ROLE_COLORS[user.role] || 'default'} size="sm">
                             {ROLE_LABELS[user.role] || user.role}
                           </Badge>
                         </button>
                         {(user as ApiUser & { affiliation?: string }).affiliation && (
-                          <div className="flex items-center gap-1.5 text-xs text-stone-500">
+                          <p className="flex items-center gap-1.5 text-xs text-stone-500 mt-1">
                             {['student', 'coordinator', 'professor'].includes(user.role) ? (
                               <GraduationCap className="w-3.5 h-3.5 text-stone-400 shrink-0" />
                             ) : (
                               <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
                             )}
                             <span className="truncate max-w-[160px]">{(user as ApiUser & { affiliation?: string }).affiliation}</span>
-                          </div>
+                          </p>
                         )}
                       </div>
                     </td>
