@@ -7,7 +7,7 @@ import {
   ShieldCheck, MessageSquare, BookOpen, Heart
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite, useUniversities, useAssignStudentProgram } from '../hooks/useApi.ts'
+import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite, useAssignSiteManagerToSites, useRemoveSiteManagerFromSite, useUniversities, useAssignStudentProgram } from '../hooks/useApi.ts'
 import { universitiesApi } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -1073,59 +1073,128 @@ function AssignToSiteModal({ userId, assignedSiteIds, onClose }: { userId: strin
 
 // ─── Site Manager Sections ───────────────────────────────────────
 function SiteManagerSections({ user }: { user: ApiUser }) {
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const removeMut = useRemoveSiteManagerFromSite()
+
+  const handleRemove = async (siteId: string, siteName: string) => {
+    if (!confirm(`Remove ${user.first_name} as manager of ${siteName}?`)) return
+    try {
+      const res = await removeMut.mutateAsync({ userId: user.id, siteId })
+      toast.success(res.message)
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to remove manager.')
+    }
+  }
+
   return (
     <>
-      {user.managed_sites && user.managed_sites.length > 0 && (
-        <Card>
-          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary-500" /> Managed Sites ({user.managed_sites.length})
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-primary-500" /> Managed Sites ({user.managed_sites?.length || 0})
           </h2>
+          <Button size="sm" onClick={() => setShowAssignModal(true)}>
+            <Plus className="w-4 h-4 mr-1" /> Assign Sites
+          </Button>
+        </div>
+        {user.managed_sites && user.managed_sites.length > 0 ? (
           <div className="space-y-2">
             {user.managed_sites.map((site: any) => (
-              <Link key={site.id} to={`/sites/${site.id}`} className="block p-4 bg-stone-50 rounded-xl hover:bg-stone-100 transition-colors">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="text-sm font-semibold text-stone-900">{site.name}</p>
-                    <p className="text-xs text-stone-500 flex items-center gap-1">
-                      <MapPin className="w-3 h-3" /> {site.city}, {site.state}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {site.is_verified && <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3 mr-0.5" />Verified</Badge>}
-                    {site.rating > 0 && (
-                      <span className="text-sm text-amber-600 flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-current" />{site.rating}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {site.specialties?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {site.specialties.slice(0, 5).map((s: string) => <Badge key={s} variant="default" size="sm">{s}</Badge>)}
-                    {site.specialties.length > 5 && <Badge variant="default" size="sm">+{site.specialties.length - 5}</Badge>}
-                  </div>
-                )}
-                {/* Show slot count if available */}
-                {site.slots?.length > 0 && (
-                  <p className="text-xs text-stone-500 mt-2 flex items-center gap-1">
-                    <BookOpen className="w-3 h-3" /> {site.slots.length} rotation slot{site.slots.length !== 1 ? 's' : ''}
+              <div key={site.id} className="flex items-start justify-between p-4 bg-stone-50 rounded-xl">
+                <Link to={`/sites/${site.id}`} className="flex-1 hover:opacity-80 transition-opacity">
+                  <p className="text-sm font-semibold text-stone-900">{site.name}</p>
+                  <p className="text-xs text-stone-500 flex items-center gap-1">
+                    <MapPin className="w-3 h-3" /> {site.city}, {site.state}
                   </p>
-                )}
-              </Link>
+                  {site.specialties?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {site.specialties.slice(0, 5).map((s: string) => <Badge key={s} variant="default" size="sm">{s}</Badge>)}
+                      {site.specialties.length > 5 && <Badge variant="default" size="sm">+{site.specialties.length - 5}</Badge>}
+                    </div>
+                  )}
+                </Link>
+                <button
+                  onClick={() => handleRemove(site.id, site.name)}
+                  className="ml-2 p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  title="Remove as manager"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             ))}
           </div>
-        </Card>
-      )}
-
-      {(!user.managed_sites || user.managed_sites.length === 0) && (
-        <Card>
-          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-primary-500" /> Managed Sites
-          </h2>
+        ) : (
           <p className="text-sm text-stone-400 text-center py-4">No sites managed by this user.</p>
-        </Card>
+        )}
+      </Card>
+
+      {showAssignModal && (
+        <AssignSiteManagerModal
+          userId={user.id}
+          managedSiteIds={(user.managed_sites || []).map((s: any) => s.id)}
+          onClose={() => setShowAssignModal(false)}
+        />
       )}
     </>
+  )
+}
+
+// ─── Assign Sites to Site Manager Modal ──────────────────────────
+function AssignSiteManagerModal({ userId, managedSiteIds, onClose }: { userId: string; managedSiteIds: string[]; onClose: () => void }) {
+  const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([])
+  const { data: sitesData } = useSites()
+  const assignMut = useAssignSiteManagerToSites()
+
+  const sites = ((sitesData as { data?: { id: string; name: string; city: string; state: string }[] })?.data || [])
+    .filter(s => !managedSiteIds.includes(s.id))
+
+  const toggleSite = (siteId: string) => {
+    setSelectedSiteIds(prev => prev.includes(siteId) ? prev.filter(id => id !== siteId) : [...prev, siteId])
+  }
+
+  const handleSubmit = async () => {
+    if (selectedSiteIds.length === 0) return
+    try {
+      const res = await assignMut.mutateAsync({ userId, siteIds: selectedSiteIds })
+      toast.success(res.message)
+      onClose()
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to assign sites.')
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title="Assign Sites to Manager" size="md">
+      <div className="space-y-4">
+        {sites.length > 0 ? (
+          <div className="max-h-64 overflow-y-auto border border-stone-200 rounded-xl divide-y divide-stone-100">
+            {sites.map(site => (
+              <label key={site.id} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedSiteIds.includes(site.id)}
+                  onChange={() => toggleSite(site.id)}
+                  className="rounded border-stone-300 text-primary-500 focus:ring-primary-500"
+                />
+                <div>
+                  <p className="text-sm font-medium text-stone-900">{site.name}</p>
+                  <p className="text-xs text-stone-500">{site.city}, {site.state}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-stone-400 text-center py-4">All sites are already assigned.</p>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={assignMut.isPending} disabled={selectedSiteIds.length === 0}>
+            <Plus className="w-4 h-4 mr-2" /> Assign {selectedSiteIds.length > 0 ? `(${selectedSiteIds.length})` : ''}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }
 

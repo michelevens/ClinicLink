@@ -1,12 +1,16 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Building2, MapPin, Phone, Globe, Star, Shield, Users,
-  Calendar, Clock, Stethoscope, FileText, Handshake, CheckCircle2, Loader2
+  Calendar, Clock, Stethoscope, FileText, Handshake, CheckCircle2, Loader2, Pencil, Plus
 } from 'lucide-react'
-import { useSite } from '../hooks/useApi.ts'
+import { toast } from 'sonner'
+import { useSite, useAssignManagerToSite, useAdminUsers } from '../hooks/useApi.ts'
+import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { Modal } from '../components/ui/Modal.tsx'
 
 const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
   open: 'success', filled: 'warning', closed: 'default',
@@ -17,7 +21,10 @@ const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'default'
 export function SiteDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user: currentUser } = useAuth()
   const { data: site, isLoading } = useSite(id!)
+  const [showManagerModal, setShowManagerModal] = useState(false)
+  const isAdmin = currentUser?.role === 'admin'
 
   if (isLoading) {
     return (
@@ -147,12 +154,19 @@ export function SiteDetail() {
       </div>
 
       {/* Manager */}
-      {site.manager && (
-        <Card>
-          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+      <Card>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary-500" /> Site Manager
           </h2>
-          <div className="flex items-center gap-3">
+          {isAdmin && (
+            <Button size="sm" variant="outline" onClick={() => setShowManagerModal(true)}>
+              {site.manager ? <><Pencil className="w-3.5 h-3.5 mr-1" /> Change</> : <><Plus className="w-3.5 h-3.5 mr-1" /> Assign</>}
+            </Button>
+          )}
+        </div>
+        {site.manager ? (
+          <Link to={`/users/${site.manager.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm">
               {site.manager.first_name?.[0]}{site.manager.last_name?.[0]}
             </div>
@@ -160,8 +174,14 @@ export function SiteDetail() {
               <p className="text-sm font-medium text-stone-900">{site.manager.first_name} {site.manager.last_name}</p>
               <p className="text-xs text-stone-500">{site.manager.email}</p>
             </div>
-          </div>
-        </Card>
+          </Link>
+        ) : (
+          <p className="text-sm text-stone-400 text-center py-4">No manager assigned to this site.</p>
+        )}
+      </Card>
+
+      {showManagerModal && (
+        <AssignManagerModal siteId={id!} currentManagerId={site.manager?.id} onClose={() => setShowManagerModal(false)} />
       )}
 
       {/* Rotation Slots */}
@@ -295,5 +315,81 @@ export function SiteDetail() {
         </Card>
       )}
     </div>
+  )
+}
+
+// ─── Assign Manager Modal ────────────────────────────────────────
+function AssignManagerModal({ siteId, currentManagerId, onClose }: { siteId: string; currentManagerId?: string; onClose: () => void }) {
+  const [search, setSearch] = useState('')
+  const [selectedManagerId, setSelectedManagerId] = useState<string | null>(null)
+  const { data: usersData, isLoading: loading } = useAdminUsers({ role: 'site_manager' })
+  const assignMut = useAssignManagerToSite()
+
+  const managers: { id: string; first_name: string; last_name: string; email: string }[] = (usersData as any)?.data || []
+
+  const filteredManagers = managers.filter(m => {
+    if (m.id === currentManagerId) return false
+    if (!search) return true
+    const q = search.toLowerCase()
+    return `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+  })
+
+  const handleSubmit = async () => {
+    if (!selectedManagerId) return
+    try {
+      const res = await assignMut.mutateAsync({ siteId, managerId: selectedManagerId })
+      toast.success(res.message)
+      onClose()
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to assign manager.')
+    }
+  }
+
+  return (
+    <Modal isOpen onClose={onClose} title={currentManagerId ? 'Change Site Manager' : 'Assign Site Manager'} size="md">
+      <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Search site managers..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+
+        {loading ? (
+          <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-stone-400" /></div>
+        ) : filteredManagers.length > 0 ? (
+          <div className="max-h-64 overflow-y-auto border border-stone-200 rounded-xl divide-y divide-stone-100">
+            {filteredManagers.map(m => (
+              <label key={m.id} className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 cursor-pointer">
+                <input
+                  type="radio"
+                  name="manager"
+                  checked={selectedManagerId === m.id}
+                  onChange={() => setSelectedManagerId(m.id)}
+                  className="border-stone-300 text-primary-500 focus:ring-primary-500"
+                />
+                <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-xs shrink-0">
+                  {m.first_name[0]}{m.last_name[0]}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-stone-900">{m.first_name} {m.last_name}</p>
+                  <p className="text-xs text-stone-500">{m.email}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-stone-400 text-center py-4">No site managers available.</p>
+        )}
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} isLoading={assignMut.isPending} disabled={!selectedManagerId}>
+            <Shield className="w-4 h-4 mr-2" /> Assign Manager
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

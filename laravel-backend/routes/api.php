@@ -432,6 +432,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->whereUuid('user');
         Route::post('/users/{user}/assign-sites', [AdminController::class, 'assignPreceptorToSites'])->whereUuid('user');
         Route::delete('/users/{user}/remove-site/{site}', [AdminController::class, 'removePreceptorFromSite'])->whereUuid('user');
+        Route::post('/users/{user}/assign-managed-sites', [AdminController::class, 'assignSiteManagerToSites'])->whereUuid('user');
+        Route::delete('/users/{user}/remove-managed-site/{site}', [AdminController::class, 'removeSiteManagerFromSite'])->whereUuid('user');
+        Route::post('/sites/{site}/assign-manager', [AdminController::class, 'assignManagerToSite']);
         Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
         Route::post('/test-email', [AdminController::class, 'testEmail']);
         Route::get('/audit-logs', [AdminController::class, 'auditLogs']);

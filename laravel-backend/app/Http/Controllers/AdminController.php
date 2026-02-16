@@ -588,6 +588,86 @@ class AdminController extends Controller
         return response()->json(['message' => "Preceptor removed from {$site->name}."]);
     }
 
+    public function assignSiteManagerToSites(Request $request, User $user): JsonResponse
+    {
+        if ($user->role !== 'site_manager') {
+            return response()->json(['message' => 'User is not a site manager.'], 422);
+        }
+
+        $validated = $request->validate([
+            'site_ids' => ['required', 'array', 'min:1'],
+            'site_ids.*' => ['uuid', 'exists:rotation_sites,id'],
+        ]);
+
+        $assigned = [];
+        $skipped = [];
+
+        foreach ($validated['site_ids'] as $siteId) {
+            $site = RotationSite::find($siteId);
+            if (!$site) continue;
+
+            if ($site->manager_id === $user->id) {
+                $skipped[] = $site->name;
+                continue;
+            }
+
+            $site->manager_id = $user->id;
+            $site->save();
+            $assigned[] = $site->name;
+        }
+
+        $message = count($assigned) > 0
+            ? 'Site manager assigned to: ' . implode(', ', $assigned) . '.'
+            : 'No new assignments made.';
+
+        if (count($skipped) > 0) {
+            $message .= ' Already managing: ' . implode(', ', $skipped) . '.';
+        }
+
+        return response()->json(['message' => $message, 'assigned' => $assigned, 'skipped' => $skipped]);
+    }
+
+    public function removeSiteManagerFromSite(Request $request, User $user, RotationSite $site): JsonResponse
+    {
+        if ($user->role !== 'site_manager') {
+            return response()->json(['message' => 'User is not a site manager.'], 422);
+        }
+
+        if ($site->manager_id !== $user->id) {
+            return response()->json(['message' => 'This user is not the manager of this site.'], 404);
+        }
+
+        $site->manager_id = null;
+        $site->save();
+
+        return response()->json(['message' => "Site manager removed from {$site->name}."]);
+    }
+
+    public function assignManagerToSite(Request $request, RotationSite $site): JsonResponse
+    {
+        $validated = $request->validate([
+            'manager_id' => ['required', 'uuid', 'exists:users,id'],
+        ]);
+
+        $manager = User::find($validated['manager_id']);
+        if (!$manager || $manager->role !== 'site_manager') {
+            return response()->json(['message' => 'Selected user is not a site manager.'], 422);
+        }
+
+        $site->manager_id = $manager->id;
+        $site->save();
+
+        return response()->json([
+            'message' => "{$manager->first_name} {$manager->last_name} assigned as manager of {$site->name}.",
+            'manager' => [
+                'id' => $manager->id,
+                'first_name' => $manager->first_name,
+                'last_name' => $manager->last_name,
+                'email' => $manager->email,
+            ],
+        ]);
+    }
+
     public function auditLogs(Request $request): JsonResponse
     {
         $query = AuditLog::with('actor:id,first_name,last_name,role');

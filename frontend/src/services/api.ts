@@ -485,6 +485,12 @@ export const adminApi = {
     api.post<{ message: string; assigned: string[]; skipped: string[] }>(`/admin/users/${userId}/assign-sites`, { site_ids: siteIds }),
   removePreceptorFromSite: (userId: string, siteId: string) =>
     api.delete<{ message: string }>(`/admin/users/${userId}/remove-site/${siteId}`),
+  assignSiteManagerToSites: (userId: string, siteIds: string[]) =>
+    api.post<{ message: string; assigned: string[]; skipped: string[] }>(`/admin/users/${userId}/assign-managed-sites`, { site_ids: siteIds }),
+  removeSiteManagerFromSite: (userId: string, siteId: string) =>
+    api.delete<{ message: string }>(`/admin/users/${userId}/remove-managed-site/${siteId}`),
+  assignManagerToSite: (siteId: string, managerId: string) =>
+    api.post<{ message: string; manager: { id: string; first_name: string; last_name: string; email: string } }>(`/admin/sites/${siteId}/assign-manager`, { manager_id: managerId }),
   licenseCodes: (params?: { university_id?: string; page?: number }) => {
     const qs = new URLSearchParams()
     if (params?.university_id) qs.set('university_id', params.university_id)

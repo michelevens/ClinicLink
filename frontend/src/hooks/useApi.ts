@@ -393,6 +393,40 @@ export function useRemovePreceptorFromSite() {
   })
 }
 
+export function useAssignSiteManagerToSites() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, siteIds }: { userId: string; siteIds: string[] }) => adminApi.assignSiteManagerToSites(userId, siteIds),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-user'] })
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
+export function useRemoveSiteManagerFromSite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ userId, siteId }: { userId: string; siteId: string }) => adminApi.removeSiteManagerFromSite(userId, siteId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-user'] })
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
+export function useAssignManagerToSite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ siteId, managerId }: { siteId: string; managerId: string }) => adminApi.assignManagerToSite(siteId, managerId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['site'] })
+      qc.invalidateQueries({ queryKey: ['sites'] })
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+  })
+}
+
 // --- License Codes ---
 export function useLicenseCodes(params?: { university_id?: string; page?: number }) {
   return useQuery({
