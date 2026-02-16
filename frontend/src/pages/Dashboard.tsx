@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -26,9 +27,10 @@ function LoadingSpinner() {
   )
 }
 
-// ─── Shared stat card ──────────────────────────────────────────
-function StatCard({ icon, label, value, color = 'primary' }: {
+// ─── Shared stat card with optional sparkline ──────────────────
+function StatCard({ icon, label, value, color = 'primary', spark }: {
   icon: React.ReactNode; label: string; value: string | number; color?: string
+  spark?: number[]
 }) {
   const colors: Record<string, string> = {
     primary: 'bg-primary-50 text-primary-600',
@@ -38,16 +40,51 @@ function StatCard({ icon, label, value, color = 'primary' }: {
     red: 'bg-red-50 text-red-600',
     accent: 'bg-accent-50 text-accent-600',
   }
+  const sparkColors: Record<string, string> = {
+    primary: '#6366f1', secondary: '#0ea5e9', green: '#22c55e',
+    amber: '#f59e0b', red: '#ef4444', accent: '#f97316',
+  }
   return (
     <Card>
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color] || colors.primary}`}>{icon}</div>
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-2xl font-bold text-stone-900">{value}</p>
           <p className="text-xs text-stone-500">{label}</p>
         </div>
+        {spark && spark.length > 1 && (
+          <Sparkline data={spark} color={sparkColors[color] || sparkColors.primary} />
+        )}
       </div>
     </Card>
+  )
+}
+
+/** Tiny inline sparkline chart */
+function Sparkline({ data, color }: { data: number[]; color: string }) {
+  const max = Math.max(...data)
+  const min = Math.min(...data)
+  const range = max - min || 1
+  const w = 60
+  const h = 28
+  const pad = 2
+  const points = data.map((v, i) => {
+    const x = pad + (i / (data.length - 1)) * (w - pad * 2)
+    const y = h - pad - ((v - min) / range) * (h - pad * 2)
+    return `${x},${y}`
+  }).join(' ')
+
+  return (
+    <svg width={w} height={h} className="shrink-0 opacity-70">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 
@@ -131,6 +168,30 @@ function StudentDashboard() {
   const complianceStatus = expiredCreds.length > 0 ? 'red' : expiringSoonCreds.length > 0 ? 'yellow' : 'green'
   const complianceLabel = complianceStatus === 'red' ? 'Action Required' : complianceStatus === 'yellow' ? 'Expiring Soon' : 'All Current'
 
+  // Build sparkline data from hour logs (cumulative hours over time)
+  const hoursSpark = useMemo(() => {
+    if (hours.length === 0) return undefined
+    const sorted = [...hours]
+      .filter(h => h.date)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    if (sorted.length < 2) return undefined
+    let cumulative = priorHours
+    return sorted.map(h => {
+      cumulative += Number(h.hours_worked) || 0
+      return cumulative
+    })
+  }, [hours, priorHours])
+
+  // Build sparkline data from applications (cumulative count over time)
+  const appsSpark = useMemo(() => {
+    if (applications.length === 0) return undefined
+    const sorted = [...applications]
+      .filter(a => a.created_at)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    if (sorted.length < 2) return undefined
+    return sorted.map((_, i) => i + 1)
+  }, [applications])
+
   if (statsLoading) return <LoadingSpinner />
 
   return (
@@ -143,8 +204,8 @@ function StudentDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={<Clock className="w-5 h-5" />} label="Hours Completed" value={requiredHours > 0 ? `${totalHours}/${requiredHours}` : 'No program'} color="primary" />
-        <StatCard icon={<FileText className="w-5 h-5" />} label="Applications" value={stats?.applications_count || applications.length} color="secondary" />
+        <StatCard icon={<Clock className="w-5 h-5" />} label="Hours Completed" value={requiredHours > 0 ? `${totalHours}/${requiredHours}` : 'No program'} color="primary" spark={hoursSpark} />
+        <StatCard icon={<FileText className="w-5 h-5" />} label="Applications" value={stats?.applications_count || applications.length} color="secondary" spark={appsSpark} />
         <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Active Rotations" value={stats?.active_rotations || activeRotations.length} color="green" />
         <StatCard icon={<AlertCircle className="w-5 h-5" />} label="Pending Review" value={pendingCount} color="amber" />
       </div>
