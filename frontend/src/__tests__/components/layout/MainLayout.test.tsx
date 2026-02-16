@@ -36,10 +36,6 @@ vi.mock('../../../components/layout/MainLayoutV2.tsx', () => ({
   ),
 }))
 
-vi.mock('../../../components/ui/DesignToggle.tsx', () => ({
-  DesignToggle: () => <button data-testid="design-toggle">V1</button>,
-}))
-
 vi.mock('../../../components/ai-chat/AiChatWidget.tsx', () => ({
   AiChatWidget: () => <div data-testid="ai-chat" />,
 }))
@@ -94,11 +90,6 @@ describe('MainLayout', () => {
   it('shows sidebar in V1 mode', () => {
     renderWithProviders('v1')
     expect(screen.getByTestId('sidebar')).toBeInTheDocument()
-  })
-
-  it('shows design toggle', () => {
-    renderWithProviders('v1')
-    expect(screen.getByTestId('design-toggle')).toBeInTheDocument()
   })
 
   it('shows AI chat widget', () => {
