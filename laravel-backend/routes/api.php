@@ -429,6 +429,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/universities', [UniversityController::class, 'store']);
         Route::put('/universities/{university}', [UniversityController::class, 'update']);
         Route::delete('/universities/{university}', [UniversityController::class, 'destroy']);
+
+        Route::get('/university-codes', [AdminController::class, 'listLicenseCodes']);
+        Route::post('/university-codes', [AdminController::class, 'createLicenseCode']);
+        Route::delete('/university-codes/{code}', [AdminController::class, 'deactivateLicenseCode']);
     });
 });
 

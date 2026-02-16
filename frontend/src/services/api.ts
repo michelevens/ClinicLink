@@ -112,7 +112,7 @@ export const api = new ApiClient(API_URL)
 
 // --- Auth ---
 export const authApi = {
-  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string; university_id?: string; program_id?: string; site_id?: string }) =>
+  register: (data: { first_name: string; last_name: string; email: string; username?: string; password: string; password_confirmation: string; role: string; university_id?: string; program_id?: string; site_id?: string; license_code?: string }) =>
     api.post<{ message: string; pending_approval: boolean }>('/auth/register', data),
 
   login: (data: { login: string; password: string }) =>

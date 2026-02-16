@@ -12,6 +12,7 @@ use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\SiteJoinRequest;
 use App\Models\StudentProfile;
+use App\Models\UniversityLicenseCode;
 use App\Models\User;
 use App\Notifications\NewUserRegisteredNotification;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +39,7 @@ class AuthController extends Controller
             'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
             'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
             'site_id' => ['sometimes', 'nullable', 'exists:rotation_sites,id'],
+            'license_code' => ['sometimes', 'nullable', 'string', 'max:20'],
         ]);
 
         $user = User::create([
@@ -50,6 +52,19 @@ class AuthController extends Controller
             'is_active' => true,
             'trial_ends_at' => $validated['role'] === 'student' ? now()->addMonths(3) : null,
         ]);
+
+        // Redeem university license code for students
+        if ($validated['role'] === 'student' && !empty($validated['license_code'])) {
+            $licenseCode = UniversityLicenseCode::where('code', $validated['license_code'])->first();
+            if ($licenseCode && $licenseCode->isValid()) {
+                $user->update([
+                    'plan' => 'pro',
+                    'subscription_status' => 'active',
+                    'sponsored_by_code_id' => $licenseCode->id,
+                ]);
+                $licenseCode->increment('times_used');
+            }
+        }
 
         // Create student profile with university/program affiliation if provided
         if (!empty($validated['university_id']) && in_array($validated['role'], ['student', 'preceptor', 'coordinator', 'professor'])) {

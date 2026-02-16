@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\StudentProfile;
+use App\Models\UniversityLicenseCode;
 use App\Models\User;
 use App\Notifications\PreceptorAssignedToSiteNotification;
 use Illuminate\Http\JsonResponse;
@@ -630,5 +631,62 @@ class AdminController extends Controller
             'exit_code' => $exitCode,
             'output' => $output,
         ]);
+    }
+
+    // --- University License Codes ---
+
+    public function listLicenseCodes(Request $request): JsonResponse
+    {
+        $query = UniversityLicenseCode::with('university:id,name', 'createdBy:id,first_name,last_name')
+            ->withCount('users');
+
+        if ($request->filled('university_id')) {
+            $query->where('university_id', $request->university_id);
+        }
+
+        $codes = $query->orderByDesc('created_at')->paginate(25);
+
+        return response()->json($codes);
+    }
+
+    public function createLicenseCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'university_id' => ['required', 'exists:universities,id'],
+            'max_uses' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'expires_at' => ['sometimes', 'nullable', 'date', 'after:now'],
+            'count' => ['sometimes', 'integer', 'min:1', 'max:500'],
+        ]);
+
+        $count = $validated['count'] ?? 1;
+        $codes = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $codes[] = UniversityLicenseCode::create([
+                'university_id' => $validated['university_id'],
+                'code' => strtoupper(Str::random(12)),
+                'max_uses' => $validated['max_uses'] ?? 1,
+                'expires_at' => $validated['expires_at'] ?? null,
+                'is_active' => true,
+                'created_by' => $request->user()->id,
+            ]);
+        }
+
+        foreach ($codes as $code) {
+            $code->load('university:id,name');
+        }
+
+        if ($count === 1) {
+            return response()->json(['code' => $codes[0]], 201);
+        }
+
+        return response()->json(['codes' => $codes, 'count' => $count], 201);
+    }
+
+    public function deactivateLicenseCode(UniversityLicenseCode $code): JsonResponse
+    {
+        $code->update(['is_active' => false]);
+
+        return response()->json(['message' => 'Code deactivated.', 'code' => $code]);
     }
 }

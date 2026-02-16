@@ -39,6 +39,7 @@ class User extends Authenticatable
         'stripe_subscription_id',
         'subscription_status',
         'subscription_ends_at',
+        'sponsored_by_code_id',
     ];
 
     protected $hidden = [

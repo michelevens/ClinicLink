@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, Building2, Search, Loader2, BookOpen, ShieldCheck, MapPin } from 'lucide-react'
+import { Stethoscope, Mail, Lock, User, AtSign, Wand2, Eye, EyeOff, Check, X, Building2, Search, Loader2, BookOpen, ShieldCheck, MapPin, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
 import { universitiesApi, sitesApi, api } from '../services/api.ts'
@@ -59,9 +59,10 @@ export function RegisterPage() {
   const [searchParams] = useSearchParams()
   const prefillEmail = searchParams.get('email') || ''
   const prefillRole = (searchParams.get('role') as UserRole) || 'student'
+  const prefillCode = searchParams.get('code') || ''
 
   const navigate = useNavigate()
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '', npiNumber: '', siteId: '' })
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '', npiNumber: '', siteId: '', licenseCode: prefillCode })
   const [showPassword, setShowPassword] = useState(false)
   const { register, isLoading } = useAuth()
 
@@ -177,7 +178,7 @@ export function RegisterPage() {
       return
     }
     try {
-      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined, siteId: form.siteId || undefined })
+      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined, siteId: form.siteId || undefined, licenseCode: form.licenseCode || undefined })
       navigate('/verify-email?email=' + encodeURIComponent(form.email))
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
@@ -512,6 +513,27 @@ export function RegisterPage() {
                   </div>
                 )}
                 <p className="text-xs text-stone-400">Select the clinical program you are enrolled in</p>
+              </div>
+            )}
+
+            {/* University License Code (students only) */}
+            {form.role === 'student' && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-stone-700">University License Code (Optional)</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={form.licenseCode}
+                    onChange={e => setForm(f => ({ ...f, licenseCode: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) }))}
+                    placeholder="Enter your university code"
+                    maxLength={20}
+                    className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200 uppercase tracking-wider"
+                  />
+                </div>
+                <p className="text-xs text-stone-400">If your university provided a license code, enter it here to get Pro access automatically.</p>
               </div>
             )}
 
