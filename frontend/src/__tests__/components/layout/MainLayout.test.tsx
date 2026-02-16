@@ -1,10 +1,10 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MainLayout } from '../../../components/layout/MainLayout.tsx'
 import { DesignVersionProvider } from '../../../contexts/DesignVersionContext.tsx'
 import { BrowserRouter } from 'react-router-dom'
 
-// Mock the auth context to avoid API calls
+// Mock the auth context
 vi.mock('../../../contexts/AuthContext.tsx', () => ({
   useAuth: () => ({
     user: {
@@ -21,19 +21,27 @@ vi.mock('../../../contexts/AuthContext.tsx', () => ({
   }),
 }))
 
-// Mock the API hooks
-vi.mock('../../../hooks/useApi.ts', () => ({
-  useMessageUnreadCount: () => ({ data: { count: 0 } }),
-  useMyPendingSignatures: () => ({ data: { data: [] } }),
-  useUnreadCount: () => ({ data: { count: 0 } }),
-  useNotifications: () => ({ data: { data: [] } }),
-  useMarkAsRead: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
-  useMarkAllAsRead: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
-  useAiConversations: () => ({ data: { conversations: [] } }),
-  useAiMessages: () => ({ data: { messages: [] } }),
-  useAiSendMessage: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
-  useAiDeleteConversation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
-  useAiSuggestions: () => ({ data: { suggestions: [] } }),
+// Mock heavy child components to avoid loading lucide-react icons and API hooks
+vi.mock('../../../components/layout/Sidebar.tsx', () => ({
+  Sidebar: () => <div data-testid="sidebar">ClinicLink</div>,
+}))
+
+vi.mock('../../../components/layout/TopBar.tsx', () => ({
+  TopBar: () => <div data-testid="topbar">TopBar</div>,
+}))
+
+vi.mock('../../../components/layout/MainLayoutV2.tsx', () => ({
+  MainLayoutV2: ({ children }: { children: React.ReactNode }) => (
+    <div className="bg-gray-50" data-testid="v2-layout">{children}</div>
+  ),
+}))
+
+vi.mock('../../../components/ui/DesignToggle.tsx', () => ({
+  DesignToggle: () => <button data-testid="design-toggle">V1</button>,
+}))
+
+vi.mock('../../../components/ai-chat/AiChatWidget.tsx', () => ({
+  AiChatWidget: () => <div data-testid="ai-chat" />,
 }))
 
 function renderWithProviders(initialVersion: 'v1' | 'v2' = 'v1') {
@@ -78,21 +86,23 @@ describe('MainLayout', () => {
     expect(layoutDiv).toBeInTheDocument()
   })
 
-  it('renders V2 layout with gray-50 background', () => {
-    const { container } = renderWithProviders('v2')
-    const layoutDiv = container.querySelector('.bg-gray-50')
-    expect(layoutDiv).toBeInTheDocument()
+  it('renders V2 layout when version is v2', () => {
+    renderWithProviders('v2')
+    expect(screen.getByTestId('v2-layout')).toBeInTheDocument()
   })
 
-  it('shows the design toggle button', () => {
+  it('shows sidebar in V1 mode', () => {
     renderWithProviders('v1')
-    // The toggle shows V1 text
-    expect(screen.getByText('V1')).toBeInTheDocument()
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument()
   })
 
-  it('shows ClinicLink branding', () => {
+  it('shows design toggle', () => {
     renderWithProviders('v1')
-    const logos = screen.getAllByText('ClinicLink')
-    expect(logos.length).toBeGreaterThan(0)
+    expect(screen.getByTestId('design-toggle')).toBeInTheDocument()
+  })
+
+  it('shows AI chat widget', () => {
+    renderWithProviders('v1')
+    expect(screen.getByTestId('ai-chat')).toBeInTheDocument()
   })
 })

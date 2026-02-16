@@ -13,11 +13,12 @@ const localStorageMock = (() => {
   }
 })()
 
-Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+Object.defineProperty(window, 'localStorage', { value: localStorageMock, configurable: true })
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
+  configurable: true,
   value: (query: string) => ({
     matches: false,
     media: query,
@@ -36,7 +37,7 @@ class MockIntersectionObserver {
   unobserve() {}
   disconnect() {}
 }
-Object.defineProperty(window, 'IntersectionObserver', { value: MockIntersectionObserver })
+Object.defineProperty(window, 'IntersectionObserver', { value: MockIntersectionObserver, configurable: true })
 
 // Mock ResizeObserver
 class MockResizeObserver {
@@ -44,7 +45,7 @@ class MockResizeObserver {
   unobserve() {}
   disconnect() {}
 }
-Object.defineProperty(window, 'ResizeObserver', { value: MockResizeObserver })
+Object.defineProperty(window, 'ResizeObserver', { value: MockResizeObserver, configurable: true })
 
 // Mock scrollIntoView (not implemented in jsdom)
 Element.prototype.scrollIntoView = () => {}
