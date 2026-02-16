@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Sidebar } from './Sidebar.tsx'
 import { TopBar } from './TopBar.tsx'
 import { MainLayoutV2 } from './MainLayoutV2.tsx'
+import { PageTransition } from './PageTransition.tsx'
 import { useDesignVersion } from '../../contexts/DesignVersionContext.tsx'
 import { AiChatWidget } from '../ai-chat/AiChatWidget.tsx'
 
@@ -11,7 +12,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
   if (version === 'v2') {
     return (
       <>
-        <MainLayoutV2>{children}</MainLayoutV2>
+        <MainLayoutV2><PageTransition>{children}</PageTransition></MainLayoutV2>
         <AiChatWidget />
       </>
     )
@@ -24,7 +25,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
           <div className="p-4 sm:p-6 max-w-7xl mx-auto">
             <TopBar />
-            {children}
+            <PageTransition>{children}</PageTransition>
           </div>
         </main>
       </div>
