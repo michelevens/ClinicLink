@@ -609,14 +609,6 @@ export interface ApiUser {
   onboarding_completed?: boolean
 }
 
-export interface ApiPreceptorReview {
-  id: string
-  overall_rating: number
-  comment: string | null
-  created_at: string
-  student?: { id: string; first_name: string; last_name: string }
-}
-
 export interface ApiStudentProfile {
   id: string
   user_id: string

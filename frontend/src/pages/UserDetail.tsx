@@ -942,11 +942,11 @@ function PreceptorSections({ user, stats }: { user: ApiUser; stats?: AdminUserSt
                   </p>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map(i => (
-                      <Star key={i} className={`w-3.5 h-3.5 ${review.overall_rating >= i ? 'text-yellow-400 fill-yellow-400' : 'text-stone-300'}`} />
+                      <Star key={i} className={`w-3.5 h-3.5 ${review.overall_score >= i ? 'text-yellow-400 fill-yellow-400' : 'text-stone-300'}`} />
                     ))}
                   </div>
                 </div>
-                {review.comment && <p className="text-sm text-stone-600 mt-1">{review.comment}</p>}
+                {review.comments && <p className="text-sm text-stone-600 mt-1">{review.comments}</p>}
                 <p className="text-xs text-stone-400 mt-1">{new Date(review.created_at).toLocaleDateString()}</p>
               </div>
             ))}
