@@ -1700,6 +1700,36 @@ export const exportsApi = {
   },
 }
 
+// --- AI Chat ---
+export interface AiChatConversation {
+  id: string
+  title: string
+  context_page: string | null
+  message_count: number
+  last_message_at: string | null
+  created_at: string
+}
+
+export interface AiChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  created_at: string
+}
+
+export const aiChatApi = {
+  conversations: () =>
+    api.get<{ conversations: AiChatConversation[] }>('/ai-chat/conversations'),
+  messages: (id: string) =>
+    api.get<{ messages: AiChatMessage[] }>(`/ai-chat/conversations/${id}`),
+  send: (data: { message: string; conversation_id?: string; current_page?: string }) =>
+    api.post<{ conversation_id: string; message: AiChatMessage }>('/ai-chat/send', data),
+  deleteConversation: (id: string) =>
+    api.delete(`/ai-chat/conversations/${id}`),
+  suggestions: (page?: string) =>
+    api.get<{ suggestions: string[] }>(`/ai-chat/suggestions${page ? `?page=${encodeURIComponent(page)}` : ''}`),
+}
+
 // --- Subscription Types ---
 export interface SubscriptionStatus {
   plan: 'free' | 'pro'

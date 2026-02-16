@@ -6,7 +6,7 @@ import {
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
-  signaturesApi, subscriptionApi,
+  signaturesApi, subscriptionApi, aiChatApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1454,5 +1454,52 @@ export function useSubscriptionCheckout() {
 export function useSubscriptionPortal() {
   return useMutation({
     mutationFn: subscriptionApi.portal,
+  })
+}
+
+// --- AI Chat ---
+export function useAiConversations() {
+  return useQuery({
+    queryKey: ['ai-conversations'],
+    queryFn: () => aiChatApi.conversations(),
+  })
+}
+
+export function useAiMessages(conversationId: string | null) {
+  return useQuery({
+    queryKey: ['ai-messages', conversationId],
+    queryFn: () => aiChatApi.messages(conversationId!),
+    enabled: !!conversationId,
+  })
+}
+
+export function useAiSendMessage() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: aiChatApi.send,
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['ai-conversations'] })
+      if (variables.conversation_id) {
+        qc.invalidateQueries({ queryKey: ['ai-messages', variables.conversation_id] })
+      }
+    },
+  })
+}
+
+export function useAiDeleteConversation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: aiChatApi.deleteConversation,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ai-conversations'] })
+    },
+  })
+}
+
+export function useAiSuggestions(page?: string) {
+  return useQuery({
+    queryKey: ['ai-suggestions', page],
+    queryFn: () => aiChatApi.suggestions(page),
+    staleTime: 10 * 60 * 1000,
   })
 }

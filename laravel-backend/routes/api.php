@@ -35,6 +35,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AccreditationReportController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\NpiController;
 use Illuminate\Support\Facades\Route;
 
@@ -402,6 +403,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/accreditation-reports', [AccreditationReportController::class, 'generate']);
         Route::get('/accreditation-reports/{report}/preview', [AccreditationReportController::class, 'preview']);
         Route::delete('/accreditation-reports/{report}', [AccreditationReportController::class, 'destroy']);
+    });
+
+    // AI Chat (all authenticated users — rate-limited)
+    Route::middleware('throttle:30,1')->prefix('ai-chat')->group(function () {
+        Route::get('/conversations', [AiChatController::class, 'conversations']);
+        Route::get('/conversations/{conversation}', [AiChatController::class, 'messages']);
+        Route::post('/send', [AiChatController::class, 'send']);
+        Route::delete('/conversations/{conversation}', [AiChatController::class, 'deleteConversation']);
+        Route::get('/suggestions', [AiChatController::class, 'suggestions']);
     });
 
     // Calendar (all authenticated users — controller scopes by role)
