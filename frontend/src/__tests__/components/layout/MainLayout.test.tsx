@@ -27,12 +27,12 @@ vi.mock('../../../hooks/useApi.ts', () => ({
   useMyPendingSignatures: () => ({ data: { data: [] } }),
   useUnreadCount: () => ({ data: { count: 0 } }),
   useNotifications: () => ({ data: { data: [] } }),
-  useMarkAsRead: () => ({ mutateAsync: vi.fn() }),
-  useMarkAllAsRead: () => ({ mutateAsync: vi.fn() }),
+  useMarkAsRead: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
+  useMarkAllAsRead: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
   useAiConversations: () => ({ data: { conversations: [] } }),
   useAiMessages: () => ({ data: { messages: [] } }),
-  useAiSendMessage: () => ({ mutateAsync: vi.fn() }),
-  useAiDeleteConversation: () => ({ mutateAsync: vi.fn() }),
+  useAiSendMessage: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
+  useAiDeleteConversation: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
   useAiSuggestions: () => ({ data: { suggestions: [] } }),
 }))
 

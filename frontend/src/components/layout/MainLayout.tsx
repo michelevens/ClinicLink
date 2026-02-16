@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Sidebar } from './Sidebar.tsx'
+import { TopBar } from './TopBar.tsx'
 import { MainLayoutV2 } from './MainLayoutV2.tsx'
 import { useDesignVersion } from '../../contexts/DesignVersionContext.tsx'
 import { DesignToggle } from '../ui/DesignToggle.tsx'
@@ -24,6 +25,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
         <Sidebar />
         <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
           <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+            <TopBar />
             {children}
           </div>
         </main>

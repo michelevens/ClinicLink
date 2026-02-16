@@ -1,14 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
-  Building2, Users, CalendarDays, BookOpen, Settings, Handshake, ShieldCheck,
+  Building2, Users, CalendarDays, BookOpen, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
   MessageSquare, Calendar, BarChart3, FileBarChart, UserSearch, KeyRound
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { useMessageUnreadCount, useMyPendingSignatures } from '../../hooks/useApi.ts'
-import { NotificationBell } from './NotificationBell.tsx'
 import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
@@ -46,7 +45,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Preceptor Directory', path: '/preceptor-directory', icon: <UserSearch className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'admin'] },
   { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
   { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
-  { label: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
 ]
 
 export function Sidebar() {
@@ -72,15 +70,6 @@ export function Sidebar() {
   const pendingSigCount = pendingSigs?.data?.length ?? 0
   const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
 
-  const roleLabels: Record<UserRole, string> = {
-    student: 'Student',
-    preceptor: 'Preceptor',
-    site_manager: 'Site Manager',
-    coordinator: 'Coordinator',
-    professor: 'Professor',
-    admin: 'Admin',
-  }
-
   const sidebarContent = (
     <>
       {/* Logo */}
@@ -93,33 +82,13 @@ export function Sidebar() {
             ClinicLink
           </span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="hidden lg:block">
-            <NotificationBell />
-          </div>
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
-
-      {/* User */}
-      {user && (
-        <div className="px-4 py-3 border-b border-stone-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
-              {user.firstName[0]}{user.lastName[0]}
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-stone-900 truncate">{user.firstName} {user.lastName}</p>
-              <p className="text-xs text-stone-500">{roleLabels[user.role]}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
@@ -166,7 +135,7 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile top bar */}
+      {/* Mobile top bar — only logo + hamburger, user info moved to TopBar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-stone-200 flex items-center justify-between px-4 z-30">
         <div className="flex items-center">
           <button
@@ -184,17 +153,6 @@ export function Sidebar() {
               ClinicLink
             </span>
           </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <NotificationBell />
-          <button
-            onClick={logout}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors text-xs font-medium"
-            aria-label="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Logout</span>
-          </button>
         </div>
       </div>
 
