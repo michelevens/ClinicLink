@@ -131,7 +131,8 @@ class AdminController extends Controller
                 $q->where('first_name', 'ilike', "%{$search}%")
                   ->orWhere('last_name', 'ilike', "%{$search}%")
                   ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhere('username', 'ilike', "%{$search}%");
+                  ->orWhere('username', 'ilike', "%{$search}%")
+                  ->orWhere('system_id', 'ilike', "%{$search}%");
             });
         }
 

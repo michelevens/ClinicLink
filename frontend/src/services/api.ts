@@ -592,6 +592,7 @@ export const siteJoinRequestsApi = {
 // --- API Types (match Laravel snake_case) ---
 export interface ApiUser {
   id: string
+  system_id?: string
   email: string
   username: string | null
   first_name: string
@@ -637,6 +638,7 @@ export interface ApiStudentProfile {
 
 export interface ApiSite {
   id: string
+  system_id?: string
   name: string
   address: string
   city: string
@@ -753,6 +755,7 @@ export interface ApiCredential {
 
 export interface ApiUniversity {
   id: string
+  system_id?: string
   name: string
   address: string | null
   city: string | null

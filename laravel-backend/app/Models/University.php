@@ -19,7 +19,20 @@ class University extends Model
         'phone',
         'website',
         'is_verified',
+        'system_id',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (University $uni) {
+            if (!$uni->system_id) {
+                do {
+                    $code = strtoupper(substr(bin2hex(random_bytes(4)), 0, 7));
+                } while (static::where('system_id', $code)->exists());
+                $uni->system_id = $code;
+            }
+        });
+    }
 
     protected function casts(): array
     {

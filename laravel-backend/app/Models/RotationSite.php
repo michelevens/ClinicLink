@@ -30,7 +30,20 @@ class RotationSite extends Model
         'npi_number',
         'npi_verified_at',
         'npi_data',
+        'system_id',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (RotationSite $site) {
+            if (!$site->system_id) {
+                do {
+                    $code = strtoupper(substr(bin2hex(random_bytes(4)), 0, 7));
+                } while (static::where('system_id', $code)->exists());
+                $site->system_id = $code;
+            }
+        });
+    }
 
     protected function casts(): array
     {

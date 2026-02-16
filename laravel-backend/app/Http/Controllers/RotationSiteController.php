@@ -23,7 +23,8 @@ class RotationSiteController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
                   ->orWhere('city', 'ilike', "%{$search}%")
-                  ->orWhere('state', 'ilike', "%{$search}%");
+                  ->orWhere('state', 'ilike', "%{$search}%")
+                  ->orWhere('system_id', 'ilike', "%{$search}%");
             });
         }
 

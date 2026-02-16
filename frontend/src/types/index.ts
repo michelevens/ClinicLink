@@ -2,6 +2,7 @@ export type UserRole = 'student' | 'preceptor' | 'site_manager' | 'coordinator' 
 
 export interface User {
   id: string
+  systemId?: string
   email: string
   username?: string
   firstName: string
@@ -38,6 +39,7 @@ export interface Credential {
 
 export interface RotationSite {
   id: string
+  systemId?: string
   name: string
   address: string
   city: string
@@ -129,6 +131,7 @@ export interface Evaluation {
 
 export interface University {
   id: string
+  systemId?: string
   name: string
   address: string
   programs: Program[]

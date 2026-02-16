@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent, type MouseEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { MessageCircle, X, Send, ArrowLeft, Trash2, Plus, Clock, Bot, Loader2 } from 'lucide-react'
 import { useAiConversations, useAiMessages, useAiSendMessage, useAiDeleteConversation, useAiSuggestions } from '../../hooks/useApi.ts'
@@ -100,7 +100,7 @@ export function AiChatWidget() {
     }
   }, [input, isWaiting, conversationId, location.pathname, sendMessage])
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
@@ -118,7 +118,7 @@ export function AiChatWidget() {
     setView('chat')
   }
 
-  const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteConversation = async (id: string, e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
     await deleteConversation.mutateAsync(id)
     if (conversationId === id) {

@@ -45,3 +45,6 @@ class MockResizeObserver {
   disconnect() {}
 }
 Object.defineProperty(window, 'ResizeObserver', { value: MockResizeObserver })
+
+// Mock scrollIntoView (not implemented in jsdom)
+Element.prototype.scrollIntoView = () => {}

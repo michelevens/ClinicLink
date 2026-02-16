@@ -92,7 +92,8 @@ class UniversityController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('city', 'ilike', "%{$search}%");
+                  ->orWhere('city', 'ilike', "%{$search}%")
+                  ->orWhere('system_id', 'ilike', "%{$search}%");
             });
         }
 

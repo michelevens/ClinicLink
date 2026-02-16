@@ -40,7 +40,20 @@ class User extends Authenticatable
         'subscription_status',
         'subscription_ends_at',
         'sponsored_by_code_id',
+        'system_id',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (!$user->system_id) {
+                do {
+                    $code = strtoupper(substr(bin2hex(random_bytes(4)), 0, 7));
+                } while (static::where('system_id', $code)->exists());
+                $user->system_id = $code;
+            }
+        });
+    }
 
     protected $hidden = [
         'password',

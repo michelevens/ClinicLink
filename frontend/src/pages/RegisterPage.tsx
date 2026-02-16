@@ -68,18 +68,18 @@ export function RegisterPage() {
 
   // University search
   const [uniSearch, setUniSearch] = useState('')
-  const [uniResults, setUniResults] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([])
+  const [uniResults, setUniResults] = useState<{ id: string; name: string; city: string | null; state: string | null; system_id?: string }[]>([])
   const [uniLoading, setUniLoading] = useState(false)
-  const [selectedUni, setSelectedUni] = useState<{ id: string; name: string } | null>(null)
+  const [selectedUni, setSelectedUni] = useState<{ id: string; name: string; system_id?: string } | null>(null)
   const [showUniDropdown, setShowUniDropdown] = useState(false)
   const uniRef = useRef<HTMLDivElement>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
   // Site search (for preceptors)
   const [siteSearch, setSiteSearch] = useState('')
-  const [siteResults, setSiteResults] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([])
+  const [siteResults, setSiteResults] = useState<{ id: string; name: string; city: string | null; state: string | null; system_id?: string }[]>([])
   const [siteLoading, setSiteLoading] = useState(false)
-  const [selectedSite, setSelectedSite] = useState<{ id: string; name: string } | null>(null)
+  const [selectedSite, setSelectedSite] = useState<{ id: string; name: string; system_id?: string } | null>(null)
   const [showSiteDropdown, setShowSiteDropdown] = useState(false)
   const siteRef = useRef<HTMLDivElement>(null)
   const siteSearchTimer = useRef<ReturnType<typeof setTimeout>>(null)
@@ -115,7 +115,7 @@ export function RegisterPage() {
     searchTimer.current = setTimeout(async () => {
       try {
         const res = await universitiesApi.list({ search: uniSearch })
-        setUniResults((res.data || []).map(u => ({ id: u.id, name: u.name, city: u.city, state: u.state })))
+        setUniResults((res.data || []).map(u => ({ id: u.id, name: u.name, city: u.city, state: u.state, system_id: u.system_id })))
       } catch {
         setUniResults([])
       } finally {
@@ -135,7 +135,7 @@ export function RegisterPage() {
     siteSearchTimer.current = setTimeout(async () => {
       try {
         const res = await sitesApi.list({ search: siteSearch })
-        setSiteResults((res.data || []).map(s => ({ id: s.id, name: s.name, city: s.city, state: s.state })))
+        setSiteResults((res.data || []).map(s => ({ id: s.id, name: s.name, city: s.city, state: s.state, system_id: s.system_id })))
       } catch {
         setSiteResults([])
       } finally {
@@ -322,7 +322,12 @@ export function RegisterPage() {
                   <div className="flex items-center justify-between p-3 rounded-xl border border-primary-300 bg-primary-50">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-primary-600" />
-                      <span className="text-sm font-medium text-stone-900">{selectedSite.name}</span>
+                      <div>
+                        <span className="text-sm font-medium text-stone-900">{selectedSite.name}</span>
+                        {selectedSite.system_id && (
+                          <p className="text-xs text-primary-600 font-mono">ID: {selectedSite.system_id}</p>
+                        )}
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -352,7 +357,7 @@ export function RegisterPage() {
                             key={s.id}
                             type="button"
                             onClick={() => {
-                              setSelectedSite({ id: s.id, name: s.name })
+                              setSelectedSite({ id: s.id, name: s.name, system_id: s.system_id })
                               setForm(f => ({ ...f, siteId: s.id }))
                               setShowSiteDropdown(false)
                               setSiteSearch('')
@@ -360,9 +365,11 @@ export function RegisterPage() {
                             className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0"
                           >
                             <p className="text-sm font-medium text-stone-900">{s.name}</p>
-                            {(s.city || s.state) && (
-                              <p className="text-xs text-stone-500">{[s.city, s.state].filter(Boolean).join(', ')}</p>
-                            )}
+                            <p className="text-xs text-stone-500">
+                              {s.system_id && <span className="font-mono text-primary-600">ID: {s.system_id}</span>}
+                              {s.system_id && (s.city || s.state) && <span> &middot; </span>}
+                              {(s.city || s.state) && <span>{[s.city, s.state].filter(Boolean).join(', ')}</span>}
+                            </p>
                           </button>
                         ))}
                       </div>
@@ -389,7 +396,12 @@ export function RegisterPage() {
                   <div className="flex items-center justify-between p-3 rounded-xl border border-primary-300 bg-primary-50">
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-primary-600" />
-                      <span className="text-sm font-medium text-stone-900">{selectedUni.name}</span>
+                      <div>
+                        <span className="text-sm font-medium text-stone-900">{selectedUni.name}</span>
+                        {selectedUni.system_id && (
+                          <p className="text-xs text-primary-600 font-mono">ID: {selectedUni.system_id}</p>
+                        )}
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -419,7 +431,7 @@ export function RegisterPage() {
                             key={u.id}
                             type="button"
                             onClick={() => {
-                              setSelectedUni({ id: u.id, name: u.name })
+                              setSelectedUni({ id: u.id, name: u.name, system_id: u.system_id })
                               setForm(f => ({ ...f, universityId: u.id, programId: '' }))
                               setShowUniDropdown(false)
                               setUniSearch('')
@@ -427,9 +439,11 @@ export function RegisterPage() {
                             className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0"
                           >
                             <p className="text-sm font-medium text-stone-900">{u.name}</p>
-                            {(u.city || u.state) && (
-                              <p className="text-xs text-stone-500">{[u.city, u.state].filter(Boolean).join(', ')}</p>
-                            )}
+                            <p className="text-xs text-stone-500">
+                              {u.system_id && <span className="font-mono text-primary-600">ID: {u.system_id}</span>}
+                              {u.system_id && (u.city || u.state) && <span> &middot; </span>}
+                              {(u.city || u.state) && <span>{[u.city, u.state].filter(Boolean).join(', ')}</span>}
+                            </p>
                           </button>
                         ))}
                       </div>
