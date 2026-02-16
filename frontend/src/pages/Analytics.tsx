@@ -3,6 +3,7 @@ import { BarChart3, TrendingUp, Users, Clock, DollarSign, Target } from 'lucide-
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useAnalyticsSummary, usePlatformAnalytics, useUniversityAnalytics, useSiteAnalytics, useSpecialtyDemand, useMySites } from '../hooks/useApi.ts'
 import { MetricCard, PlacementTrendChart, SpecialtyDemandChart, PlacementFunnelChart, GeoDemandTable } from '../components/analytics/AnalyticsCharts.tsx'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 
 type Period = '7d' | '30d' | '90d' | '12m'
 
@@ -117,10 +118,12 @@ export function Analytics() {
 
       {/* No data state */}
       {!summaryLoading && !summary && (
-        <div className="text-center py-16 bg-white border border-stone-200 rounded-xl">
-          <BarChart3 className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-          <p className="text-stone-500 font-medium">No analytics data available yet</p>
-          <p className="text-sm text-stone-400 mt-1">Data will appear as placements and activities are recorded</p>
+        <div className="bg-white border border-stone-200 rounded-xl">
+          <EmptyState
+            illustration="chart"
+            title="No analytics data available yet"
+            description="Data will appear as placements and activities are recorded."
+          />
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Card } from '../components/ui/Card.tsx'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
@@ -377,16 +378,12 @@ export function Evaluations() {
 
           {/* Evaluations List */}
           {filteredEvals.length === 0 && (
-            <Card className="text-center py-12">
-              <ClipboardCheck className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-stone-700 mb-2">
-                {typeFilter === 'all' ? 'No evaluations yet' : `No ${getTypeLabel(typeFilter).toLowerCase()} evaluations`}
-              </h3>
-              <p className="text-stone-500">
-                {isPreceptor ? 'Create your first evaluation for a student' :
-                 isStudent ? 'Evaluations from your preceptors will appear here. You can also submit site feedback.' :
-                 'No evaluations have been submitted'}
-              </p>
+            <Card>
+              <EmptyState
+                illustration="clipboard"
+                title={typeFilter === 'all' ? 'No evaluations yet' : `No ${getTypeLabel(typeFilter).toLowerCase()} evaluations`}
+                description={isPreceptor ? 'Create your first evaluation for a student.' : isStudent ? 'Evaluations from your preceptors will appear here.' : 'No evaluations have been submitted.'}
+              />
             </Card>
           )}
 

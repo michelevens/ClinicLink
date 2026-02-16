@@ -8,6 +8,7 @@ import {
 import { toast } from 'sonner'
 import { useAdminUsers, useUpdateUser, useDeleteUser, useCreateUser, useBulkInviteUsers, useUniversities, useSites } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
@@ -109,11 +110,11 @@ export function AdminUsers() {
         </div>
       ) : users.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-stone-900 mb-1">No users found</h3>
-            <p className="text-stone-500 text-sm">Try adjusting your search or filters.</p>
-          </div>
+          <EmptyState
+            illustration="users"
+            title="No users found"
+            description="Try adjusting your search or filters."
+          />
         </Card>
       ) : (
         <Card padding="none">
