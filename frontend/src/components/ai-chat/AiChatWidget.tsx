@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { MessageCircle, X, Send, ArrowLeft, Trash2, Plus, Clock, Bot, Loader2 } from 'lucide-react'
 import { useAiConversations, useAiMessages, useAiSendMessage, useAiDeleteConversation, useAiSuggestions } from '../../hooks/useApi.ts'
 import type { AiChatConversation, AiChatMessage } from '../../services/api.ts'
-import { useAuth } from '../../hooks/useAuth.ts'
+import { useAuth } from '../../contexts/AuthContext.tsx'
 
 type View = 'chat' | 'history'
 

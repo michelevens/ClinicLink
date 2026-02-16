@@ -29,6 +29,11 @@ vi.mock('../../../hooks/useApi.ts', () => ({
   useNotifications: () => ({ data: { data: [] } }),
   useMarkAsRead: () => ({ mutateAsync: vi.fn() }),
   useMarkAllAsRead: () => ({ mutateAsync: vi.fn() }),
+  useAiConversations: () => ({ data: { conversations: [] } }),
+  useAiMessages: () => ({ data: { messages: [] } }),
+  useAiSendMessage: () => ({ mutateAsync: vi.fn() }),
+  useAiDeleteConversation: () => ({ mutateAsync: vi.fn() }),
+  useAiSuggestions: () => ({ data: { suggestions: [] } }),
 }))
 
 function renderWithProviders(initialVersion: 'v1' | 'v2' = 'v1') {
