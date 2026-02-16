@@ -6,7 +6,7 @@ import {
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
-  signaturesApi, subscriptionApi, aiChatApi, studentInvitesApi,
+  signaturesApi, subscriptionApi, aiChatApi, studentInvitesApi, supportApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1591,5 +1591,14 @@ export function useAiSuggestions(page?: string) {
     queryKey: ['ai-suggestions', page],
     queryFn: () => aiChatApi.suggestions(page),
     staleTime: 10 * 60 * 1000,
+  })
+}
+
+// --- Support Requests ---
+export function useSubmitSupportRequest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: supportApi.submit,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['support-requests'] }),
   })
 }

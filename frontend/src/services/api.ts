@@ -1773,6 +1773,26 @@ export const aiChatApi = {
     api.get<{ suggestions: string[] }>(`/ai-chat/suggestions${page ? `?page=${encodeURIComponent(page)}` : ''}`),
 }
 
+// --- Support Requests ---
+export interface SupportRequest {
+  id: string
+  subject: string
+  description: string
+  category: string
+  current_page: string | null
+  ai_chat_conversation_id: string | null
+  status: string
+  priority: string
+  created_at: string
+}
+
+export const supportApi = {
+  submit: (data: { subject: string; description: string; category?: string; current_page?: string; ai_chat_conversation_id?: string }) =>
+    api.post<{ message: string; support_request: SupportRequest }>('/support-requests', data),
+  list: () =>
+    api.get<{ support_requests: SupportRequest[] }>('/support-requests'),
+}
+
 // --- Subscription Types ---
 export interface SubscriptionStatus {
   plan: 'free' | 'pro'

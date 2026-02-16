@@ -430,6 +430,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/suggestions', [AiChatController::class, 'suggestions']);
     });
 
+    // Support / Help requests
+    Route::post('/support-requests', [\App\Http\Controllers\SupportRequestController::class, 'store']);
+    Route::get('/support-requests', [\App\Http\Controllers\SupportRequestController::class, 'index']);
+
     // Calendar (all authenticated users — controller scopes by role)
     Route::get('/calendar/events', [CalendarController::class, 'events']);
 
