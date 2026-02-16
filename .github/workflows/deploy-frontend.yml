@@ -36,7 +36,7 @@ jobs:
         working-directory: frontend
 
       - name: Run tests
-        run: npm run test
+        run: npx vitest run --reporter=verbose
         working-directory: frontend
 
       - name: Build
