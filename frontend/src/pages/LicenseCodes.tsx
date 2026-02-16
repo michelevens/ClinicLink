@@ -43,8 +43,9 @@ export function LicenseCodes() {
       await deactivateMutation.mutateAsync(deactivateConfirm.id)
       toast.success('Code deactivated')
       setDeactivateConfirm(null)
-    } catch {
-      toast.error('Failed to deactivate code')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to deactivate code'
+      toast.error(message)
     }
   }
 
@@ -272,8 +273,9 @@ function CreateCodeModal({ onClose }: { onClose: () => void }) {
       if (res.codes) codes.push(...res.codes.map(c => c.code))
       setGeneratedCodes(codes)
       toast.success(`${codes.length} code${codes.length > 1 ? 's' : ''} generated successfully`)
-    } catch {
-      toast.error('Failed to generate codes')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to generate codes'
+      toast.error(message)
     }
   }
 

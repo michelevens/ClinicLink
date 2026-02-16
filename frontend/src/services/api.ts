@@ -782,11 +782,10 @@ export interface ApiLicenseCode {
   times_used: number
   expires_at: string | null
   is_active: boolean
-  created_by: string | null
+  created_by: string | { id: string; first_name: string; last_name: string } | null
   created_at: string
   updated_at: string
   university?: { id: string; name: string }
-  created_by_user?: { id: string; first_name: string; last_name: string }
   users_count?: number
 }
 
