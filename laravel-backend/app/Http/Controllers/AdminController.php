@@ -158,18 +158,28 @@ class AdminController extends Controller
                     'hourLogs',
                     'evaluationsAsStudent.slot',
                     'evaluationsAsStudent.preceptor',
+                    'matchingPreferences',
                 ];
                 break;
             case 'preceptor':
                 $relations = [
+                    'preceptorProfile',
                     'preceptorSlots.site',
                     'evaluationsAsPreceptor.student',
                     'evaluationsAsPreceptor.slot',
+                    'preceptorReviewsReceived.student',
                 ];
                 break;
             case 'site_manager':
                 $relations = [
                     'managedSites',
+                ];
+                break;
+            case 'coordinator':
+            case 'professor':
+                $relations = [
+                    'studentProfile.university',
+                    'studentProfile.program',
                 ];
                 break;
         }
@@ -188,6 +198,11 @@ class AdminController extends Controller
                 ->get());
         }
 
+        // For site managers, load sites with their slots and preceptors for a richer view
+        if ($user->role === 'site_manager') {
+            $user->load('managedSites.slots.preceptor');
+        }
+
         $stats = [
             'applications_count' => $user->applications()->count(),
             'hour_logs_count' => $user->hourLogs()->count(),
@@ -196,6 +211,12 @@ class AdminController extends Controller
             'evaluations_as_preceptor' => $user->evaluationsAsPreceptor()->count(),
             'managed_sites_count' => $user->managedSites()->count(),
             'preceptor_slots_count' => $user->preceptorSlots()->count(),
+            'reviews_received_count' => $user->preceptorReviewsReceived()->count(),
+            'average_rating' => round((float) $user->preceptorReviewsReceived()->avg('overall_rating'), 1),
+            'messages_sent_count' => $user->sentMessages()->count(),
+            'conversations_count' => $user->conversations()->count(),
+            'total_students_mentored' => $user->preceptorProfile?->total_students_mentored ?? 0,
+            'total_hours_supervised' => (float) ($user->preceptorProfile?->total_hours_supervised ?? 0),
         ];
 
         return response()->json([
@@ -548,6 +569,38 @@ class AdminController extends Controller
             ->paginate($request->input('per_page', 50));
 
         return response()->json($logs);
+    }
+
+    public function testEmail(Request $request): JsonResponse
+    {
+        $request->validate([
+            'to' => ['required', 'email'],
+        ]);
+
+        $to = $request->input('to');
+
+        try {
+            Mail::raw('This is a test email from ClinicLink. If you receive this, email delivery is working correctly.', function ($message) use ($to) {
+                $message->to($to)
+                    ->subject('ClinicLink - Email Test');
+            });
+
+            return response()->json([
+                'message' => 'Test email sent successfully.',
+                'to' => $to,
+                'mailer' => config('mail.default'),
+                'from' => config('mail.from.address'),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Email sending failed.',
+                'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'mailer' => config('mail.default'),
+                'from' => config('mail.from.address'),
+                'resend_key_set' => !empty(config('services.resend.key')),
+            ], 500);
+        }
     }
 
     public function seedUniversities(Request $request): JsonResponse

@@ -348,6 +348,12 @@ export interface AdminUserStats {
   evaluations_as_preceptor: number
   managed_sites_count: number
   preceptor_slots_count: number
+  reviews_received_count: number
+  average_rating: number
+  messages_sent_count: number
+  conversations_count: number
+  total_students_mentored: number
+  total_hours_supervised: number
 }
 
 export const myStudentsApi = {
@@ -587,7 +593,9 @@ export interface ApiUser {
   mfa_enabled: boolean
   email_verified: boolean
   created_at: string
+  onboarding_completed_at?: string | null
   student_profile?: ApiStudentProfile
+  preceptor_profile?: ApiPreceptorProfile
   credentials?: ApiCredential[]
   applications?: ApiApplication[]
   hour_logs?: ApiHourLog[]
@@ -596,7 +604,17 @@ export interface ApiUser {
   preceptor_slots?: ApiSlot[]
   managed_sites?: ApiSite[]
   assigned_sites?: { id: string; name: string; city: string; state: string; specialties: string[] }[]
+  preceptor_reviews_received?: ApiPreceptorReview[]
+  matching_preferences?: any
   onboarding_completed?: boolean
+}
+
+export interface ApiPreceptorReview {
+  id: string
+  overall_rating: number
+  comment: string | null
+  created_at: string
+  student?: { id: string; first_name: string; last_name: string }
 }
 
 export interface ApiStudentProfile {

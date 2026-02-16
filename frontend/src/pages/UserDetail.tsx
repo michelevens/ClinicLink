@@ -3,7 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Shield, Mail, Phone, Calendar, Clock, FileText, ClipboardCheck,
   Building2, GraduationCap, Award, MapPin, Star, Loader2, ToggleLeft, ToggleRight,
-  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil, Copy, Check, Plus, X
+  Trash2, Users, Stethoscope, CheckCircle2, KeyRound, Pencil, Copy, Check, Plus, X,
+  ShieldCheck, MessageSquare, BookOpen, Heart
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite, useUniversities, useAssignStudentProgram } from '../hooks/useApi.ts'
@@ -22,6 +23,18 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'secondary' | 'default'> = {
   student: 'primary', preceptor: 'secondary', site_manager: 'warning',
   coordinator: 'success', professor: 'default', admin: 'danger',
+}
+
+const BADGE_LABELS: Record<string, { label: string; color: string }> = {
+  mentor_bronze: { label: 'Bronze Mentor', color: 'bg-amber-100 text-amber-700' },
+  mentor_silver: { label: 'Silver Mentor', color: 'bg-stone-100 text-stone-600' },
+  mentor_gold: { label: 'Gold Mentor', color: 'bg-yellow-100 text-yellow-700' },
+  hours_100: { label: 'Century Supervisor', color: 'bg-blue-100 text-blue-700' },
+  hours_500: { label: 'Master Supervisor', color: 'bg-purple-100 text-purple-700' },
+  reviews_5: { label: '5 Reviews', color: 'bg-green-100 text-green-700' },
+  reviews_20: { label: '20 Reviews', color: 'bg-teal-100 text-teal-700' },
+  specialist_3: { label: 'Multi-Specialist', color: 'bg-indigo-100 text-indigo-700' },
+  fast_responder: { label: 'Fast Responder', color: 'bg-rose-100 text-rose-700' },
 }
 
 export function UserDetail() {
@@ -79,6 +92,8 @@ export function UserDetail() {
     navigate('/admin/users')
   }
 
+  const onboardingDone = !!user.onboarding_completed_at || user.onboarding_completed
+
   return (
     <div className="space-y-6">
       {/* Back + Header */}
@@ -98,6 +113,10 @@ export function UserDetail() {
                 <Badge variant={ROLE_COLORS[user.role] || 'default'}>{ROLE_LABELS[user.role] || user.role}</Badge>
                 <Badge variant={user.is_active ? 'success' : 'default'}>{user.is_active ? 'Active' : 'Inactive'}</Badge>
                 {user.email_verified && <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3 mr-1" />Email Verified</Badge>}
+                {!onboardingDone && <Badge variant="warning" size="sm">Onboarding Incomplete</Badge>}
+                {user.preceptor_profile?.npi_verified_at && (
+                  <Badge variant="success" size="sm"><ShieldCheck className="w-3 h-3 mr-1" />NPI Verified</Badge>
+                )}
               </div>
               <div className="flex flex-wrap gap-4 mt-3 text-sm text-stone-600">
                 <span className="flex items-center gap-1"><Mail className="w-4 h-4 text-stone-400" /> {user.email}</span>
@@ -141,8 +160,12 @@ export function UserDetail() {
 
       {/* Role-Specific Sections */}
       {user.role === 'student' && <StudentSections user={user} />}
-      {user.role === 'preceptor' && <PreceptorSections user={user} />}
+      {user.role === 'preceptor' && <PreceptorSections user={user} stats={stats} />}
       {user.role === 'site_manager' && <SiteManagerSections user={user} />}
+      {(user.role === 'coordinator' || user.role === 'professor') && <FacultySections user={user} />}
+
+      {/* Account Details (all roles) */}
+      <AccountDetails user={user} stats={stats} />
 
       {/* Change Role Modal */}
       {editRole && (
@@ -336,6 +359,65 @@ export function UserDetail() {
   )
 }
 
+// ─── Account Details (all roles) ──────────────────────────────────
+function AccountDetails({ user, stats }: { user: ApiUser; stats?: AdminUserStats }) {
+  const onboardingDone = !!user.onboarding_completed_at || user.onboarding_completed
+
+  return (
+    <Card>
+      <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+        <Shield className="w-4 h-4 text-stone-500" /> Account Details
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs text-stone-500 mb-1">Account Status</p>
+          <p className={`text-sm font-medium ${user.is_active ? 'text-green-600' : 'text-stone-500'}`}>
+            {user.is_active ? 'Active' : 'Inactive'}
+          </p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs text-stone-500 mb-1">Email Verified</p>
+          <p className={`text-sm font-medium ${user.email_verified ? 'text-green-600' : 'text-amber-600'}`}>
+            {user.email_verified ? 'Yes' : 'No'}
+          </p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs text-stone-500 mb-1">Onboarding</p>
+          <p className={`text-sm font-medium ${onboardingDone ? 'text-green-600' : 'text-amber-600'}`}>
+            {onboardingDone ? 'Completed' : 'Incomplete'}
+          </p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs text-stone-500 mb-1">MFA Enabled</p>
+          <p className={`text-sm font-medium ${user.mfa_enabled ? 'text-green-600' : 'text-stone-500'}`}>
+            {user.mfa_enabled ? 'Yes' : 'No'}
+          </p>
+        </div>
+        {stats && (
+          <>
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Messages Sent</p>
+              <p className="text-sm font-medium text-stone-900">{stats.messages_sent_count}</p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Conversations</p>
+              <p className="text-sm font-medium text-stone-900">{stats.conversations_count}</p>
+            </div>
+          </>
+        )}
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs text-stone-500 mb-1">Member Since</p>
+          <p className="text-sm font-medium text-stone-900">{new Date(user.created_at).toLocaleDateString()}</p>
+        </div>
+        <div className="bg-stone-50 rounded-xl p-3">
+          <p className="text-xs text-stone-500 mb-1">User ID</p>
+          <p className="text-xs font-mono text-stone-600 truncate" title={user.id}>{user.id}</p>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 // ─── Stat Cards ──────────────────────────────────────────────────
 function StatCards({ user, stats }: { user: ApiUser; stats: AdminUserStats }) {
   const cards: { icon: React.ReactNode; label: string; value: string | number; color: string }[] = []
@@ -349,8 +431,12 @@ function StatCards({ user, stats }: { user: ApiUser; stats: AdminUserStats }) {
     )
   } else if (user.role === 'preceptor') {
     cards.push(
-      { icon: <GraduationCap className="w-5 h-5" />, label: 'Rotation Slots', value: stats.preceptor_slots_count, color: 'bg-primary-50 text-primary-600' },
-      { icon: <ClipboardCheck className="w-5 h-5" />, label: 'Evaluations Written', value: stats.evaluations_as_preceptor, color: 'bg-secondary-50 text-secondary-600' },
+      { icon: <Users className="w-5 h-5" />, label: 'Students Mentored', value: stats.total_students_mentored, color: 'bg-primary-50 text-primary-600' },
+      { icon: <Clock className="w-5 h-5" />, label: 'Hours Supervised', value: `${stats.total_hours_supervised}h`, color: 'bg-secondary-50 text-secondary-600' },
+      { icon: <GraduationCap className="w-5 h-5" />, label: 'Rotation Slots', value: stats.preceptor_slots_count, color: 'bg-green-50 text-green-600' },
+      { icon: <ClipboardCheck className="w-5 h-5" />, label: 'Evaluations Written', value: stats.evaluations_as_preceptor, color: 'bg-amber-50 text-amber-600' },
+      { icon: <Star className="w-5 h-5" />, label: 'Avg Rating', value: stats.average_rating > 0 ? `${stats.average_rating}/5` : 'N/A', color: 'bg-yellow-50 text-yellow-600' },
+      { icon: <MessageSquare className="w-5 h-5" />, label: 'Reviews', value: stats.reviews_received_count, color: 'bg-purple-50 text-purple-600' },
     )
   } else if (user.role === 'site_manager') {
     cards.push(
@@ -359,13 +445,14 @@ function StatCards({ user, stats }: { user: ApiUser; stats: AdminUserStats }) {
   } else if (user.role === 'coordinator' || user.role === 'professor') {
     cards.push(
       { icon: <Users className="w-5 h-5" />, label: 'Students', value: stats.applications_count, color: 'bg-primary-50 text-primary-600' },
+      { icon: <MessageSquare className="w-5 h-5" />, label: 'Conversations', value: stats.conversations_count, color: 'bg-secondary-50 text-secondary-600' },
     )
   }
 
   if (cards.length === 0) return null
 
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-${Math.min(cards.length, 4)} gap-3`}>
+    <div className={`grid grid-cols-2 ${cards.length >= 4 ? 'sm:grid-cols-4' : cards.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-3`}>
       {cards.map(c => (
         <div key={c.label} className="bg-white rounded-xl border border-stone-200 p-4 text-center">
           <div className={`w-10 h-10 rounded-xl ${c.color} flex items-center justify-center mx-auto mb-2`}>{c.icon}</div>
@@ -655,12 +742,14 @@ function AssignProgramModal({ studentId, currentProgramId, onClose }: { studentI
 }
 
 // ─── Preceptor Sections ──────────────────────────────────────────
-function PreceptorSections({ user }: { user: ApiUser }) {
+function PreceptorSections({ user, stats }: { user: ApiUser; stats?: AdminUserStats }) {
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [removeConfirm, setRemoveConfirm] = useState<{ id: string; name: string } | null>(null)
   const removeMut = useRemovePreceptorFromSite()
 
   const assignedSites = user.assigned_sites || []
+  const pp = user.preceptor_profile
+  const reviews = user.preceptor_reviews_received || []
 
   const handleRemove = async () => {
     if (!removeConfirm) return
@@ -675,6 +764,94 @@ function PreceptorSections({ user }: { user: ApiUser }) {
 
   return (
     <>
+      {/* Preceptor Profile */}
+      {pp && (
+        <Card>
+          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+            <Stethoscope className="w-4 h-4 text-primary-500" /> Preceptor Profile
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Availability</p>
+              <p className={`text-sm font-medium ${
+                pp.availability_status === 'available' ? 'text-green-600'
+                : pp.availability_status === 'limited' ? 'text-amber-600' : 'text-stone-500'
+              }`}>
+                {pp.availability_status === 'available' ? 'Available' : pp.availability_status === 'limited' ? 'Limited' : 'Unavailable'}
+              </p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Max Students</p>
+              <p className="text-sm font-medium text-stone-900">{pp.max_students ?? 'N/A'}</p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Years Experience</p>
+              <p className="text-sm font-medium text-stone-900">{pp.years_experience ?? 'N/A'}</p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Profile Visibility</p>
+              <p className="text-sm font-medium text-stone-900 capitalize">{pp.profile_visibility || 'public'}</p>
+            </div>
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">Preferred Schedule</p>
+              <p className="text-sm font-medium text-stone-900 capitalize">{pp.preferred_schedule?.replace('_', ' ') || 'N/A'}</p>
+            </div>
+            {pp.npi_number && (
+              <div className={`rounded-xl p-3 ${pp.npi_verified_at ? 'bg-teal-50' : 'bg-stone-50'}`}>
+                <p className="text-xs text-stone-500 mb-1">NPI Number</p>
+                <p className="text-sm font-medium text-stone-900 flex items-center gap-1">
+                  {pp.npi_number}
+                  {pp.npi_verified_at && <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Specialties */}
+          {pp.specialties?.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-stone-500 mb-1.5">Specialties</p>
+              <div className="flex flex-wrap gap-1.5">
+                {pp.specialties.map((s: string) => <Badge key={s} variant="secondary" size="sm">{s}</Badge>)}
+              </div>
+            </div>
+          )}
+
+          {/* Bio */}
+          {pp.bio && (
+            <div className="mt-3">
+              <p className="text-xs text-stone-500 mb-1.5">Bio</p>
+              <p className="text-sm text-stone-700 bg-stone-50 rounded-xl p-3">{pp.bio}</p>
+            </div>
+          )}
+
+          {/* Teaching Philosophy */}
+          {pp.teaching_philosophy && (
+            <div className="mt-3">
+              <p className="text-xs text-stone-500 mb-1.5">Teaching Philosophy</p>
+              <p className="text-sm text-stone-700 bg-stone-50 rounded-xl p-3">{pp.teaching_philosophy}</p>
+            </div>
+          )}
+
+          {/* Badges */}
+          {pp.badges?.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-stone-500 mb-1.5">Badges & Achievements</p>
+              <div className="flex flex-wrap gap-1.5">
+                {pp.badges.map((b: string) => {
+                  const info = BADGE_LABELS[b]
+                  return (
+                    <span key={b} className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${info?.color || 'bg-stone-100 text-stone-600'}`}>
+                      <Award className="w-3 h-3" /> {info?.label || b}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Assigned Sites */}
       <Card>
         <div className="flex items-center justify-between mb-3">
@@ -720,7 +897,7 @@ function PreceptorSections({ user }: { user: ApiUser }) {
       {user.preceptor_slots && user.preceptor_slots.length > 0 && (
         <Card>
           <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
-            <Stethoscope className="w-4 h-4 text-primary-500" /> Assigned Rotation Slots ({user.preceptor_slots.length})
+            <BookOpen className="w-4 h-4 text-primary-500" /> Rotation Slots ({user.preceptor_slots.length})
           </h2>
           <div className="space-y-2">
             {user.preceptor_slots.map((slot: any) => (
@@ -739,6 +916,38 @@ function PreceptorSections({ user }: { user: ApiUser }) {
                 <Badge variant={slot.status === 'open' ? 'success' : slot.status === 'filled' ? 'warning' : 'default'} size="sm">
                   {slot.status} ({slot.filled}/{slot.capacity})
                 </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* Reviews Received */}
+      {reviews.length > 0 && (
+        <Card>
+          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+            <Star className="w-4 h-4 text-yellow-500" /> Student Reviews ({reviews.length})
+            {stats && stats.average_rating > 0 && (
+              <span className="ml-auto text-sm font-bold text-yellow-600 flex items-center gap-1">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /> {stats.average_rating}/5
+              </span>
+            )}
+          </h2>
+          <div className="space-y-2">
+            {reviews.map((review: any) => (
+              <div key={review.id} className="p-3 bg-stone-50 rounded-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-medium text-stone-900">
+                    {review.student ? `${review.student.first_name} ${review.student.last_name}` : 'Anonymous'}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <Star key={i} className={`w-3.5 h-3.5 ${review.overall_rating >= i ? 'text-yellow-400 fill-yellow-400' : 'text-stone-300'}`} />
+                    ))}
+                  </div>
+                </div>
+                {review.comment && <p className="text-sm text-stone-600 mt-1">{review.comment}</p>}
+                <p className="text-xs text-stone-400 mt-1">{new Date(review.created_at).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
@@ -895,11 +1104,62 @@ function SiteManagerSections({ user }: { user: ApiUser }) {
                     {site.specialties.length > 5 && <Badge variant="default" size="sm">+{site.specialties.length - 5}</Badge>}
                   </div>
                 )}
+                {/* Show slot count if available */}
+                {site.slots?.length > 0 && (
+                  <p className="text-xs text-stone-500 mt-2 flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" /> {site.slots.length} rotation slot{site.slots.length !== 1 ? 's' : ''}
+                  </p>
+                )}
               </Link>
             ))}
           </div>
         </Card>
       )}
+
+      {(!user.managed_sites || user.managed_sites.length === 0) && (
+        <Card>
+          <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-primary-500" /> Managed Sites
+          </h2>
+          <p className="text-sm text-stone-400 text-center py-4">No sites managed by this user.</p>
+        </Card>
+      )}
+    </>
+  )
+}
+
+// ─── Faculty (Coordinator / Professor) Sections ─────────────────
+function FacultySections({ user }: { user: ApiUser }) {
+  const profile = user.student_profile
+
+  return (
+    <>
+      {/* University Affiliation */}
+      <Card>
+        <h2 className="text-sm font-semibold text-stone-900 mb-3 flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-primary-500" /> University Affiliation
+        </h2>
+        {profile?.university ? (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-stone-50 rounded-xl p-3">
+              <p className="text-xs text-stone-500 mb-1">University</p>
+              <p className="text-sm font-medium text-stone-900">
+                <Link to={`/universities/${profile.university.id}`} className="text-primary-600 hover:underline">
+                  {profile.university.name}
+                </Link>
+              </p>
+            </div>
+            {profile.program && (
+              <div className="bg-stone-50 rounded-xl p-3">
+                <p className="text-xs text-stone-500 mb-1">Program</p>
+                <p className="text-sm font-medium text-stone-900">{profile.program.name}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-stone-400 text-center py-4">No university affiliation set.</p>
+        )}
+      </Card>
     </>
   )
 }

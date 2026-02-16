@@ -98,3 +98,44 @@ cliniclink/
 - Same Split Context state management pattern
 - Same API service architecture (typed client + domain service objects)
 - Mobile-first but web-primary (React Native in Phase 4)
+
+## Deployment
+
+### Frontend — GitHub Pages
+- Auto-deploys via `.github/workflows/deploy-frontend.yml` on push to `master` (when `frontend/` files change)
+- Build: `cd frontend && npm run build`
+- API URL configured as: `https://cliniclink-api-production.up.railway.app/api`
+
+### Backend — Railway
+- **Project:** ClinicLink
+- **Service:** cliniclink-api
+- **Database:** PostgreSQL (on Railway)
+- **Builder:** Nixpacks (PHP 8.4 + pgsql extensions)
+- **Auto-migrate:** Start command in `railway.json` runs `php artisan migrate --force`
+
+#### Railway CLI Deployment Steps
+The Railway CLI binary is at `c:\Users\emich\railway.exe`. To deploy:
+
+```bash
+# 1. Authenticate (only needed once, opens browser)
+c:\Users\emich\railway.exe login
+
+# 2. Link to the ClinicLink project (only needed once per directory)
+cd c:\Users\emich\OneDrive\Desktop\GitHub_Projects\ClinicLink\laravel-backend
+c:\Users\emich\railway.exe link --project 39a183e5-a3e3-4470-acc6-a0671430618b --service 303eb390-0dfa-4440-bf09-5b8581ee2d1b --environment 0bcb3ee5-3e74-4412-a239-3e11915760e4
+
+# 3. Deploy
+c:\Users\emich\railway.exe up --detach
+```
+
+#### Railway Project IDs
+- **Project ID:** `39a183e5-a3e3-4470-acc6-a0671430618b`
+- **Service ID (cliniclink-api):** `303eb390-0dfa-4440-bf09-5b8581ee2d1b`
+- **Environment ID (production):** `0bcb3ee5-3e74-4412-a239-3e11915760e4`
+
+#### Standard Deployment Workflow
+After pushing code to GitHub:
+1. Frontend auto-deploys to GitHub Pages (if frontend files changed)
+2. Backend: run `c:\Users\emich\railway.exe up --detach` from `laravel-backend/` directory
+3. Verify deployment at build logs URL returned by the command
+4. Migrations run automatically on startup
