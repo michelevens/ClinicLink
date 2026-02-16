@@ -203,21 +203,26 @@ class AdminController extends Controller
             $user->load('managedSites.slots.preceptor');
         }
 
-        $stats = [
-            'applications_count' => $user->applications()->count(),
-            'hour_logs_count' => $user->hourLogs()->count(),
-            'total_hours' => (float) $user->hourLogs()->where('status', 'approved')->sum('hours_worked'),
-            'evaluations_as_student' => $user->evaluationsAsStudent()->count(),
-            'evaluations_as_preceptor' => $user->evaluationsAsPreceptor()->count(),
-            'managed_sites_count' => $user->managedSites()->count(),
-            'preceptor_slots_count' => $user->preceptorSlots()->count(),
-            'reviews_received_count' => $user->preceptorReviewsReceived()->count(),
-            'average_rating' => round((float) $user->preceptorReviewsReceived()->avg('overall_score'), 1),
-            'messages_sent_count' => $user->sentMessages()->count(),
-            'conversations_count' => $user->conversations()->count(),
-            'total_students_mentored' => $user->preceptorProfile?->total_students_mentored ?? 0,
-            'total_hours_supervised' => (float) ($user->preceptorProfile?->total_hours_supervised ?? 0),
-        ];
+        try {
+            $stats = [
+                'applications_count' => $user->applications()->count(),
+                'hour_logs_count' => $user->hourLogs()->count(),
+                'total_hours' => (float) $user->hourLogs()->where('status', 'approved')->sum('hours_worked'),
+                'evaluations_as_student' => $user->evaluationsAsStudent()->count(),
+                'evaluations_as_preceptor' => $user->evaluationsAsPreceptor()->count(),
+                'managed_sites_count' => $user->managedSites()->count(),
+                'preceptor_slots_count' => $user->preceptorSlots()->count(),
+                'reviews_received_count' => $user->preceptorReviewsReceived()->count(),
+                'average_rating' => round((float) $user->preceptorReviewsReceived()->avg('overall_score'), 1),
+                'messages_sent_count' => $user->sentMessages()->count(),
+                'conversations_count' => $user->conversations()->count(),
+                'total_students_mentored' => $user->preceptorProfile?->total_students_mentored ?? 0,
+                'total_hours_supervised' => (float) ($user->preceptorProfile?->total_hours_supervised ?? 0),
+            ];
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to compute user stats', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            $stats = [];
+        }
 
         return response()->json([
             'user' => $user,

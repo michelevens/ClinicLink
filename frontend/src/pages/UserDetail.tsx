@@ -40,7 +40,7 @@ const BADGE_LABELS: Record<string, { label: string; color: string }> = {
 export function UserDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data, isLoading } = useAdminUser(id!)
+  const { data, isLoading, error } = useAdminUser(id!)
   const updateUser = useUpdateUser()
   const deleteUserMut = useDeleteUser()
   const resetPwMut = useResetUserPassword()
@@ -69,7 +69,8 @@ export function UserDetail() {
     return (
       <div className="text-center py-24">
         <Users className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-        <h2 className="text-lg font-semibold text-stone-900">User not found</h2>
+        <h2 className="text-lg font-semibold text-stone-900">{error ? 'Failed to load user' : 'User not found'}</h2>
+        {error && <p className="text-sm text-stone-500 mt-1">{(error as Error).message}</p>}
         <Button variant="outline" className="mt-4" onClick={() => navigate('/admin/users')}>
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Users
         </Button>
