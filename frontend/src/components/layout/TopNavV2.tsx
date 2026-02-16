@@ -174,7 +174,7 @@ export function TopNavV2() {
             to="/messages"
             className={({ isActive }) =>
               `relative p-2 rounded-lg transition-all ${
-                isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                isActive ? 'text-indigo-700 bg-indigo-50' : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50'
               }`
             }
             title="Messages"
@@ -191,7 +191,7 @@ export function TopNavV2() {
             to="/calendar"
             className={({ isActive }) =>
               `p-2 rounded-lg transition-all ${
-                isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                isActive ? 'text-indigo-700 bg-indigo-50' : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50'
               }`
             }
             title="Calendar"
@@ -203,7 +203,7 @@ export function TopNavV2() {
             to="/preceptor-directory"
             className={({ isActive }) =>
               `p-2 rounded-lg transition-all ${
-                isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+                isActive ? 'text-indigo-700 bg-indigo-50' : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50'
               }`
             }
             title="Preceptor Directory"
@@ -211,7 +211,7 @@ export function TopNavV2() {
             <UserSearch className="w-4 h-4" />
           </NavLink>
 
-          <button className="relative p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
+          <button className="relative p-2 rounded-lg text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 transition-all">
             <Bell className="w-4 h-4" />
             {pendingSigCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">

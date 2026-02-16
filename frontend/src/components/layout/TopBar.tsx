@@ -29,8 +29,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `relative p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-600 bg-primary-50'
-              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+              ? 'text-primary-700 bg-primary-50'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
           }`
         }
         title="Messages"
@@ -49,8 +49,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-600 bg-primary-50'
-              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+              ? 'text-primary-700 bg-primary-50'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
           }`
         }
         title="Calendar"
@@ -64,8 +64,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-600 bg-primary-50'
-              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+              ? 'text-primary-700 bg-primary-50'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
           }`
         }
         title="Preceptor Directory"
@@ -82,8 +82,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-600 bg-primary-50'
-              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+              ? 'text-primary-700 bg-primary-50'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
           }`
         }
         title="Settings"
