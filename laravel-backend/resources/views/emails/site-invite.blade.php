@@ -70,7 +70,7 @@
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
                                             <tr>
-                                                <td style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:12px;box-shadow:0 4px 12px rgba(139,92,246,0.3);">
+                                                <td style="background-color:#7c3aed;border-radius:12px;">
                                                     <a href="{{ $inviteUrl }}" style="display:inline-block;padding:16px 40px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Accept Invitation</a>
                                                 </td>
                                             </tr>

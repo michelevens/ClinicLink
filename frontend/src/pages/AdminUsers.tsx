@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Users, Search, Shield, ChevronLeft, ChevronRight, ToggleLeft, ToggleRight,
   Trash2, Mail, Building2, GraduationCap, MapPin, Eye, UserPlus,
-  Upload, X, Check, AlertTriangle
+  Upload, X, Check, AlertTriangle, ShieldCheck, ShieldOff, CheckCircle2, Clock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAdminUsers, useUpdateUser, useDeleteUser, useCreateUser, useBulkInviteUsers, useUniversities, useSites } from '../hooks/useApi.ts'
@@ -123,8 +123,11 @@ export function AdminUsers() {
                 <tr className="border-b border-stone-200 bg-stone-50">
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">User</th>
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">Role</th>
+                  <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden lg:table-cell">Affiliation</th>
                   <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">Status</th>
-                  <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3">Joined</th>
+                  <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden md:table-cell">MFA</th>
+                  <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden md:table-cell">Onboarding</th>
+                  <th className="text-left text-xs font-semibold text-stone-500 uppercase px-4 py-3 hidden sm:table-cell">Joined</th>
                   <th className="text-right text-xs font-semibold text-stone-500 uppercase px-4 py-3">Actions</th>
                 </tr>
               </thead>
@@ -153,6 +156,20 @@ export function AdminUsers() {
                         </Badge>
                       </button>
                     </td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      {(user as ApiUser & { affiliation?: string }).affiliation ? (
+                        <div className="flex items-center gap-1.5 text-sm text-stone-600">
+                          {['student', 'coordinator', 'professor'].includes(user.role) ? (
+                            <GraduationCap className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                          ) : (
+                            <Building2 className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                          )}
+                          <span className="truncate max-w-[160px]">{(user as ApiUser & { affiliation?: string }).affiliation}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-stone-300">&mdash;</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <button
                         onClick={e => handleToggleActive(user, e)}
@@ -166,7 +183,21 @@ export function AdminUsers() {
                         )}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-sm text-stone-500">
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {user.mfa_enabled ? (
+                        <span className="flex items-center gap-1 text-xs text-green-600"><ShieldCheck className="w-3.5 h-3.5" />On</span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-stone-400"><ShieldOff className="w-3.5 h-3.5" />Off</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      {user.onboarding_completed_at ? (
+                        <span className="flex items-center gap-1 text-xs text-green-600"><CheckCircle2 className="w-3.5 h-3.5" />Done</span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-xs text-amber-500"><Clock className="w-3.5 h-3.5" />Pending</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-stone-500 hidden sm:table-cell">
                       {new Date(user.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">

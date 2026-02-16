@@ -40,9 +40,21 @@
                                 <tr>
                                     <td style="padding:24px 48px 40px;">
                                         <h1 style="margin:0 0 8px;color:#0c4a6e;font-size:24px;font-weight:700;text-align:center;">New User Registration</h1>
-                                        <p style="margin:0 0 24px;color:#64748b;font-size:15px;text-align:center;line-height:1.5;">
+                                        <p style="margin:0 0 20px;color:#64748b;font-size:15px;text-align:center;line-height:1.5;">
                                             A new user has registered on ClinicLink and is waiting for your approval.
                                         </p>
+
+                                        <!-- Required Action Banner -->
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fef2f2;border:2px solid #fca5a5;border-radius:14px;margin-bottom:24px;">
+                                            <tr>
+                                                <td style="padding:20px;text-align:center;">
+                                                    <p style="margin:0 0 6px;color:#991b1b;font-size:16px;font-weight:800;letter-spacing:0.5px;">&#9888; REQUIRED ACTION</p>
+                                                    <p style="margin:0;color:#7f1d1d;font-size:14px;line-height:1.5;">
+                                                        This user cannot access the platform until their account is reviewed and approved. Please take action promptly.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
 
                                         <!-- User Details Card -->
                                         <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:14px;margin-bottom:24px;">
@@ -74,7 +86,7 @@
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto 20px;">
                                             <tr>
-                                                <td style="background:linear-gradient(135deg,#0369a1,#0ea5e9);border-radius:12px;box-shadow:0 4px 12px rgba(14,165,233,0.3);">
+                                                <td style="background-color:#0369a1;border-radius:12px;">
                                                     <a href="{{ $reviewUrl }}" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Review &amp; Approve User</a>
                                                 </td>
                                             </tr>

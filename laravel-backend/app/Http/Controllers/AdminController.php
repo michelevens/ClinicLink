@@ -139,8 +139,34 @@ class AdminController extends Controller
             $query->where('role', $request->input('role'));
         }
 
+        $query->with([
+            'studentProfile.university:id,name',
+            'managedSites:id,name,manager_id',
+            'preceptorSlots:id,preceptor_id,site_id',
+            'preceptorSlots.site:id,name',
+        ]);
+
         $users = $query->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 20));
+
+        // Append affiliation for each user
+        $users->getCollection()->transform(function ($user) {
+            $affiliation = null;
+            if (in_array($user->role, ['student', 'coordinator']) && $user->studentProfile?->university) {
+                $affiliation = $user->studentProfile->university->name;
+            } elseif ($user->role === 'site_manager' && $user->managedSites->isNotEmpty()) {
+                $affiliation = $user->managedSites->first()->name;
+            } elseif ($user->role === 'preceptor' && $user->preceptorSlots->isNotEmpty()) {
+                $site = $user->preceptorSlots->first()->site;
+                $affiliation = $site?->name;
+            }
+            $user->setAttribute('affiliation', $affiliation);
+            // Clean up eager-loaded relations from response
+            $user->unsetRelation('studentProfile');
+            $user->unsetRelation('managedSites');
+            $user->unsetRelation('preceptorSlots');
+            return $user;
+        });
 
         return response()->json($users);
     }

@@ -80,7 +80,7 @@
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
                                             <tr>
-                                                <td style="background:linear-gradient(135deg,#047857,#10b981);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                                                <td style="background-color:#047857;border-radius:12px;">
                                                     <a href="{{ env('FRONTEND_URL', 'https://cliniclink.health') }}/applications" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">View Application</a>
                                                 </td>
                                             </tr>

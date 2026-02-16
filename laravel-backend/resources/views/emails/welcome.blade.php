@@ -78,7 +78,7 @@
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
                                             <tr>
-                                                <td style="background:linear-gradient(135deg,#0369a1,#0ea5e9);border-radius:12px;box-shadow:0 4px 12px rgba(14,165,233,0.3);">
+                                                <td style="background-color:#0369a1;border-radius:12px;">
                                                     <a href="{{ env('FRONTEND_URL', 'https://cliniclink.health') }}/dashboard" style="display:inline-block;padding:16px 36px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Go to Dashboard</a>
                                                 </td>
                                             </tr>

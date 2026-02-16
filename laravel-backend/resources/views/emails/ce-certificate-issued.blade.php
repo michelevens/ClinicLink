@@ -87,7 +87,7 @@
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
                                             <tr>
-                                                <td style="background:linear-gradient(135deg,#047857,#10b981);border-radius:12px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
+                                                <td style="background-color:#047857;border-radius:12px;">
                                                     <a href="{{ $dashboardUrl }}" style="display:inline-block;padding:16px 40px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;letter-spacing:0.3px;">
                                                         View &amp; Download Certificate
                                                     </a>

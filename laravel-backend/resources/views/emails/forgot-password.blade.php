@@ -47,7 +47,7 @@
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
                                             <tr>
-                                                <td style="background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:12px;box-shadow:0 4px 12px rgba(99,102,241,0.3);">
+                                                <td style="background-color:#4338ca;border-radius:12px;">
                                                     <a href="{{ $resetUrl }}" style="display:inline-block;padding:16px 40px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Reset Password</a>
                                                 </td>
                                             </tr>
