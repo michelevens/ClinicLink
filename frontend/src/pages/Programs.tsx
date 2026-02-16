@@ -1,16 +1,16 @@
 import { useState, useMemo } from 'react'
 import {
   BookOpen, GraduationCap, Clock, ChevronDown, ChevronRight, Search, Building2, Plus,
-  Users, MapPin, Phone, Globe, CheckCircle2, UserPlus,
+  Users, MapPin, Phone, Globe, CheckCircle2, UserPlus, KeyRound, Copy, Check, ExternalLink,
 } from 'lucide-react'
-import { useCreateProgram, useMyStudents, useAssignStudentProgram } from '../hooks/useApi.ts'
+import { useCreateProgram, useMyStudents, useAssignStudentProgram, useMyUniversityLicenseCodes } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { api } from '../services/api.ts'
-import type { ApiUniversity, ApiProgram, ApiMyStudent } from '../services/api.ts'
+import type { ApiUniversity, ApiProgram, ApiMyStudent, ApiLicenseCode } from '../services/api.ts'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -237,6 +237,9 @@ function CoordinatorMyUniversity({ universityId }: { universityId: string }) {
         </div>
       )}
 
+      {/* License Codes */}
+      <LicenseCodesSection />
+
       {/* Add Program Modal */}
       {showAddProgram && (
         <AddProgramModal
@@ -252,6 +255,111 @@ function CoordinatorMyUniversity({ universityId }: { universityId: string }) {
           programs={programs}
           onClose={() => setAssigningStudent(null)}
         />
+      )}
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────
+// License Codes Section (Coordinator view)
+// ──────────────────────────────────────────
+function LicenseCodesSection() {
+  const { data, isLoading } = useMyUniversityLicenseCodes()
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const codes: ApiLicenseCode[] = data?.codes || []
+
+  const copyCode = (code: string, id: string) => {
+    navigator.clipboard.writeText(code)
+    setCopiedId(id)
+    toast.success('Code copied to clipboard')
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const getStatusBadge = (code: ApiLicenseCode) => {
+    if (!code.is_active) return <Badge variant="default" size="sm">Deactivated</Badge>
+    if (code.expires_at && new Date(code.expires_at) < new Date()) return <Badge variant="danger" size="sm">Expired</Badge>
+    if (code.max_uses && code.times_used >= code.max_uses) return <Badge variant="warning" size="sm">Used</Badge>
+    return <Badge variant="success" size="sm">Active</Badge>
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <div className="flex justify-center py-6">
+          <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-lg font-bold text-stone-900 flex items-center gap-2">
+        <KeyRound className="w-5 h-5 text-primary-500" /> License Codes
+      </h2>
+
+      {codes.length === 0 ? (
+        <Card>
+          <div className="text-center py-8">
+            <KeyRound className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+            <h3 className="font-semibold text-stone-900 mb-1">No license codes</h3>
+            <p className="text-sm text-stone-500">No license codes have been generated for your university yet. Contact an admin to create codes.</p>
+          </div>
+        </Card>
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-stone-100">
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Code</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Usage</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Expires</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Created</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-50">
+                {codes.map(code => (
+                  <tr key={code.id} className="hover:bg-stone-50 transition-colors">
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-2">
+                        <code className="font-mono text-xs bg-stone-100 px-2 py-1 rounded-md text-stone-800">{code.code}</code>
+                        <button
+                          onClick={() => copyCode(code.code, code.id)}
+                          className="text-stone-400 hover:text-primary-500 transition-colors"
+                          title="Copy code"
+                        >
+                          {copiedId === code.id
+                            ? <Check className="w-3.5 h-3.5 text-green-500" />
+                            : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span className="text-stone-700">
+                        {code.users_count ?? code.times_used} / {code.max_uses ?? '∞'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-stone-500">
+                      {code.expires_at
+                        ? new Date(code.expires_at).toLocaleDateString()
+                        : 'Never'}
+                    </td>
+                    <td className="py-2.5 px-3">{getStatusBadge(code)}</td>
+                    <td className="py-2.5 px-3 text-stone-500">
+                      {new Date(code.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 pt-3 border-t border-stone-100 text-xs text-stone-500">
+            {codes.length} code{codes.length !== 1 ? 's' : ''} total
+          </div>
+        </Card>
       )}
     </div>
   )

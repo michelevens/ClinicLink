@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AffiliationAgreement;
 use App\Models\Program;
 use App\Models\University;
+use App\Models\UniversityLicenseCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -377,5 +378,22 @@ class UniversityController extends Controller
         $program->update($validated);
 
         return response()->json($program);
+    }
+
+    public function myUniversityLicenseCodes(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $universityId = $user->university_id;
+
+        if (!$universityId) {
+            return response()->json(['message' => 'You are not associated with a university.'], 422);
+        }
+
+        $codes = UniversityLicenseCode::where('university_id', $universityId)
+            ->withCount('users')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json(['codes' => $codes]);
     }
 }

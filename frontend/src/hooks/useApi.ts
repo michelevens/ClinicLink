@@ -267,6 +267,13 @@ export function useMyStudents() {
   })
 }
 
+export function useMyUniversityLicenseCodes() {
+  return useQuery({
+    queryKey: ['my-university-license-codes'],
+    queryFn: () => coordinatorApi.myUniversityLicenseCodes(),
+  })
+}
+
 // --- Student Profile ---
 export function useStudentProfile() {
   return useQuery({

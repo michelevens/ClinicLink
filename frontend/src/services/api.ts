@@ -376,6 +376,8 @@ export const coordinatorApi = {
     api.post<ApiProgram>(`/universities/${universityId}/programs`, data),
   assignStudentProgram: (studentId: string, programId: string) =>
     api.post<{ message: string; student_id: string; program: ApiProgram }>('/students/assign-program', { student_id: studentId, program_id: programId }),
+  myUniversityLicenseCodes: () =>
+    api.get<{ codes: ApiLicenseCode[] }>('/my-university/license-codes'),
 }
 
 // --- Dashboard ---

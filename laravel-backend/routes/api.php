@@ -181,6 +181,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:preceptor,site_manager,coordinator,professor,admin')
         ->get('/my-students', [StudentController::class, 'myStudents']);
 
+    // My University License Codes (coordinator)
+    Route::middleware('role:coordinator,admin')
+        ->get('/my-university/license-codes', [UniversityController::class, 'myUniversityLicenseCodes']);
+
     // Prior Hours, Program Management & Bulk Import (coordinator, admin)
     Route::middleware('role:coordinator,admin')->group(function () {
         Route::put('/students/{student}/prior-hours', [StudentController::class, 'setPriorHours']);
