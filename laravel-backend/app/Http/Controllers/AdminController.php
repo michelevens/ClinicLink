@@ -146,61 +146,69 @@ class AdminController extends Controller
 
     public function showUser(User $user): JsonResponse
     {
-        $relations = [];
+        try {
+            $relations = [];
 
-        switch ($user->role) {
-            case 'student':
-                $relations = [
-                    'studentProfile.university',
-                    'studentProfile.program',
-                    'credentials',
-                    'applications.slot.site',
-                    'hourLogs',
-                    'evaluationsAsStudent.slot',
-                    'evaluationsAsStudent.preceptor',
-                    'matchingPreferences',
-                ];
-                break;
-            case 'preceptor':
-                $relations = [
-                    'preceptorProfile',
-                    'preceptorSlots.site',
-                    'evaluationsAsPreceptor.student',
-                    'evaluationsAsPreceptor.slot',
-                    'preceptorReviewsReceived.student',
-                ];
-                break;
-            case 'site_manager':
-                $relations = [
-                    'managedSites',
-                ];
-                break;
-            case 'coordinator':
-            case 'professor':
-                $relations = [
-                    'studentProfile.university',
-                    'studentProfile.program',
-                ];
-                break;
+            switch ($user->role) {
+                case 'student':
+                    $relations = [
+                        'studentProfile.university',
+                        'studentProfile.program',
+                        'credentials',
+                        'applications.slot.site',
+                        'hourLogs',
+                        'evaluationsAsStudent.slot',
+                        'evaluationsAsStudent.preceptor',
+                        'matchingPreferences',
+                    ];
+                    break;
+                case 'preceptor':
+                    $relations = [
+                        'preceptorProfile',
+                        'preceptorSlots.site',
+                        'evaluationsAsPreceptor.student',
+                        'evaluationsAsPreceptor.slot',
+                        'preceptorReviewsReceived.student',
+                    ];
+                    break;
+                case 'site_manager':
+                    $relations = [
+                        'managedSites',
+                    ];
+                    break;
+                case 'coordinator':
+                case 'professor':
+                    $relations = [
+                        'studentProfile.university',
+                        'studentProfile.program',
+                    ];
+                    break;
+            }
+
+            $user->load($relations);
+        } catch (\Throwable $e) {
+            \Log::error('Failed to load user relations', ['user_id' => $user->id, 'error' => $e->getMessage()]);
         }
-
-        $user->load($relations);
 
         // For preceptors, attach associated sites from accepted invites
-        if ($user->role === 'preceptor') {
-            $siteIds = SiteInvite::where('accepted_by', $user->id)
-                ->where('status', 'accepted')
-                ->pluck('site_id')
-                ->unique();
+        try {
+            if ($user->role === 'preceptor') {
+                $siteIds = SiteInvite::where('accepted_by', $user->id)
+                    ->where('status', 'accepted')
+                    ->pluck('site_id')
+                    ->unique();
 
-            $user->setAttribute('assigned_sites', RotationSite::whereIn('id', $siteIds)
-                ->select('id', 'name', 'city', 'state', 'specialties')
-                ->get());
-        }
+                $user->setAttribute('assigned_sites', RotationSite::whereIn('id', $siteIds)
+                    ->select('id', 'name', 'city', 'state', 'specialties')
+                    ->get());
+            }
 
-        // For site managers, load sites with their slots and preceptors for a richer view
-        if ($user->role === 'site_manager') {
-            $user->load('managedSites.slots.preceptor');
+            // For site managers, load sites with their slots and preceptors for a richer view
+            if ($user->role === 'site_manager') {
+                $user->load('managedSites.slots.preceptor');
+            }
+        } catch (\Throwable $e) {
+            \Log::error('Failed to load site data', ['user_id' => $user->id, 'error' => $e->getMessage()]);
         }
 
         try {
