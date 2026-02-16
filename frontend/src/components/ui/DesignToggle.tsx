@@ -1,5 +1,4 @@
 import { useDesignVersion } from '../../contexts/DesignVersionContext.tsx'
-import { Paintbrush } from 'lucide-react'
 
 export function DesignToggle() {
   const { version, toggle } = useDesignVersion()
@@ -7,27 +6,20 @@ export function DesignToggle() {
   return (
     <button
       onClick={toggle}
-      className="fixed bottom-24 right-6 z-[9999] flex items-center gap-2 px-4 py-2.5 rounded-full shadow-lg border transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl group"
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all duration-300 hover:opacity-90 shrink-0"
       style={{
         background: version === 'v1'
           ? 'linear-gradient(135deg, #8b5cf6, #f43f5e)'
           : 'linear-gradient(135deg, #0f172a, #1e293b)',
-        borderColor: version === 'v1' ? 'rgba(255,255,255,0.2)' : 'rgba(99,102,241,0.3)',
         color: '#fff',
       }}
       title={`Switch to ${version === 'v1' ? 'V2 (Modern)' : 'V1 (Classic)'}`}
     >
-      <Paintbrush className="w-4 h-4" />
-      <span className="text-sm font-semibold tracking-wide">
-        {version === 'v1' ? 'V1' : 'V2'}
-      </span>
-      <span className="text-xs opacity-70 hidden sm:inline">
-        {version === 'v1' ? 'Classic' : 'Modern'}
-      </span>
-      <div className="w-10 h-5 rounded-full bg-white/20 relative ml-1">
+      <span>{version === 'v1' ? 'V1' : 'V2'}</span>
+      <div className="w-7 h-3.5 rounded-full bg-white/20 relative">
         <div
-          className="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300"
-          style={{ left: version === 'v1' ? '2px' : '22px' }}
+          className="absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white shadow-sm transition-all duration-300"
+          style={{ left: version === 'v1' ? '2px' : '14px' }}
         />
       </div>
     </button>

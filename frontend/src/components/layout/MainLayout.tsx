@@ -3,7 +3,6 @@ import { Sidebar } from './Sidebar.tsx'
 import { TopBar } from './TopBar.tsx'
 import { MainLayoutV2 } from './MainLayoutV2.tsx'
 import { useDesignVersion } from '../../contexts/DesignVersionContext.tsx'
-import { DesignToggle } from '../ui/DesignToggle.tsx'
 import { AiChatWidget } from '../ai-chat/AiChatWidget.tsx'
 
 export function MainLayout({ children }: { children: ReactNode }) {
@@ -13,7 +12,6 @@ export function MainLayout({ children }: { children: ReactNode }) {
     return (
       <>
         <MainLayoutV2>{children}</MainLayoutV2>
-        <DesignToggle />
         <AiChatWidget />
       </>
     )
@@ -30,7 +28,6 @@ export function MainLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
-      <DesignToggle />
       <AiChatWidget />
     </>
   )

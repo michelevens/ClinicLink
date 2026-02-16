@@ -9,6 +9,7 @@ import {
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { useMessageUnreadCount, useMyPendingSignatures } from '../../hooks/useApi.ts'
+import { DesignToggle } from '../ui/DesignToggle.tsx'
 import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
@@ -136,6 +137,7 @@ export function TopNavV2() {
             <span className="font-bold text-base text-gray-900 tracking-tight">
               ClinicLink
             </span>
+            <DesignToggle />
           </div>
 
           <nav className="flex items-center gap-1">

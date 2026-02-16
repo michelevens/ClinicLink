@@ -8,6 +8,7 @@ import {
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { useMyPendingSignatures } from '../../hooks/useApi.ts'
+import { DesignToggle } from '../ui/DesignToggle.tsx'
 import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
@@ -77,6 +78,7 @@ export function Sidebar() {
           <span className="font-bold text-lg bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
             ClinicLink
           </span>
+          <DesignToggle />
         </div>
         <button
           onClick={() => setMobileOpen(false)}

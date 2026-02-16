@@ -3,32 +3,24 @@ import type { ReactNode } from 'react'
 
 const COLORS = ['#3b82f6', '#22c55e', '#a8a29e', '#f59e0b', '#8b5cf6', '#ec4899']
 
-export function PlacementTrendChart({ data }: { data: { labels: string[]; datasets: { label: string; data: number[]; color?: string }[] } }) {
-  const chartData = data.labels.map((label, i) => {
-    const point: Record<string, string | number> = { name: label }
-    data.datasets.forEach(ds => { point[ds.label] = ds.data[i] ?? 0 })
-    return point
-  })
-
+export function PlacementTrendChart({ data }: { data: { date: string; placements: number }[] }) {
   return (
     <div className="bg-white border border-stone-200 rounded-xl p-5">
       <h3 className="text-sm font-semibold text-stone-900 mb-4">Placement Trends</h3>
       <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData}>
-          <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#a8a29e" />
+        <LineChart data={data}>
+          <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#a8a29e" />
           <YAxis tick={{ fontSize: 12 }} stroke="#a8a29e" />
           <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e7e5e4', fontSize: 13 }} />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          {data.datasets.map((ds, i) => (
-            <Line key={ds.label} type="monotone" dataKey={ds.label} stroke={ds.color || COLORS[i % COLORS.length]} strokeWidth={2} dot={false} />
-          ))}
+          <Line type="monotone" dataKey="placements" stroke={COLORS[0]} strokeWidth={2} dot={false} name="Placements" />
         </LineChart>
       </ResponsiveContainer>
     </div>
   )
 }
 
-export function SpecialtyDemandChart({ data }: { data: { specialty: string; count: number }[] }) {
+export function SpecialtyDemandChart({ data }: { data: { specialty: string; demand: number }[] }) {
   const top = data.slice(0, 10)
   return (
     <div className="bg-white border border-stone-200 rounded-xl p-5">
@@ -38,7 +30,7 @@ export function SpecialtyDemandChart({ data }: { data: { specialty: string; coun
           <XAxis type="number" tick={{ fontSize: 12 }} stroke="#a8a29e" />
           <YAxis dataKey="specialty" type="category" tick={{ fontSize: 11 }} stroke="#a8a29e" width={80} />
           <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e7e5e4', fontSize: 13 }} />
-          <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+          <Bar dataKey="demand" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Applications" />
         </BarChart>
       </ResponsiveContainer>
     </div>
