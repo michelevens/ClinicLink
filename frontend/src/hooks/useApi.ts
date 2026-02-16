@@ -393,6 +393,30 @@ export function useRemovePreceptorFromSite() {
   })
 }
 
+// --- License Codes ---
+export function useLicenseCodes(params?: { university_id?: string; page?: number }) {
+  return useQuery({
+    queryKey: ['license-codes', params],
+    queryFn: () => adminApi.licenseCodes(params),
+  })
+}
+
+export function useCreateLicenseCode() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.createLicenseCode,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['license-codes'] }) },
+  })
+}
+
+export function useDeactivateLicenseCode() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: adminApi.deactivateLicenseCode,
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['license-codes'] }) },
+  })
+}
+
 // --- Universities ---
 export function useUniversities(params?: { search?: string; state?: string; page?: number }) {
   return useQuery({

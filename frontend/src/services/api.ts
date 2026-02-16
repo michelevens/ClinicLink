@@ -485,6 +485,16 @@ export const adminApi = {
     api.post<{ message: string; assigned: string[]; skipped: string[] }>(`/admin/users/${userId}/assign-sites`, { site_ids: siteIds }),
   removePreceptorFromSite: (userId: string, siteId: string) =>
     api.delete<{ message: string }>(`/admin/users/${userId}/remove-site/${siteId}`),
+  licenseCodes: (params?: { university_id?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.university_id) qs.set('university_id', params.university_id)
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiLicenseCode>>(`/admin/university-codes?${qs}`)
+  },
+  createLicenseCode: (data: { university_id: string; max_uses?: number; expires_at?: string; count?: number }) =>
+    api.post<{ code?: ApiLicenseCode; codes?: ApiLicenseCode[]; count?: number }>('/admin/university-codes', data),
+  deactivateLicenseCode: (id: string) =>
+    api.delete<{ message: string; code: ApiLicenseCode }>(`/admin/university-codes/${id}`),
 }
 
 // --- Onboarding Templates ---
@@ -762,6 +772,22 @@ export interface ApiUniversity {
     agreement_summary: { active: number; pending: number; expiring_soon: number; expired: number }
     student_overview: { total_enrolled: number; avg_hours_progress: number; nearing_completion: number }
   }
+}
+
+export interface ApiLicenseCode {
+  id: string
+  university_id: string
+  code: string
+  max_uses: number | null
+  times_used: number
+  expires_at: string | null
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  university?: { id: string; name: string }
+  created_by_user?: { id: string; first_name: string; last_name: string }
+  users_count?: number
 }
 
 export interface ApiProgram {

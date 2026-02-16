@@ -22,6 +22,7 @@ import { SitesDirectory } from './pages/SitesDirectory.tsx'
 import { Programs } from './pages/Programs.tsx'
 import { Placements } from './pages/Placements.tsx'
 import { AdminUsers } from './pages/AdminUsers.tsx'
+import { LicenseCodes } from './pages/LicenseCodes.tsx'
 import { UniversityDirectory } from './pages/UniversityDirectory.tsx'
 import { SiteDetail } from './pages/SiteDetail.tsx'
 import { UniversityDetail } from './pages/UniversityDetail.tsx'
@@ -141,6 +142,7 @@ export default function App() {
       <Route path="/ce-credits" element={<ProtectedRoute roles={['preceptor', 'coordinator', 'admin']}><CeCredits /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
       <Route path="/admin/users/:id" element={<ProtectedRoute roles={['admin']}><UserDetail /></ProtectedRoute>} />
+      <Route path="/admin/license-codes" element={<ProtectedRoute roles={['admin']}><LicenseCodes /></ProtectedRoute>} />
       <Route path="/preceptor-directory" element={<ProtectedRoute><PreceptorDirectory /></ProtectedRoute>} />
       <Route path="/preceptor-directory/:userId" element={<ProtectedRoute><PreceptorDetail /></ProtectedRoute>} />
       <Route path="/analytics" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Analytics /></ProtectedRoute>} />
