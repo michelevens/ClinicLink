@@ -31,6 +31,7 @@ interface RegisterData {
   role: UserRole
   universityId?: string
   programId?: string
+  siteId?: string
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -159,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: data.role,
         university_id: data.universityId,
         program_id: data.programId,
+        site_id: data.siteId,
       })
       // Registration no longer returns a token — account is pending approval
       setState(s => ({ ...s, isLoading: false }))

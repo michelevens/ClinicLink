@@ -10,6 +10,7 @@ use App\Models\AuditLog;
 use App\Models\PreceptorProfile;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
+use App\Models\SiteJoinRequest;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Notifications\NewUserRegisteredNotification;
@@ -36,6 +37,7 @@ class AuthController extends Controller
             'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor'],
             'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
             'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
+            'site_id' => ['sometimes', 'nullable', 'exists:rotation_sites,id'],
         ]);
 
         $user = User::create([
@@ -69,6 +71,17 @@ class AuthController extends Controller
                 'availability_status' => 'available',
                 'profile_visibility' => 'public',
             ]);
+
+            // Link preceptor to selected clinical site
+            if (!empty($validated['site_id'])) {
+                SiteJoinRequest::create([
+                    'site_id' => $validated['site_id'],
+                    'preceptor_id' => $user->id,
+                    'message' => 'Affiliated during registration',
+                    'status' => 'approved',
+                    'reviewed_at' => now(),
+                ]);
+            }
         }
 
         // Send email verification link
