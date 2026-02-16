@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
-import { Settings, LogOut } from 'lucide-react'
+import { Settings, LogOut, MessageSquare, Calendar, UserSearch } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
+import { useMessageUnreadCount } from '../../hooks/useApi.ts'
 import { NotificationBell } from './NotificationBell.tsx'
 import type { UserRole } from '../../types/index.ts'
 
@@ -15,11 +16,63 @@ const roleLabels: Record<UserRole, string> = {
 
 export function TopBar() {
   const { user, logout } = useAuth()
+  const { data: messageUnread } = useMessageUnreadCount()
+  const unreadCount = messageUnread?.count ?? 0
 
   if (!user) return null
 
   return (
-    <div className="flex items-center justify-end gap-3 mb-4">
+    <div className="flex items-center justify-end gap-1.5 mb-4">
+      {/* Messages */}
+      <NavLink
+        to="/messages"
+        className={({ isActive }) =>
+          `relative p-2 rounded-lg transition-colors ${
+            isActive
+              ? 'text-primary-600 bg-primary-50'
+              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+          }`
+        }
+        title="Messages"
+      >
+        <MessageSquare className="w-5 h-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary-600 text-white text-[10px] font-bold flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </NavLink>
+
+      {/* Calendar */}
+      <NavLink
+        to="/calendar"
+        className={({ isActive }) =>
+          `p-2 rounded-lg transition-colors ${
+            isActive
+              ? 'text-primary-600 bg-primary-50'
+              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+          }`
+        }
+        title="Calendar"
+      >
+        <Calendar className="w-5 h-5" />
+      </NavLink>
+
+      {/* Preceptor Directory */}
+      <NavLink
+        to="/preceptor-directory"
+        className={({ isActive }) =>
+          `p-2 rounded-lg transition-colors ${
+            isActive
+              ? 'text-primary-600 bg-primary-50'
+              : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'
+          }`
+        }
+        title="Preceptor Directory"
+      >
+        <UserSearch className="w-5 h-5" />
+      </NavLink>
+
       {/* Notification Bell */}
       <NotificationBell />
 
@@ -39,7 +92,7 @@ export function TopBar() {
       </NavLink>
 
       {/* Divider */}
-      <div className="w-px h-6 bg-stone-200" />
+      <div className="w-px h-6 bg-stone-200 mx-1" />
 
       {/* User Info */}
       <div className="flex items-center gap-2.5">

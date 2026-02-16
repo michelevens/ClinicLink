@@ -3,11 +3,11 @@ import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
-  MessageSquare, Calendar, BarChart3, FileBarChart, UserSearch, KeyRound
+  BarChart3, FileBarChart, KeyRound
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
-import { useMessageUnreadCount, useMyPendingSignatures } from '../../hooks/useApi.ts'
+import { useMyPendingSignatures } from '../../hooks/useApi.ts'
 import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
@@ -28,8 +28,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'] },
   { label: 'Agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
   { label: 'Eval Templates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
-  { label: 'Messages', path: '/messages', icon: <MessageSquare className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
-  { label: 'Calendar', path: '/calendar', icon: <Calendar className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
   { label: 'Compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'] },
   { label: 'My Site', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'] },
   { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'] },
@@ -42,7 +40,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['admin'] },
   { label: 'All Users', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'] },
   { label: 'License Codes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'] },
-  { label: 'Preceptor Directory', path: '/preceptor-directory', icon: <UserSearch className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'admin'] },
   { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
   { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
 ]
@@ -65,7 +62,6 @@ export function Sidebar() {
     return () => { document.body.style.overflow = '' }
   }, [mobileOpen])
 
-  const { data: messageUnread } = useMessageUnreadCount()
   const { data: pendingSigs } = useMyPendingSignatures()
   const pendingSigCount = pendingSigs?.data?.length ?? 0
   const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
@@ -106,11 +102,6 @@ export function Sidebar() {
           >
             {item.icon}
             <span className="flex-1">{item.label}</span>
-            {item.path === '/messages' && (messageUnread?.count ?? 0) > 0 && (
-              <span className="w-5 h-5 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
-                {messageUnread!.count > 9 ? '9+' : messageUnread!.count}
-              </span>
-            )}
             {item.path === '/agreements' && pendingSigCount > 0 && (
               <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center" title="Pending signatures">
                 {pendingSigCount > 9 ? '9+' : pendingSigCount}

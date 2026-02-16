@@ -30,8 +30,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-4 h-4" />, roles: ['student', 'site_manager'], group: 'tools' },
   { label: 'Agreements', path: '/agreements', icon: <Handshake className="w-4 h-4" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'manage' },
   { label: 'Eval Templates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-4 h-4" />, roles: ['coordinator', 'admin'], group: 'manage' },
-  { label: 'Messages', path: '/messages', icon: <MessageSquare className="w-4 h-4" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'tools' },
-  { label: 'Calendar', path: '/calendar', icon: <Calendar className="w-4 h-4" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'tools' },
   { label: 'Compliance', path: '/compliance', icon: <ShieldCheck className="w-4 h-4" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'tools' },
   { label: 'My Site', path: '/site', icon: <Building2 className="w-4 h-4" />, roles: ['site_manager'], group: 'manage' },
   { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-4 h-4" />, roles: ['site_manager', 'admin'], group: 'manage' },
@@ -43,7 +41,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-4 h-4" />, roles: ['coordinator', 'admin'], group: 'manage' },
   { label: 'Universities', path: '/universities', icon: <BookOpen className="w-4 h-4" />, roles: ['admin'], group: 'admin' },
   { label: 'All Users', path: '/admin/users', icon: <Users className="w-4 h-4" />, roles: ['admin'], group: 'admin' },
-  { label: 'Preceptor Directory', path: '/preceptor-directory', icon: <UserSearch className="w-4 h-4" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'admin'], group: 'tools' },
   { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-4 h-4" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'admin' },
   { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-4 h-4" />, roles: ['coordinator', 'admin'], group: 'admin' },
   { label: 'Settings', path: '/settings', icon: <Settings className="w-4 h-4" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'tools' },
@@ -175,7 +172,12 @@ export function TopNavV2() {
         <div className="flex items-center gap-3">
           <NavLink
             to="/messages"
-            className="relative p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all"
+            className={({ isActive }) =>
+              `relative p-2 rounded-lg transition-all ${
+                isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+              }`
+            }
+            title="Messages"
           >
             <MessageSquare className="w-4 h-4" />
             {unreadCount > 0 && (
@@ -183,6 +185,30 @@ export function TopNavV2() {
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
+          </NavLink>
+
+          <NavLink
+            to="/calendar"
+            className={({ isActive }) =>
+              `p-2 rounded-lg transition-all ${
+                isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+              }`
+            }
+            title="Calendar"
+          >
+            <Calendar className="w-4 h-4" />
+          </NavLink>
+
+          <NavLink
+            to="/preceptor-directory"
+            className={({ isActive }) =>
+              `p-2 rounded-lg transition-all ${
+                isActive ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'
+              }`
+            }
+            title="Preceptor Directory"
+          >
+            <UserSearch className="w-4 h-4" />
           </NavLink>
 
           <button className="relative p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
