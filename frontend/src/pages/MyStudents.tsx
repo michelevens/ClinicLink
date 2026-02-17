@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card.tsx'
 import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { BulkImportModal } from '../components/student/BulkImportModal.tsx'
 import type { ApiMyStudent } from '../services/api.ts'
 
@@ -141,15 +142,11 @@ export function MyStudents() {
         </div>
       ) : filtered.length === 0 ? (
         <Card>
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-stone-900 mb-1">
-              {students.length === 0 ? 'No students yet' : 'No matching students'}
-            </h3>
-            <p className="text-stone-500 text-sm">
-              {isPreceptor ? 'Students will appear here once they are accepted into your rotations.' : 'No students found matching your criteria.'}
-            </p>
-          </div>
+          <EmptyState
+            illustration="users"
+            title={students.length === 0 ? 'No students yet' : 'No matching students'}
+            description={isPreceptor ? 'Students will appear here once they are accepted into your rotations.' : 'No students found matching your criteria.'}
+          />
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">

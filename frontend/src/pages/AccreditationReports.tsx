@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { FileBarChart, Plus, Download, Trash2, Eye, X, Loader2, FileText } from 'lucide-react'
+import { FileBarChart, Plus, Download, Trash2, Eye, X, Loader2 } from 'lucide-react'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useAccreditationReports, useGenerateReport, useDeleteReport } from '../hooks/useApi.ts'
 import { accreditationReportsApi } from '../services/api.ts'
@@ -63,11 +64,11 @@ export function AccreditationReports() {
         {isLoading ? (
           <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin text-stone-400 mx-auto" /></div>
         ) : reports.length === 0 ? (
-          <div className="text-center py-16">
-            <FileText className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-            <p className="text-stone-500 font-medium">No reports generated yet</p>
-            <p className="text-sm text-stone-400 mt-1">Click "Generate Report" to create your first accreditation report</p>
-          </div>
+          <EmptyState
+            illustration="chart"
+            title="No reports generated yet"
+            description="Click 'Generate Report' to create your first accreditation report for compliance tracking."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

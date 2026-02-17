@@ -12,6 +12,7 @@ import {
   Plus, Pencil, Trash2, Calendar, Users,
   Clock, Building2, Loader2, Search, DollarSign, User
 } from 'lucide-react'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 
 const SPECIALTIES = [
   'Emergency Medicine', 'Family Practice', 'Internal Medicine', 'Pediatrics',
@@ -181,13 +182,13 @@ export function SlotManagement() {
       {/* Slots List */}
       <div className="space-y-4">
         {slots.length === 0 && (
-          <Card className="text-center py-12">
-            <Building2 className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-stone-700 mb-2">No rotation slots yet</h3>
-            <p className="text-stone-500 mb-4">Create your first rotation slot to start receiving applications</p>
-            <Button onClick={openCreateModal}>
-              <Plus className="w-4 h-4" /> Create Slot
-            </Button>
+          <Card>
+            <EmptyState
+              illustration="calendar"
+              title="No rotation slots yet"
+              description="Create your first rotation slot to start receiving applications from students."
+              action={<Button onClick={openCreateModal}><Plus className="w-4 h-4" /> Create Slot</Button>}
+            />
           </Card>
         )}
 

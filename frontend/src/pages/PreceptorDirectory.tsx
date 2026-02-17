@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, UserSearch, Trophy, ChevronDown, ChevronUp } from 'lucide-react'
 import { usePreceptorDirectory, usePreceptorLeaderboard } from '../hooks/useApi.ts'
 import { PreceptorProfileCard } from '../components/preceptor/PreceptorProfileCard.tsx'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 
 const SPECIALTIES = ['Family Medicine', 'Internal Medicine', 'Pediatrics', 'OB/GYN', 'Psychiatry', 'Surgery', 'Emergency Medicine', 'Cardiology', 'Dermatology', 'Neurology', 'Oncology', 'Orthopedics', 'Radiology', 'Anesthesiology', 'Geriatrics', 'Other']
 
@@ -97,10 +98,12 @@ export function PreceptorDirectory() {
           ))}
         </div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-16 bg-white border border-stone-200 rounded-xl">
-          <UserSearch className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-          <p className="text-stone-500 font-medium">No preceptors found</p>
-          <p className="text-sm text-stone-400 mt-1">Try adjusting your search filters</p>
+        <div className="bg-white border border-stone-200 rounded-xl">
+          <EmptyState
+            illustration="users"
+            title="No preceptors found"
+            description="Try adjusting your search filters or browse all specialties."
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

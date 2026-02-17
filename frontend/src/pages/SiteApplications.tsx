@@ -12,6 +12,7 @@ import {
   ChevronDown, ChevronUp, GraduationCap, BadgeCheck,
   CheckCircle2, AlertTriangle, Info
 } from 'lucide-react'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 
 export function SiteApplications() {
   const [statusFilter, setStatusFilter] = useState('all')
@@ -108,14 +109,12 @@ export function SiteApplications() {
 
       {/* Applications List */}
       {filtered.length === 0 && (
-        <Card className="text-center py-12">
-          <Inbox className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-stone-700 mb-2">No applications</h3>
-          <p className="text-stone-500">
-            {statusFilter === 'all'
-              ? 'No applications have been received yet'
-              : `No ${statusFilter} applications`}
-          </p>
+        <Card>
+          <EmptyState
+            illustration="inbox"
+            title="No applications"
+            description={statusFilter === 'all' ? 'No applications have been received yet. They will appear here when students apply to your rotation slots.' : `No ${statusFilter} applications found. Try changing the filter.`}
+          />
         </Card>
       )}
 

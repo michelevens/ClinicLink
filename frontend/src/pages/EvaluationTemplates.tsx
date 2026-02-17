@@ -5,7 +5,8 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { useEvaluationTemplates, useCreateEvaluationTemplate, useUpdateEvaluationTemplate, useDeleteEvaluationTemplate, useUniversities } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, Loader2, GripVertical, X, FileCheck, Copy, Eye, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, GripVertical, X, Copy, Eye, ChevronDown, ChevronRight } from 'lucide-react'
+import { EmptyState } from '../components/ui/EmptyState.tsx'
 import type { ApiEvaluationTemplate, ApiRatingScaleLevel } from '../services/api.ts'
 
 const PRESET_CATEGORIES = [
@@ -330,10 +331,12 @@ export function EvaluationTemplates() {
       {isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-primary-500" /></div>
       ) : !templates || templates.length === 0 ? (
-        <Card className="text-center py-12">
-          <FileCheck className="w-12 h-12 text-stone-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-stone-700 mb-2">No templates found</h3>
-          <p className="text-stone-500">Create a template to customize evaluation categories</p>
+        <Card>
+          <EmptyState
+            illustration="clipboard"
+            title="No templates found"
+            description="Create a template to customize evaluation categories and scoring rubrics."
+          />
         </Card>
       ) : (
         <div className="grid gap-4">
