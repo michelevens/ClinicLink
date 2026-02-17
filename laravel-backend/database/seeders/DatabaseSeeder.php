@@ -24,8 +24,20 @@ use App\Models\CeCertificate;
 use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\Message;
+use App\Models\PreceptorReview;
+use App\Models\MatchingPreference;
+use App\Models\SavedSearch;
+use App\Models\SlotBookmark;
+use App\Models\EvaluationTemplate;
+use App\Models\AgreementTemplate;
+use App\Models\Signature;
+use App\Models\StudentInvite;
+use App\Models\SiteJoinRequest;
+use App\Models\AnalyticsSnapshot;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
@@ -2425,5 +2437,825 @@ class DatabaseSeeder extends Seeder
         Message::create(['conversation_id' => $conv7->id, 'sender_id' => $demoPreceptor->id, 'body' => 'Confirmed. I\'ll prepare the ER orientation packet and have badge access set up by Friday.', 'created_at' => now()->subDays(8)->setHour(16)]);
         Message::create(['conversation_id' => $conv7->id, 'sender_id' => $preceptor2->id, 'body' => 'Same here — Peds orientation materials are ready. Maria, can you confirm the students have completed their onboarding checklists?', 'created_at' => now()->subDays(7)->setHour(9)]);
         Message::create(['conversation_id' => $conv7->id, 'sender_id' => $demoSiteManager->id, 'body' => 'Checking now... 3 of 4 are complete. I\'ll follow up with the remaining student today.', 'created_at' => now()->subDays(7)->setHour(10)]);
+
+        // =====================================================================
+        // 18. PRECEPTOR REVIEWS — students rating preceptors after rotations
+        // =====================================================================
+
+        // Jessica rates Dr. Okafor after completed IM rotation (excellent)
+        PreceptorReview::create([
+            'student_id' => $student7->id,
+            'preceptor_id' => $preceptor4->id,
+            'slot_id' => $slotInternalMed->id,
+            'ratings' => [
+                'teaching_quality' => 5,
+                'clinical_knowledge' => 5,
+                'communication' => 4,
+                'availability' => 4,
+                'feedback_quality' => 5,
+                'professionalism' => 5,
+                'learning_environment' => 5,
+            ],
+            'comments' => 'Dr. Okafor is an outstanding preceptor. She gave me increasing autonomy as I demonstrated competence. Her case presentations were incredibly educational. I feel well-prepared for my surgical rotation thanks to her mentorship.',
+            'overall_score' => 4.7,
+            'is_anonymous' => false,
+        ]);
+
+        // Emily rates Dr. Okafor after completed IM rotation (good)
+        PreceptorReview::create([
+            'student_id' => $student5->id,
+            'preceptor_id' => $preceptor4->id,
+            'slot_id' => $slotInternalMed->id,
+            'ratings' => [
+                'teaching_quality' => 4,
+                'clinical_knowledge' => 5,
+                'communication' => 4,
+                'availability' => 3,
+                'feedback_quality' => 4,
+                'professionalism' => 5,
+                'learning_environment' => 4,
+            ],
+            'comments' => 'Dr. Okafor is very knowledgeable and professional. Sometimes hard to reach on off-days, but always thorough during clinical hours. Would recommend to other students.',
+            'overall_score' => 4.1,
+            'is_anonymous' => false,
+        ]);
+
+        // Marcus rates Dr. Wilson after Peds rotation (very good)
+        PreceptorReview::create([
+            'student_id' => $student4->id,
+            'preceptor_id' => $demoPreceptor->id,
+            'slot_id' => $slotPeds->id,
+            'ratings' => [
+                'teaching_quality' => 4,
+                'clinical_knowledge' => 5,
+                'communication' => 5,
+                'availability' => 5,
+                'feedback_quality' => 4,
+                'professionalism' => 5,
+                'learning_environment' => 5,
+            ],
+            'comments' => 'Wonderful pediatric rotation. Dr. Wilson creates a supportive learning environment. Would have liked more autonomy with patient encounters, but overall an excellent experience.',
+            'overall_score' => 4.7,
+            'is_anonymous' => false,
+        ]);
+
+        // Aisha rates Dr. Wilson at MSW (anonymous review, constructive)
+        PreceptorReview::create([
+            'student_id' => $student3->id,
+            'preceptor_id' => $demoPreceptor->id,
+            'slot_id' => $slotMSW->id,
+            'ratings' => [
+                'teaching_quality' => 4,
+                'clinical_knowledge' => 4,
+                'communication' => 5,
+                'availability' => 4,
+                'feedback_quality' => 4,
+                'professionalism' => 5,
+                'learning_environment' => 4,
+            ],
+            'comments' => 'Good supervision and support. Very approachable. Provided quality feedback during weekly supervision sessions.',
+            'overall_score' => 4.3,
+            'is_anonymous' => true,
+        ]);
+
+        // =====================================================================
+        // 19. MATCHING PREFERENCES — student search preferences for matching
+        // =====================================================================
+
+        // Demo student: wants ER or primary care in South FL, free only
+        MatchingPreference::create([
+            'user_id' => $demoStudent->id,
+            'preferred_specialties' => ['Emergency Medicine', 'Family Practice', 'Urgent Care'],
+            'preferred_states' => ['FL'],
+            'preferred_cities' => ['Miami', 'Fort Lauderdale', 'Coral Gables'],
+            'max_distance_miles' => 30,
+            'preferred_schedule' => '3x12hr shifts/week',
+            'cost_preference' => 'free_only',
+            'min_preceptor_rating' => 4.0,
+            'preferred_start_after' => '2026-03-01',
+            'preferred_start_before' => '2026-06-01',
+            'exclude_applied' => true,
+        ]);
+
+        // Student 2 (David): ICU/critical care, any cost
+        MatchingPreference::create([
+            'user_id' => $student2->id,
+            'preferred_specialties' => ['ICU/Critical Care', 'Emergency Medicine', 'Medical-Surgical'],
+            'preferred_states' => ['FL'],
+            'preferred_cities' => ['Miami', 'Orlando', 'Tampa'],
+            'max_distance_miles' => 50,
+            'preferred_schedule' => '2x12hr shifts/week',
+            'cost_preference' => 'any',
+            'min_preceptor_rating' => 3.5,
+            'preferred_start_after' => '2026-03-01',
+            'preferred_start_before' => '2026-08-01',
+            'exclude_applied' => true,
+        ]);
+
+        // Student 3 (Aisha): behavioral health, free only
+        MatchingPreference::create([
+            'user_id' => $student3->id,
+            'preferred_specialties' => ['Clinical Social Work', 'Behavioral Health', 'Substance Abuse', 'Family Therapy'],
+            'preferred_states' => ['FL'],
+            'preferred_cities' => ['Fort Lauderdale', 'Miami', 'Jacksonville'],
+            'max_distance_miles' => 40,
+            'cost_preference' => 'free_only',
+            'preferred_start_after' => '2026-03-01',
+            'preferred_start_before' => '2026-09-01',
+            'exclude_applied' => false,
+        ]);
+
+        // Student 4 (Marcus): pediatrics, any cost
+        MatchingPreference::create([
+            'user_id' => $student4->id,
+            'preferred_specialties' => ['Pediatrics', 'Adolescent Health', 'Well-Child Care'],
+            'preferred_states' => ['FL'],
+            'preferred_cities' => ['Orlando', 'Tampa', 'Jacksonville'],
+            'max_distance_miles' => 35,
+            'cost_preference' => 'paid_ok',
+            'min_preceptor_rating' => 4.0,
+            'preferred_start_after' => '2026-03-01',
+            'preferred_start_before' => '2026-06-01',
+            'exclude_applied' => true,
+        ]);
+
+        // Student 5 (Emily): ER/ICU, nearing graduation
+        MatchingPreference::create([
+            'user_id' => $student5->id,
+            'preferred_specialties' => ['Emergency Medicine', 'ICU/Critical Care', 'Urgent Care'],
+            'preferred_states' => ['FL'],
+            'preferred_cities' => ['Tampa', 'St. Petersburg', 'Orlando'],
+            'max_distance_miles' => 25,
+            'cost_preference' => 'free_only',
+            'preferred_start_after' => '2026-04-01',
+            'preferred_start_before' => '2026-07-01',
+            'exclude_applied' => true,
+        ]);
+
+        // =====================================================================
+        // 20. SAVED SEARCHES — for rotation search page
+        // =====================================================================
+
+        // Demo student: saved ER search
+        SavedSearch::create([
+            'user_id' => $demoStudent->id,
+            'name' => 'ER Rotations in Miami',
+            'filters' => [
+                'specialty' => 'Emergency Medicine',
+                'state' => 'FL',
+                'city' => 'Miami',
+                'cost_type' => 'free',
+            ],
+            'alerts_enabled' => true,
+            'last_checked_at' => now()->subDays(1),
+        ]);
+
+        SavedSearch::create([
+            'user_id' => $demoStudent->id,
+            'name' => 'FNP Primary Care — South FL',
+            'filters' => [
+                'specialty' => 'Family Practice',
+                'state' => 'FL',
+                'cost_type' => 'any',
+            ],
+            'alerts_enabled' => true,
+            'last_checked_at' => now()->subDays(3),
+        ]);
+
+        // Student 2: ICU search
+        SavedSearch::create([
+            'user_id' => $student2->id,
+            'name' => 'ICU/Critical Care — FL',
+            'filters' => [
+                'specialty' => 'ICU/Critical Care',
+                'state' => 'FL',
+            ],
+            'alerts_enabled' => true,
+            'last_checked_at' => now()->subDays(2),
+        ]);
+
+        // Student 4: Peds search
+        SavedSearch::create([
+            'user_id' => $student4->id,
+            'name' => 'Pediatric NP Rotations',
+            'filters' => [
+                'specialty' => 'Pediatrics',
+                'state' => 'FL',
+                'cost_type' => 'any',
+            ],
+            'alerts_enabled' => false,
+        ]);
+
+        // Student 5: urgent care search (alerts off)
+        SavedSearch::create([
+            'user_id' => $student5->id,
+            'name' => 'Urgent Care — Tampa Area',
+            'filters' => [
+                'specialty' => 'Urgent Care',
+                'state' => 'FL',
+                'city' => 'Tampa',
+            ],
+            'alerts_enabled' => false,
+        ]);
+
+        // =====================================================================
+        // 21. SLOT BOOKMARKS — students bookmarking interesting rotations
+        // =====================================================================
+
+        // Demo student bookmarks
+        SlotBookmark::create(['user_id' => $demoStudent->id, 'slot_id' => $slotED->id]);
+        SlotBookmark::create(['user_id' => $demoStudent->id, 'slot_id' => $slotUrgent->id]);
+        SlotBookmark::create(['user_id' => $demoStudent->id, 'slot_id' => $slotPsych->id]);
+
+        // Student 2 bookmarks
+        SlotBookmark::create(['user_id' => $student2->id, 'slot_id' => $slotED->id]);
+        SlotBookmark::create(['user_id' => $student2->id, 'slot_id' => $slotSurgery->id]);
+
+        // Student 3 bookmarks
+        SlotBookmark::create(['user_id' => $student3->id, 'slot_id' => $slotMSW->id]);
+
+        // Student 4 bookmarks
+        SlotBookmark::create(['user_id' => $student4->id, 'slot_id' => $slotPeds->id]);
+        SlotBookmark::create(['user_id' => $student4->id, 'slot_id' => $slotPsych->id]);
+
+        // Student 5 bookmarks
+        SlotBookmark::create(['user_id' => $student5->id, 'slot_id' => $slotED->id]);
+        SlotBookmark::create(['user_id' => $student5->id, 'slot_id' => $slotUrgent->id]);
+        SlotBookmark::create(['user_id' => $student5->id, 'slot_id' => $slotICU->id]);
+
+        // =====================================================================
+        // 22. EVALUATION TEMPLATES — custom rubrics per university
+        // =====================================================================
+
+        // UMiami — comprehensive mid-rotation template
+        EvaluationTemplate::create([
+            'university_id' => $umiami->id,
+            'type' => 'mid_rotation',
+            'name' => 'UMiami Nursing Mid-Rotation Evaluation',
+            'categories' => [
+                ['name' => 'Clinical Knowledge', 'description' => 'Understanding of relevant clinical concepts and ability to apply them', 'weight' => 20],
+                ['name' => 'Assessment Skills', 'description' => 'Ability to perform thorough, accurate patient assessments', 'weight' => 20],
+                ['name' => 'Communication', 'description' => 'Effective communication with patients, families, and healthcare team', 'weight' => 15],
+                ['name' => 'Professionalism', 'description' => 'Professional behavior, appearance, punctuality, and ethical conduct', 'weight' => 15],
+                ['name' => 'Critical Thinking', 'description' => 'Clinical reasoning and problem-solving ability', 'weight' => 15],
+                ['name' => 'Documentation', 'description' => 'Accuracy, timeliness, and completeness of clinical documentation', 'weight' => 10],
+                ['name' => 'Time Management', 'description' => 'Ability to prioritize tasks and manage clinical workload', 'weight' => 5],
+            ],
+            'is_active' => true,
+            'created_by' => $demoCoordinator->id,
+        ]);
+
+        // UMiami — final evaluation template
+        EvaluationTemplate::create([
+            'university_id' => $umiami->id,
+            'type' => 'final',
+            'name' => 'UMiami Nursing Final Rotation Evaluation',
+            'categories' => [
+                ['name' => 'Clinical Knowledge', 'description' => 'Mastery of clinical concepts for this rotation specialty', 'weight' => 20],
+                ['name' => 'Assessment Skills', 'description' => 'Independent ability to perform comprehensive assessments', 'weight' => 20],
+                ['name' => 'Communication', 'description' => 'Therapeutic communication and interprofessional collaboration', 'weight' => 15],
+                ['name' => 'Professionalism', 'description' => 'Consistent professionalism throughout the rotation', 'weight' => 10],
+                ['name' => 'Critical Thinking', 'description' => 'Evidence-based clinical reasoning and decision-making', 'weight' => 15],
+                ['name' => 'Documentation', 'description' => 'Meet documentation standards independently', 'weight' => 10],
+                ['name' => 'Leadership', 'description' => 'Initiative, self-directed learning, and peer mentoring', 'weight' => 10],
+            ],
+            'is_active' => true,
+            'created_by' => $demoCoordinator->id,
+        ]);
+
+        // UMiami — student feedback template
+        EvaluationTemplate::create([
+            'university_id' => $umiami->id,
+            'type' => 'student_feedback',
+            'name' => 'UMiami Student Rotation Feedback Form',
+            'categories' => [
+                ['name' => 'Teaching Quality', 'description' => 'Quality of clinical teaching and instruction', 'weight' => 20],
+                ['name' => 'Availability', 'description' => 'Preceptor availability for questions and guidance', 'weight' => 15],
+                ['name' => 'Feedback Quality', 'description' => 'Constructive, timely, and actionable feedback', 'weight' => 20],
+                ['name' => 'Learning Environment', 'description' => 'Supportive and safe learning environment', 'weight' => 15],
+                ['name' => 'Clinical Exposure', 'description' => 'Variety and volume of clinical experiences', 'weight' => 15],
+                ['name' => 'Autonomy', 'description' => 'Appropriate level of graduated autonomy', 'weight' => 15],
+            ],
+            'is_active' => true,
+            'created_by' => $demoCoordinator->id,
+        ]);
+
+        // FIU — PA program mid-rotation
+        EvaluationTemplate::create([
+            'university_id' => $fiu->id,
+            'type' => 'mid_rotation',
+            'name' => 'FIU PA Program Mid-Rotation Assessment',
+            'categories' => [
+                ['name' => 'Medical Knowledge', 'description' => 'Understanding of pathophysiology, pharmacology, and clinical medicine', 'weight' => 25],
+                ['name' => 'Patient Care', 'description' => 'History taking, physical examination, and patient management', 'weight' => 25],
+                ['name' => 'Interpersonal Skills', 'description' => 'Communication with patients, families, and team', 'weight' => 15],
+                ['name' => 'Professionalism', 'description' => 'Ethics, reliability, and professional conduct', 'weight' => 15],
+                ['name' => 'Systems-Based Practice', 'description' => 'Understanding of healthcare systems and quality improvement', 'weight' => 10],
+                ['name' => 'Practice-Based Learning', 'description' => 'Self-assessment, lifelong learning, evidence-based practice', 'weight' => 10],
+            ],
+            'is_active' => true,
+            'created_by' => $coordinator2->id,
+        ]);
+
+        // Nova — MSW field practicum template (inactive old version)
+        EvaluationTemplate::create([
+            'university_id' => $nova->id,
+            'type' => 'mid_rotation',
+            'name' => 'Nova MSW Field Practicum Evaluation (2024 — Retired)',
+            'categories' => [
+                ['name' => 'Therapeutic Skills', 'weight' => 30],
+                ['name' => 'Cultural Competency', 'weight' => 20],
+                ['name' => 'Documentation', 'weight' => 20],
+                ['name' => 'Professionalism', 'weight' => 30],
+            ],
+            'is_active' => false,
+            'created_by' => $professor2->id,
+        ]);
+
+        // =====================================================================
+        // 23. AGREEMENT TEMPLATES — reusable agreement boilerplates
+        // =====================================================================
+
+        AgreementTemplate::create([
+            'university_id' => $umiami->id,
+            'name' => 'Standard Clinical Affiliation Agreement',
+            'description' => 'Standard 2-year affiliation agreement template for nursing programs (BSN, MSN, DNP). Includes standard liability, HIPAA, and student conduct provisions.',
+            'default_notes' => 'This agreement covers clinical rotation placements for University of Miami School of Nursing students. Maximum student capacity to be specified per site.',
+            'created_by' => $demoCoordinator->id,
+        ]);
+
+        AgreementTemplate::create([
+            'university_id' => $umiami->id,
+            'name' => 'DNP Acute Care Addendum',
+            'description' => 'Supplemental agreement for DNP acute care rotations requiring additional liability coverage and procedural privileges.',
+            'default_notes' => 'This addendum supplements the standard affiliation agreement with additional provisions for acute care clinical experiences.',
+            'created_by' => $demoCoordinator->id,
+        ]);
+
+        AgreementTemplate::create([
+            'university_id' => $fiu->id,
+            'name' => 'PA Program Clinical Rotation Agreement',
+            'description' => 'Standard agreement for FIU Physician Assistant program clinical rotations. Covers surgical, medical, and specialty rotations.',
+            'default_notes' => 'Agreement for FIU Herbert Wertheim College of Medicine PA Studies program. Students require ACLS certification for ED and surgical rotations.',
+            'created_by' => $coordinator2->id,
+        ]);
+
+        AgreementTemplate::create([
+            'university_id' => $nova->id,
+            'name' => 'MSW Field Practicum Agreement',
+            'description' => 'Standard agreement for Nova Southeastern University Master of Social Work field practicum placements.',
+            'default_notes' => 'MSW field practicum placement agreement. Students supervised by licensed clinical social worker (LCSW) on site.',
+        ]);
+
+        // =====================================================================
+        // 24. E-SIGNATURES — on affiliation agreements
+        // =====================================================================
+
+        // Get the first active UMiami-Mercy agreement for signatures
+        $agreementUmiamiMercy = AffiliationAgreement::where('university_id', $umiami->id)
+            ->where('site_id', $mercyGeneral->id)
+            ->where('status', 'active')
+            ->first();
+
+        if ($agreementUmiamiMercy) {
+            // University coordinator signed
+            Signature::create([
+                'signable_type' => 'App\\Models\\AffiliationAgreement',
+                'signable_id' => $agreementUmiamiMercy->id,
+                'signer_role' => 'university',
+                'signer_name' => 'Lisa Thompson',
+                'signer_email' => 'coordinator@cliniclink.health',
+                'signer_id' => $demoCoordinator->id,
+                'requested_by' => $demoCoordinator->id,
+                'status' => 'signed',
+                'signature_data' => 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNTAiPjx0ZXh0IHg9IjEwIiB5PSIzNSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMwMDAiPkxpc2EgVGhvbXBzb248L3RleHQ+PC9zdmc+',
+                'ip_address' => '198.51.100.1',
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                'request_message' => 'Please review and sign the clinical affiliation agreement for Mercy General Hospital.',
+                'requested_at' => '2025-07-15 09:00:00',
+                'signed_at' => '2025-07-16 10:30:00',
+            ]);
+
+            // Site manager signed
+            Signature::create([
+                'signable_type' => 'App\\Models\\AffiliationAgreement',
+                'signable_id' => $agreementUmiamiMercy->id,
+                'signer_role' => 'site',
+                'signer_name' => 'Maria Garcia',
+                'signer_email' => 'site@cliniclink.health',
+                'signer_id' => $demoSiteManager->id,
+                'requested_by' => $demoCoordinator->id,
+                'status' => 'signed',
+                'signature_data' => 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNTAiPjx0ZXh0IHg9IjEwIiB5PSIzNSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMwMDAiPk1hcmlhIEdhcmNpYTwvdGV4dD48L3N2Zz4=',
+                'ip_address' => '203.0.113.5',
+                'user_agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+                'requested_at' => '2025-07-15 09:00:00',
+                'signed_at' => '2025-07-18 14:00:00',
+            ]);
+        }
+
+        // Pending signature request on the UMiami-St Pete pending agreement
+        $agreementUmiamiStPete = AffiliationAgreement::where('university_id', $umiami->id)
+            ->where('site_id', $stPeteMedical->id)
+            ->where('status', 'pending_review')
+            ->first();
+
+        if ($agreementUmiamiStPete) {
+            // University side signed
+            Signature::create([
+                'signable_type' => 'App\\Models\\AffiliationAgreement',
+                'signable_id' => $agreementUmiamiStPete->id,
+                'signer_role' => 'university',
+                'signer_name' => 'Lisa Thompson',
+                'signer_email' => 'coordinator@cliniclink.health',
+                'signer_id' => $demoCoordinator->id,
+                'requested_by' => $demoCoordinator->id,
+                'status' => 'signed',
+                'signature_data' => 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iNTAiPjx0ZXh0IHg9IjEwIiB5PSIzNSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiMwMDAiPkxpc2EgVGhvbXBzb248L3RleHQ+PC9zdmc+',
+                'ip_address' => '198.51.100.1',
+                'requested_at' => '2026-02-01 10:00:00',
+                'signed_at' => '2026-02-01 10:15:00',
+            ]);
+
+            // Site side: still requested (awaiting signature)
+            Signature::create([
+                'signable_type' => 'App\\Models\\AffiliationAgreement',
+                'signable_id' => $agreementUmiamiStPete->id,
+                'signer_role' => 'site',
+                'signer_name' => 'David Rodriguez',
+                'signer_email' => 'david.rodriguez@stpete-medical.com',
+                'signer_id' => $siteManager2->id,
+                'requested_by' => $demoCoordinator->id,
+                'status' => 'requested',
+                'request_message' => 'Please review and sign the new affiliation agreement for DNP acute care rotations at St. Petersburg Medical Center.',
+                'requested_at' => '2026-02-01 10:00:00',
+            ]);
+        }
+
+        // =====================================================================
+        // 25. STUDENT INVITES — university coordinators inviting students
+        // =====================================================================
+
+        // UMiami coordinator invites
+        StudentInvite::create([
+            'university_id' => $umiami->id,
+            'program_id' => $bsnMiami->id,
+            'invited_by' => $demoCoordinator->id,
+            'token' => Str::random(64),
+            'email' => 'newstudent1@miami.edu',
+            'status' => 'pending',
+            'expires_at' => '2026-03-31 23:59:59',
+        ]);
+
+        StudentInvite::create([
+            'university_id' => $umiami->id,
+            'program_id' => $msnFnpMiami->id,
+            'invited_by' => $demoCoordinator->id,
+            'token' => Str::random(64),
+            'email' => 'newstudent2@miami.edu',
+            'status' => 'pending',
+            'expires_at' => '2026-03-31 23:59:59',
+        ]);
+
+        // Accepted student invite (Sarah was invited)
+        StudentInvite::create([
+            'university_id' => $umiami->id,
+            'program_id' => $msnFnpMiami->id,
+            'invited_by' => $demoCoordinator->id,
+            'token' => Str::random(64),
+            'email' => 'student@cliniclink.health',
+            'status' => 'accepted',
+            'accepted_by' => $demoStudent->id,
+            'accepted_at' => '2025-12-15 14:00:00',
+            'expires_at' => '2026-01-15 23:59:59',
+        ]);
+
+        // FIU coordinator invite (open — no email)
+        StudentInvite::create([
+            'university_id' => $fiu->id,
+            'program_id' => $paFiu->id,
+            'invited_by' => $coordinator2->id,
+            'token' => Str::random(64),
+            'email' => null,
+            'status' => 'pending',
+            'expires_at' => '2026-04-30 23:59:59',
+        ]);
+
+        // Expired invite
+        StudentInvite::create([
+            'university_id' => $nova->id,
+            'program_id' => $mswNova->id,
+            'invited_by' => $professor2->id,
+            'token' => Str::random(64),
+            'email' => 'expired.student@nova.edu',
+            'status' => 'pending',
+            'expires_at' => '2025-12-31 23:59:59',
+        ]);
+
+        // =====================================================================
+        // 26. SITE JOIN REQUESTS — preceptors requesting to join sites
+        // =====================================================================
+
+        // Approved request: Dr. Nguyen joined Coastal Rehab
+        SiteJoinRequest::create([
+            'site_id' => $coastalRehab->id,
+            'preceptor_id' => $preceptor3->id,
+            'message' => 'I am an emergency medicine physician with rehabilitation medicine interests. I would like to precept PT/OT students at Coastal Rehab to support interdisciplinary education.',
+            'status' => 'approved',
+            'reviewed_by' => $demoSiteManager->id,
+            'reviewed_at' => '2026-01-20 14:00:00',
+            'review_notes' => 'Approved. Credentials verified. Welcome to the team.',
+        ]);
+
+        // Pending request: new preceptor wants to join Mercy
+        SiteJoinRequest::create([
+            'site_id' => $mercyGeneral->id,
+            'preceptor_id' => $preceptor3->id,
+            'message' => 'I have 12 years of emergency medicine experience and would like to precept nursing and PA students at Mercy General. I am board-certified and currently practicing at a nearby facility.',
+            'status' => 'pending',
+        ]);
+
+        // Rejected request: inactive preceptor tried to join St Pete
+        SiteJoinRequest::create([
+            'site_id' => $stPeteMedical->id,
+            'preceptor_id' => $preceptor5->id,
+            'message' => 'I am interested in returning to precepting after my retirement.',
+            'status' => 'rejected',
+            'reviewed_by' => $siteManager2->id,
+            'reviewed_at' => '2026-01-10 11:00:00',
+            'review_notes' => 'Thank you for your interest. We require active clinical practice for preceptors. Please reapply if you return to practice.',
+        ]);
+
+        // =====================================================================
+        // 27. ANALYTICS SNAPSHOTS — historical platform metrics
+        // =====================================================================
+
+        // Platform-level daily snapshots (last 7 days)
+        foreach (range(7, 1) as $daysAgo) {
+            AnalyticsSnapshot::create([
+                'type' => 'platform',
+                'entity_id' => null,
+                'period' => 'daily',
+                'date' => now()->subDays($daysAgo)->toDateString(),
+                'metrics' => [
+                    'total_users' => 24 + (7 - $daysAgo) * 2,
+                    'active_users' => 18 + (7 - $daysAgo),
+                    'total_applications' => 20 + (7 - $daysAgo) * 3,
+                    'accepted_applications' => 10 + (7 - $daysAgo),
+                    'total_hours_logged' => 380 + (7 - $daysAgo) * 45,
+                    'hours_approved' => 310 + (7 - $daysAgo) * 38,
+                    'total_evaluations' => 8 + (7 - $daysAgo),
+                    'certificates_issued' => 3 + intdiv(7 - $daysAgo, 2),
+                    'new_registrations' => rand(1, 4),
+                    'messages_sent' => 15 + (7 - $daysAgo) * 5,
+                ],
+                'created_at' => now()->subDays($daysAgo)->setHour(1),
+            ]);
+        }
+
+        // Platform-level monthly snapshots (last 3 months)
+        foreach (range(3, 1) as $monthsAgo) {
+            AnalyticsSnapshot::create([
+                'type' => 'platform',
+                'entity_id' => null,
+                'period' => 'monthly',
+                'date' => now()->subMonths($monthsAgo)->startOfMonth()->toDateString(),
+                'metrics' => [
+                    'total_users' => 15 + (3 - $monthsAgo) * 8,
+                    'active_users' => 12 + (3 - $monthsAgo) * 6,
+                    'total_applications' => 8 + (3 - $monthsAgo) * 12,
+                    'accepted_applications' => 4 + (3 - $monthsAgo) * 5,
+                    'placement_rate' => 45 + (3 - $monthsAgo) * 8,
+                    'avg_time_to_place_days' => 14 - (3 - $monthsAgo) * 2,
+                    'total_hours_logged' => 200 + (3 - $monthsAgo) * 180,
+                    'total_revenue' => 0,
+                    'new_sites' => 2 + (3 - $monthsAgo),
+                    'new_universities' => 1 + intdiv(3 - $monthsAgo, 2),
+                ],
+                'created_at' => now()->subMonths($monthsAgo)->startOfMonth()->setHour(2),
+            ]);
+        }
+
+        // University-level snapshots (UMiami)
+        AnalyticsSnapshot::create([
+            'type' => 'university',
+            'entity_id' => $umiami->id,
+            'period' => 'monthly',
+            'date' => now()->subMonth()->startOfMonth()->toDateString(),
+            'metrics' => [
+                'total_students' => 3,
+                'placed_students' => 2,
+                'placement_rate' => 67,
+                'avg_hours_per_student' => 42,
+                'total_applications' => 8,
+                'accepted_applications' => 3,
+                'active_agreements' => 2,
+                'expiring_agreements' => 0,
+                'compliance_rate' => 85,
+            ],
+            'created_at' => now()->subMonth()->startOfMonth()->setHour(2),
+        ]);
+
+        // Site-level snapshot (Mercy General)
+        AnalyticsSnapshot::create([
+            'type' => 'site',
+            'entity_id' => $mercyGeneral->id,
+            'period' => 'monthly',
+            'date' => now()->subMonth()->startOfMonth()->toDateString(),
+            'metrics' => [
+                'total_slots' => 3,
+                'open_slots' => 1,
+                'total_applications' => 6,
+                'accepted_students' => 3,
+                'avg_student_rating' => 4.4,
+                'total_hours_logged' => 156,
+                'preceptors_active' => 2,
+                'occupancy_rate' => 75,
+            ],
+            'created_at' => now()->subMonth()->startOfMonth()->setHour(2),
+        ]);
+
+        // =====================================================================
+        // 28. NOTIFICATIONS — populate the bell icon for demo users
+        // =====================================================================
+
+        // Using raw DB inserts for notifications to avoid triggering mail
+        $notifications = [
+            // Demo student notifications
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\ApplicationReviewedNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoStudent->id,
+                'data' => json_encode([
+                    'message' => 'Your application for Family NP Primary Care Rotation at Sunshine Family Health Center has been accepted!',
+                    'application_id' => $appSarahFNP->id,
+                    'status' => 'accepted',
+                    'slot_title' => 'Family NP Primary Care Rotation',
+                    'site_name' => 'Sunshine Family Health Center',
+                ]),
+                'read_at' => now()->subDays(10),
+                'created_at' => now()->subDays(12),
+                'updated_at' => now()->subDays(12),
+            ],
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\HourLogReviewedNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoStudent->id,
+                'data' => json_encode([
+                    'message' => 'Your hour log for Feb 3 (8 hours, direct care) has been approved by Dr. Wilson.',
+                    'status' => 'approved',
+                    'date' => '2026-02-03',
+                    'hours' => 8,
+                ]),
+                'read_at' => now()->subDays(8),
+                'created_at' => now()->subDays(9),
+                'updated_at' => now()->subDays(9),
+            ],
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\HourLogReviewedNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoStudent->id,
+                'data' => json_encode([
+                    'message' => 'Your hour log for Feb 2 (12 hours) was rejected. Reason: Hours exceed maximum allowed per shift.',
+                    'status' => 'rejected',
+                    'date' => '2026-02-02',
+                    'hours' => 12,
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(8),
+                'updated_at' => now()->subDays(8),
+            ],
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\NewMessageNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoStudent->id,
+                'data' => json_encode([
+                    'message' => 'New message from Dr. Wilson in "Question about ER rotation schedule"',
+                    'sender_name' => 'James Wilson',
+                    'conversation_subject' => 'Question about ER rotation schedule',
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(4),
+                'updated_at' => now()->subDays(4),
+            ],
+
+            // Demo preceptor notifications
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\HourLogSubmittedNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoPreceptor->id,
+                'data' => json_encode([
+                    'message' => 'Sarah Chen submitted 8 hours (direct care) for Feb 6 at Family NP Primary Care Rotation.',
+                    'student_name' => 'Sarah Chen',
+                    'date' => '2026-02-06',
+                    'hours' => 8,
+                    'slot_title' => 'Family NP Primary Care Rotation',
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(6),
+                'updated_at' => now()->subDays(6),
+            ],
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\HourLogSubmittedNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoPreceptor->id,
+                'data' => json_encode([
+                    'message' => 'Sarah Chen submitted 4 hours (simulation) for Feb 7 at Family NP Primary Care Rotation.',
+                    'student_name' => 'Sarah Chen',
+                    'date' => '2026-02-07',
+                    'hours' => 4,
+                    'slot_title' => 'Family NP Primary Care Rotation',
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(5),
+                'updated_at' => now()->subDays(5),
+            ],
+
+            // Demo site manager notifications
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\NewApplicationNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoSiteManager->id,
+                'data' => json_encode([
+                    'message' => 'New application from Sarah Chen for Emergency Department - NP Clinical Rotation.',
+                    'student_name' => 'Sarah Chen',
+                    'slot_title' => 'Emergency Department - NP Clinical Rotation',
+                    'site_name' => 'Mercy General Hospital',
+                ]),
+                'read_at' => now()->subDays(11),
+                'created_at' => now()->subDays(14),
+                'updated_at' => now()->subDays(14),
+            ],
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\NewApplicationNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoSiteManager->id,
+                'data' => json_encode([
+                    'message' => 'New application from Emily Torres for Emergency Department - NP Clinical Rotation.',
+                    'student_name' => 'Emily Torres',
+                    'slot_title' => 'Emergency Department - NP Clinical Rotation',
+                    'site_name' => 'Mercy General Hospital',
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(7),
+                'updated_at' => now()->subDays(7),
+            ],
+
+            // Demo coordinator notifications
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\NewMessageNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoCoordinator->id,
+                'data' => json_encode([
+                    'message' => 'New message from Prof. Martinez about "Student progress — Sarah Chen"',
+                    'sender_name' => 'Robert Martinez',
+                    'conversation_subject' => 'Student progress — Sarah Chen',
+                ]),
+                'read_at' => now()->subDays(3),
+                'created_at' => now()->subDays(4),
+                'updated_at' => now()->subDays(4),
+            ],
+
+            // Demo admin notifications
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\NewUserRegisteredNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoAdmin->id,
+                'data' => json_encode([
+                    'message' => 'New user registered: Kenji Tanaka (student) from Nova Southeastern University.',
+                    'user_name' => 'Kenji Tanaka',
+                    'role' => 'student',
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(3),
+                'updated_at' => now()->subDays(3),
+            ],
+            [
+                'id' => Str::uuid(),
+                'type' => 'App\\Notifications\\SiteJoinRequestNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $demoAdmin->id,
+                'data' => json_encode([
+                    'message' => 'Dr. Michael Nguyen has requested to join Mercy General Hospital as a preceptor.',
+                    'preceptor_name' => 'Michael Nguyen',
+                    'site_name' => 'Mercy General Hospital',
+                ]),
+                'read_at' => null,
+                'created_at' => now()->subDays(2),
+                'updated_at' => now()->subDays(2),
+            ],
+        ];
+
+        DB::table('notifications')->insert($notifications);
     }
 }

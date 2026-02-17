@@ -227,7 +227,7 @@ Payments ──── Invoices ──── Refunds
 | P0 | CE certificate system with audit trail | ✅ Done |
 | P0 | Email notifications (11 mail classes + 2 scheduled reminders) | ✅ Done |
 | P0 | Landing page accuracy fixes | ✅ Done |
-| P1 | Database seeder with realistic demo data | 🔜 Next |
+| P1 | Database seeder with realistic demo data | ✅ Done |
 | P1 | Email verification flow | Pending |
 
 ### PHASE 2: Compliance & Communication (Weeks 9-16)
