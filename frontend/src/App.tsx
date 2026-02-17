@@ -55,6 +55,7 @@ const PreceptorDetail = lazy(() => import('./pages/PreceptorDetail.tsx').then(m 
 const Analytics = lazy(() => import('./pages/Analytics.tsx').then(m => ({ default: m.Analytics })))
 const AccreditationReports = lazy(() => import('./pages/AccreditationReports.tsx').then(m => ({ default: m.AccreditationReports })))
 const SitesMap = lazy(() => import('./pages/SitesMap.tsx').then(m => ({ default: m.SitesMap })))
+const SsoCallback = lazy(() => import('./pages/SsoCallback.tsx').then(m => ({ default: m.SsoCallback })))
 
 // --- Loading fallback ---
 function PageLoader() {
@@ -126,6 +127,7 @@ export default function App() {
         <Route path="/student-invite/:token" element={<AcceptStudentInvite />} />
         <Route path="/verify-email" element={<VerifyEmailPrompt />} />
         <Route path="/verify-email/:token" element={<VerifyEmailCallback />} />
+        <Route path="/sso/callback" element={<SsoCallback />} />
 
         {/* Semi-protected (works for both auth and unauth users) */}
         <Route path="/pricing" element={<SemiProtectedRoute><Pricing /></SemiProtectedRoute>} />

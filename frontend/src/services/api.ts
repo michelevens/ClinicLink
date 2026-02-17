@@ -151,6 +151,11 @@ export const authApi = {
   mfaVerify: (mfa_token: string, code: string) => api.post<{ user: ApiUser; token: string }>('/auth/mfa/verify', { mfa_token, code }),
 }
 
+// --- SSO ---
+export const ssoApi = {
+  universities: () => api.get<{ id: string; name: string }[]>('/sso/universities'),
+}
+
 // --- Rotation Sites ---
 export const sitesApi = {
   list: (params?: { search?: string; specialty?: string; state?: string; page?: number }) => {
@@ -663,6 +668,8 @@ export interface ApiUser {
   preceptor_reviews_received?: ApiPreceptorReview[]
   matching_preferences?: any
   onboarding_completed?: boolean
+  sso_provider?: string | null
+  sso_id?: string | null
 }
 
 export interface ApiStudentProfile {

@@ -37,6 +37,7 @@ use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\NpiController;
+use App\Http\Controllers\SamlController;
 use App\Http\Controllers\StudentInviteController;
 use Illuminate\Support\Facades\Route;
 
@@ -95,6 +96,12 @@ Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])
 // NPI lookup (public, rate-limited)
 Route::get('/npi/lookup', [NpiController::class, 'lookup']);
 Route::get('/npi/search', [NpiController::class, 'search']);
+
+// SSO/SAML (public endpoints — ACS receives POST from external IdP)
+Route::get('/sso/universities', [SamlController::class, 'universities']);
+Route::get('/sso/login/{university}', [SamlController::class, 'login']);
+Route::post('/sso/acs/{university}', [SamlController::class, 'acs']);
+Route::get('/sso/metadata', [SamlController::class, 'metadata']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -462,6 +469,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/universities', [UniversityController::class, 'store']);
         Route::put('/universities/{university}', [UniversityController::class, 'update']);
         Route::delete('/universities/{university}', [UniversityController::class, 'destroy']);
+        Route::put('/universities/{university}/saml', [SamlController::class, 'updateSaml']);
 
         Route::get('/university-codes', [AdminController::class, 'listLicenseCodes']);
         Route::post('/university-codes', [AdminController::class, 'createLicenseCode']);

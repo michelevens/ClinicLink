@@ -14,6 +14,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (loginId: string, password: string) => Promise<void>
+  loginWithToken: (token: string) => Promise<void>
   verifyMfa: (code: string) => Promise<void>
   cancelMfa: () => void
   register: (data: RegisterData) => Promise<void>
@@ -132,6 +133,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const loginWithToken = useCallback(async (token: string) => {
+    setState(s => ({ ...s, isLoading: true }))
+    try {
+      localStorage.setItem('cliniclink_token', token)
+      const res = await authApi.me()
+      const user = mapApiUser(res)
+      localStorage.setItem('cliniclink_user', JSON.stringify(user))
+      setState({ user, token, isAuthenticated: true, isLoading: false, mfaPending: false, mfaToken: null })
+    } catch (err) {
+      localStorage.removeItem('cliniclink_token')
+      localStorage.removeItem('cliniclink_user')
+      setState(DEFAULT_STATE)
+      throw err
+    }
+  }, [])
+
   const verifyMfa = useCallback(async (code: string) => {
     if (!state.mfaToken) throw new Error('No MFA session active.')
     setState(s => ({ ...s, isLoading: true }))
@@ -218,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ ...state, login, verifyMfa, cancelMfa, register, logout, demoLogin, completeOnboarding }}>
+    <AuthContext.Provider value={{ ...state, login, loginWithToken, verifyMfa, cancelMfa, register, logout, demoLogin, completeOnboarding }}>
       {children}
     </AuthContext.Provider>
   )

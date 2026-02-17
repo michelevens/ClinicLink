@@ -43,6 +43,10 @@ class User extends Authenticatable
         'system_id',
         'email_verified',
         'email_verified_at',
+        // SSO
+        'sso_provider',
+        'sso_id',
+        'sso_university_id',
     ];
 
     protected static function booted(): void
@@ -228,6 +232,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isSsoUser(): bool
+    {
+        return $this->sso_provider !== null;
     }
 
     public function getFullNameAttribute(): string

@@ -4,9 +4,11 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, User, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react'
+import { Stethoscope, User, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Building2, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
+import { ssoApi } from '../services/api.ts'
+import { API_URL } from '../services/api.ts'
 
 export function LoginPage() {
   usePageTitle('Sign In')
@@ -208,10 +210,103 @@ export function LoginPage() {
           </div>
         </Card>
 
+        <SsoSection />
+
         <p className="text-center text-xs text-stone-400 mt-6">
           Demo: student@cliniclink.health / ClinicLink2026! (or any demo role email)
         </p>
       </div>
+    </div>
+  )
+}
+
+function SsoSection() {
+  const [universities, setUniversities] = useState<{ id: string; name: string }[]>([])
+  const [search, setSearch] = useState('')
+  const [selectedId, setSelectedId] = useState('')
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    ssoApi.universities().then(setUniversities).catch(() => {})
+  }, [])
+
+  if (universities.length === 0) return null
+
+  const filtered = search
+    ? universities.filter(u => u.name.toLowerCase().includes(search.toLowerCase()))
+    : universities
+
+  return (
+    <div className="mt-4">
+      <div className="relative flex items-center my-4">
+        <div className="flex-1 border-t border-stone-200" />
+        <span className="px-3 text-xs text-stone-400 uppercase tracking-wider">Or</span>
+        <div className="flex-1 border-t border-stone-200" />
+      </div>
+
+      {!expanded ? (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 hover:border-stone-400 transition-all duration-200"
+        >
+          <Building2 className="w-4 h-4 text-primary-600" />
+          Sign in with University SSO
+        </button>
+      ) : (
+        <Card>
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-stone-700">Select your university</p>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                <Search className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search universities..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+              />
+            </div>
+            <div className="max-h-40 overflow-y-auto space-y-1">
+              {filtered.map(u => (
+                <button
+                  key={u.id}
+                  onClick={() => setSelectedId(u.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    selectedId === u.id
+                      ? 'bg-primary-50 text-primary-700 font-medium'
+                      : 'text-stone-700 hover:bg-stone-50'
+                  }`}
+                >
+                  {u.name}
+                </button>
+              ))}
+              {filtered.length === 0 && (
+                <p className="text-sm text-stone-400 text-center py-2">No universities found</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setExpanded(false); setSearch(''); setSelectedId('') }}
+                className="flex-1 text-sm text-stone-500 hover:text-stone-700 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedId) return
+                  window.location.href = `${API_URL}/sso/login/${selectedId}`
+                }}
+                disabled={!selectedId}
+                className="flex-1 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Continue with SSO
+              </button>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

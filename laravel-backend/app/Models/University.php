@@ -20,6 +20,16 @@ class University extends Model
         'website',
         'is_verified',
         'system_id',
+        // SSO/SAML
+        'sso_enabled',
+        'saml_entity_id',
+        'saml_sso_url',
+        'saml_slo_url',
+        'saml_certificate',
+        'saml_name_id_format',
+        'saml_attribute_map',
+        'sso_auto_approve',
+        'sso_default_role',
     ];
 
     protected static function booted(): void
@@ -38,6 +48,9 @@ class University extends Model
     {
         return [
             'is_verified' => 'boolean',
+            'sso_enabled' => 'boolean',
+            'saml_attribute_map' => 'array',
+            'sso_auto_approve' => 'boolean',
         ];
     }
 
