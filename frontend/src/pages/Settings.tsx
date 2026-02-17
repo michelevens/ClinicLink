@@ -1111,14 +1111,14 @@ function PaymentsTab() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-stone-900">
-                      ${(payment.amount / 100).toFixed(2)} {payment.currency.toUpperCase()}
+                      ${Number(payment.amount).toFixed(2)} {payment.currency.toUpperCase()}
                     </p>
                     <p className="text-xs text-stone-500 truncate">
                       {payment.paid_at
                         ? new Date(payment.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                         : new Date(payment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                       }
-                      {payment.platform_fee > 0 && ` · Fee: $${(payment.platform_fee / 100).toFixed(2)}`}
+                      {payment.platform_fee > 0 && ` · Fee: $${Number(payment.platform_fee).toFixed(2)}`}
                     </p>
                   </div>
                 </div>

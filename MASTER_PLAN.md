@@ -229,6 +229,8 @@ Payments ──── Invoices ──── Refunds
 | P0 | Landing page accuracy fixes | ✅ Done |
 | P1 | Database seeder with realistic demo data | ✅ Done |
 | P1 | Email verification flow | ✅ Done |
+| P1 | Stripe Connect marketplace (paid rotations) | ✅ Done |
+| P1 | Student subscription billing (Pro plan) | ✅ Done |
 
 ### PHASE 2: Compliance & Communication (Weeks 9-16)
 
@@ -820,8 +822,8 @@ PRIORITY 3 — DIFFERENTIATION (Weeks 7-12)
 
 PRIORITY 4 — REVENUE (Weeks 13-18)
 ═══════════════════════════════════
-□ Stripe Connect marketplace (paid rotations)
-□ University subscription tiers + billing
+✅ Stripe Connect marketplace (paid rotations)
+✅ Student subscription tiers + billing (Pro plan with Stripe Checkout + Customer Portal)
 □ Invoice generation
 □ Preceptor compensation tracking
 □ Featured/sponsored listings

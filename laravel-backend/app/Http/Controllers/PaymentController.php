@@ -299,7 +299,7 @@ class PaymentController extends Controller
         $payment->update([
             'status' => 'completed',
             'paid_at' => now(),
-            'stripe_transfer_id' => $paymentIntent->transfer ?? null,
+            'stripe_transfer_id' => $paymentIntent->latest_charge->transfer ?? null,
         ]);
 
         $payment->application?->update(['payment_status' => 'paid']);

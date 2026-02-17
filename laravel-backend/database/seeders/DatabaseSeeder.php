@@ -34,6 +34,7 @@ use App\Models\Signature;
 use App\Models\StudentInvite;
 use App\Models\SiteJoinRequest;
 use App\Models\AnalyticsSnapshot;
+use App\Models\Payment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -3257,5 +3258,101 @@ class DatabaseSeeder extends Seeder
         ];
 
         DB::table('notifications')->insert($notifications);
+
+        // ================================================================
+        // === SECTION 29: STRIPE CONNECT & PAYMENT DATA ===
+        // ================================================================
+
+        // Give site managers Stripe Connect accounts (fake IDs for demo)
+        $demoSiteManager->update([
+            'stripe_account_id' => 'acct_demo_mariagarcia',
+            'stripe_onboarded' => true,
+        ]);
+        $siteManager2->update([
+            'stripe_account_id' => 'acct_demo_davidrodriguez',
+            'stripe_onboarded' => true,
+        ]);
+
+        // Give demo student a Pro subscription
+        $demoStudent->update([
+            'plan' => 'pro',
+            'stripe_customer_id' => 'cus_demo_sarahchen',
+            'stripe_subscription_id' => 'sub_demo_sarahchen_pro',
+            'subscription_status' => 'active',
+            'trial_ends_at' => now()->subDays(14), // trial already ended
+        ]);
+
+        // Give another student free tier with trial
+        $student2->update([
+            'plan' => 'free',
+            'stripe_customer_id' => 'cus_demo_davidkim',
+            'trial_ends_at' => now()->addDays(7),
+            'free_rotations_used' => 2,
+        ]);
+
+        // Payment 1: Sarah paid for FNP rotation ($500) — completed
+        $paymentSarahFNP = Payment::create([
+            'payer_id' => $demoStudent->id,
+            'payee_id' => $demoSiteManager->id,
+            'application_id' => $appSarahFNP->id,
+            'slot_id' => $slotFNP->id,
+            'amount' => 500.00,
+            'platform_fee' => 50.00,
+            'currency' => 'usd',
+            'stripe_payment_intent_id' => 'pi_demo_sarah_fnp_' . Str::random(10),
+            'stripe_transfer_id' => 'tr_demo_sarah_fnp_' . Str::random(10),
+            'status' => 'completed',
+            'paid_at' => now()->subDays(30),
+            'metadata' => ['slot_title' => 'Family NP Primary Care Rotation', 'site_name' => 'Orlando Health Family Medicine'],
+        ]);
+        $appSarahFNP->update(['payment_status' => 'paid', 'payment_id' => $paymentSarahFNP->id]);
+
+        // Payment 2: Emily paid for Urgent Care rotation ($250) — completed
+        $paymentEmilyUrgent = Payment::create([
+            'payer_id' => $student5->id,
+            'payee_id' => $demoSiteManager->id,
+            'application_id' => $appEmilyUrgent->id,
+            'slot_id' => $slotUrgent->id,
+            'amount' => 250.00,
+            'platform_fee' => 25.00,
+            'currency' => 'usd',
+            'stripe_payment_intent_id' => 'pi_demo_emily_urgent_' . Str::random(10),
+            'stripe_transfer_id' => 'tr_demo_emily_urgent_' . Str::random(10),
+            'status' => 'completed',
+            'paid_at' => now()->subDays(15),
+            'metadata' => ['slot_title' => 'Urgent Care NP Clinical', 'site_name' => 'MinuteClinic South Orlando'],
+        ]);
+        $appEmilyUrgent->update(['payment_status' => 'paid', 'payment_id' => $paymentEmilyUrgent->id]);
+
+        // Payment 3: Marcus pending for Psych rotation ($1,200) — pending
+        Payment::create([
+            'payer_id' => $student4->id,
+            'payee_id' => $siteManager2->id,
+            'application_id' => $appMarcusPsych->id,
+            'slot_id' => $slotPsych->id,
+            'amount' => 1200.00,
+            'platform_fee' => 120.00,
+            'currency' => 'usd',
+            'stripe_payment_intent_id' => 'pi_demo_marcus_psych_' . Str::random(10),
+            'status' => 'pending',
+            'metadata' => ['slot_title' => 'Psychiatric Mental Health NP Rotation', 'site_name' => 'Behavioral Health Associates'],
+        ]);
+
+        // Payment 4: A refunded payment (Jessica's completed IM rotation)
+        $paymentJessicaIM = Payment::create([
+            'payer_id' => $student7->id,
+            'payee_id' => $demoSiteManager->id,
+            'application_id' => $appJessicaIM->id,
+            'slot_id' => $slotInternalMed->id,
+            'amount' => 350.00,
+            'platform_fee' => 35.00,
+            'currency' => 'usd',
+            'stripe_payment_intent_id' => 'pi_demo_jessica_im_' . Str::random(10),
+            'stripe_transfer_id' => 'tr_demo_jessica_im_' . Str::random(10),
+            'status' => 'refunded',
+            'paid_at' => now()->subDays(45),
+            'refunded_at' => now()->subDays(10),
+            'metadata' => ['slot_title' => 'Internal Medicine PA Rotation', 'site_name' => 'Orlando Health', 'refund_reason' => 'Schedule conflict — rotation rescheduled'],
+        ]);
     }
 }

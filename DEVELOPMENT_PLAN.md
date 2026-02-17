@@ -384,8 +384,39 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
-## Phase 3.3: Payments & Intelligence — NEXT
-- Stripe Connect for paid rotation placements
+## Phase 3.3: Stripe Connect & Payments ✅ COMPLETE
+**Goal:** Wire up Stripe Connect marketplace for paid rotation placements
+
+### What Was Built
+
+#### Stripe Connect Marketplace (already existed, wired up & bug-fixed)
+- PaymentController with Connect account creation, onboarding, checkout, refunds, webhooks
+- SubscriptionController with student Pro plan checkout, portal, webhook handling
+- Payment model with payer/payee/application/slot relationships
+- Full route registration with proper auth middleware (webhooks excluded from auth)
+- Frontend PaymentModal component with Stripe Elements integration
+- Payment & subscription hooks in useApi.ts
+- Settings page PaymentsTab (Connect onboarding + history) and SubscriptionTab
+- Pricing page with three-tier plans
+
+#### Fixes Applied
+- **Wired PaymentModal into Applications page** — "Pay Now" button appears when application is accepted on a paid slot, "Payment Complete" badge when paid
+- **Fixed amount display bug** — Settings PaymentsTab was dividing dollars by 100 (showing $2.50 instead of $250.00)
+- **Fixed stripe_transfer_id** — Was reading from wrong PaymentIntent field, now reads from `latest_charge->transfer`
+- **Added payment_status/payment_id to ApiApplication type** — Frontend can now track payment state per application
+- **Added VITE_STRIPE_PUBLISHABLE_KEY** to frontend env files — Stripe.js was silently disabled in production
+- **Added missing env vars** (STUDENT_FEE_ENABLED, STUDENT_FEE_AMOUNT) to backend .env.example
+- **Created frontend .env.example** documenting all required environment variables
+
+#### Seeder Data Added
+- Site managers with Stripe Connect accounts (fake IDs, onboarded)
+- Demo student with active Pro subscription
+- 4 Payment records: 2 completed, 1 pending, 1 refunded
+- Applications updated with payment_status for paid slots
+
+---
+
+## Phase 3.4: Intelligence & Advanced Features — NEXT
 - Preceptor management and recognition system
 - Smart matching algorithm (student prefs × site requirements)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)

@@ -742,6 +742,8 @@ export interface ApiApplication {
   reviewed_at: string | null
   reviewed_by: string | null
   notes: string | null
+  payment_status: 'pending' | 'paid' | 'refunded' | null
+  payment_id: string | null
   created_at: string
   student?: ApiUser
   slot?: ApiSlot

@@ -5,6 +5,7 @@ import { CardSkeleton } from '../components/ui/Skeleton.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
+import { PaymentModal } from '../components/payments/PaymentModal.tsx'
 import { useApplications, useWithdrawApplication } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import type { ApiApplication } from '../services/api.ts'
@@ -12,7 +13,7 @@ import {
   FileText, MapPin, Calendar, Building2, X,
   CheckCircle2, Clock, AlertCircle, XCircle, Send,
   ChevronRight, Star, Users, Stethoscope, ArrowRight,
-  Eye, Shield, BookOpen
+  Eye, Shield, BookOpen, CreditCard, DollarSign
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
@@ -27,6 +28,8 @@ export function Applications() {
   const [selectedApp, setSelectedApp] = useState<ApiApplication | null>(null)
   const [showDetail, setShowDetail] = useState(false)
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
+  const [paymentApp, setPaymentApp] = useState<ApiApplication | null>(null)
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all')
 
   const applications = data?.data || []
@@ -429,6 +432,44 @@ export function Applications() {
               </div>
             )}
 
+            {/* Payment Section */}
+            {selectedApp.status === 'accepted' && selectedApp.slot && selectedApp.slot.cost > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-stone-900 mb-2 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-primary-500" /> Payment
+                </h3>
+                {selectedApp.payment_status === 'paid' ? (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-green-900">Payment Complete</p>
+                      <p className="text-xs text-green-700">Placement fee of ${Number(selectedApp.slot.cost).toFixed(2)} has been paid</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <DollarSign className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-amber-900">Payment Required</p>
+                        <p className="text-xs text-amber-700 mt-0.5">This rotation has a placement fee of <strong>${Number(selectedApp.slot.cost).toFixed(2)}</strong></p>
+                        <Button
+                          size="sm"
+                          className="mt-3"
+                          onClick={() => {
+                            setPaymentApp(selectedApp)
+                            setShowPayment(true)
+                          }}
+                        >
+                          <CreditCard className="w-4 h-4" /> Pay Now
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex gap-3 justify-end pt-2 border-t border-stone-200">
               <Button variant="ghost" onClick={() => { setShowDetail(false); setSelectedApp(null) }}>
@@ -480,6 +521,24 @@ export function Applications() {
           </div>
         </div>
       </Modal>
+
+      {/* Payment Modal */}
+      {paymentApp && paymentApp.slot && (
+        <PaymentModal
+          open={showPayment}
+          onClose={() => { setShowPayment(false); setPaymentApp(null) }}
+          onSuccess={() => {
+            toast.success('Payment successful! Your rotation placement is confirmed.')
+            setShowPayment(false)
+            setPaymentApp(null)
+            setShowDetail(false)
+            setSelectedApp(null)
+          }}
+          applicationId={paymentApp.id}
+          slotTitle={paymentApp.slot.title}
+          amount={paymentApp.slot.cost}
+        />
+      )}
     </div>
   )
 }
