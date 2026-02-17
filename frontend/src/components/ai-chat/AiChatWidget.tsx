@@ -473,9 +473,9 @@ export function AiChatWidget() {
           )}
 
           {/* Footer */}
-          <div className="border-t border-stone-100 px-4 py-2 shrink-0 bg-stone-50/50">
-            <p className="text-[10px] text-stone-400 text-center">
-              ClinicLink is a Product of Acsyom Analytics
+          <div className="border-t border-primary-100 px-4 py-2 shrink-0 bg-primary-50/30">
+            <p className="text-[11px] text-primary-500 font-medium text-center tracking-wide">
+              ClinicLink is a Product of <span className="font-semibold text-primary-600">Acsyom Analytics</span>
             </p>
           </div>
         </div>
