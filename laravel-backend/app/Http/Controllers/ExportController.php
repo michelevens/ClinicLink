@@ -193,11 +193,16 @@ class ExportController extends Controller
         if ($user->isStudent()) {
             $query->where('student_id', $user->id);
         } elseif ($user->isSiteManager()) {
+            $managedSiteIds = $user->managedSites()->pluck('id');
             if ($request->filled('site_id')) {
-                $query->whereHas('slot', fn($q) => $q->where('site_id', $request->input('site_id')));
+                $siteId = $request->input('site_id');
+                // Validate site belongs to this manager
+                if (!$managedSiteIds->contains($siteId)) {
+                    return [];
+                }
+                $query->whereHas('slot', fn($q) => $q->where('site_id', $siteId));
             } else {
-                $siteIds = $user->managedSites()->pluck('id');
-                $query->whereHas('slot', fn($q) => $q->whereIn('site_id', $siteIds));
+                $query->whereHas('slot', fn($q) => $q->whereIn('site_id', $managedSiteIds));
             }
         } elseif ($user->isCoordinator() || $user->role === 'professor') {
             $universityId = $user->studentProfile?->university_id;

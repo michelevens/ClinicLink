@@ -122,6 +122,29 @@ class AccreditationReportController extends Controller
      */
     public function download(Request $request, AccreditationReport $report)
     {
+        // Resolve user from session or query token (for window.open downloads)
+        $user = $request->user();
+        if (!$user && $request->filled('token')) {
+            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($request->input('token'));
+            if ($token) {
+                $user = $token->tokenable;
+            }
+        }
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized.'], 401);
+        }
+
+        // Authorization: only coordinators of the same university or admins
+        if ($user->role === 'coordinator') {
+            $userUniversityId = $user->studentProfile?->university_id;
+            if (!$userUniversityId || $userUniversityId !== $report->university_id) {
+                return response()->json(['message' => 'Forbidden.'], 403);
+            }
+        } elseif ($user->role !== 'admin') {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
+
         if (!$report->file_path || !Storage::disk('local')->exists($report->file_path)) {
             return response()->json(['message' => 'File not found'], 404);
         }

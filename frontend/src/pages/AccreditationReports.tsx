@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FileBarChart, Plus, Download, Trash2, Eye, X, Loader2 } from 'lucide-react'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import { useAccreditationReports, useGenerateReport, useDeleteReport } from '../hooks/useApi.ts'
+import { useAccreditationReports, useGenerateReport, useDeleteReport, useReportPreview } from '../hooks/useApi.ts'
 import { accreditationReportsApi } from '../services/api.ts'
 import type { ApiAccreditationReport } from '../services/api.ts'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
@@ -31,6 +31,7 @@ export function AccreditationReports() {
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [previewId, setPreviewId] = useState<string | null>(null)
 
   const { data, isLoading } = useAccreditationReports({ page })
   const reports = data?.data || []
@@ -101,10 +102,16 @@ export function AccreditationReports() {
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         {report.status === 'completed' && (
-                          <a href={accreditationReportsApi.downloadUrl(report.id)} target="_blank" rel="noreferrer"
-                            className="p-1.5 rounded-lg text-stone-400 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Download PDF">
-                            <Download className="w-4 h-4" />
-                          </a>
+                          <>
+                            <button onClick={() => setPreviewId(report.id)}
+                              className="p-1.5 rounded-lg text-stone-400 hover:text-secondary-600 hover:bg-secondary-50 transition-colors" title="Preview Data">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <a href={accreditationReportsApi.downloadUrl(report.id)} target="_blank" rel="noreferrer"
+                              className="p-1.5 rounded-lg text-stone-400 hover:text-primary-600 hover:bg-primary-50 transition-colors" title="Download PDF">
+                              <Download className="w-4 h-4" />
+                            </a>
+                          </>
                         )}
                         <button onClick={() => setDeleteId(report.id)}
                           className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors" title="Delete">
@@ -132,6 +139,9 @@ export function AccreditationReports() {
       {/* Generate Modal */}
       {showModal && <GenerateModal onClose={() => setShowModal(false)} />}
 
+      {/* Preview Modal */}
+      {previewId && <PreviewModal reportId={previewId} onClose={() => setPreviewId(null)} />}
+
       {/* Delete Confirmation */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -158,22 +168,21 @@ function GenerateModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const [universityId, setUniversityId] = useState('')
+  const [universityId] = useState(user?.universityId || '')
   const [programId, setProgramId] = useState('')
   const [siteId, setSiteId] = useState('')
 
   const handleGenerate = async () => {
-    const params: Record<string, unknown> = {}
-    if (dateFrom) params.date_from = dateFrom
-    if (dateTo) params.date_to = dateTo
-    if (programId) params.program_id = programId
-    if (siteId) params.site_id = siteId
+    if (!dateFrom || !dateTo || !universityId) return
 
     await generate.mutateAsync({
       report_type: reportType,
-      title: title || `${typeLabel(reportType)} — ${dateFrom || 'All Time'}`,
+      title: title || `${typeLabel(reportType)} — ${dateFrom}`,
       university_id: universityId,
-      parameters: params,
+      date_from: dateFrom,
+      date_to: dateTo,
+      ...(programId ? { program_id: programId } : {}),
+      ...(siteId ? { site_id: siteId } : {}),
     })
     onClose()
   }
@@ -198,18 +207,17 @@ function GenerateModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">From</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">From *</label>
               <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">To</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">To *</label>
               <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">University ID</label>
-            <input value={universityId} onChange={e => setUniversityId(e.target.value)} placeholder="Required" className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-          </div>
+          {!universityId && (
+            <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">Your account is not linked to a university. Contact an admin to set up your profile.</p>
+          )}
           {reportType === 'program_review' && (
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">Program ID (optional)</label>
@@ -225,9 +233,80 @@ function GenerateModal({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex gap-3 p-5 border-t border-stone-100">
           <button onClick={onClose} className="flex-1 px-4 py-2.5 border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Cancel</button>
-          <button onClick={handleGenerate} disabled={generate.isPending || !universityId} className="flex-1 px-4 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50">
+          <button onClick={handleGenerate} disabled={generate.isPending || !universityId || !dateFrom || !dateTo} className="flex-1 px-4 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50">
             {generate.isPending ? 'Generating...' : 'Generate PDF'}
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PreviewModal({ reportId, onClose }: { reportId: string; onClose: () => void }) {
+  const { data, isLoading } = useReportPreview(reportId)
+  const report = data?.report
+  const previewData = data?.data
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b border-stone-100">
+          <div>
+            <h2 className="font-semibold text-stone-900">{report?.title || 'Report Preview'}</h2>
+            {report && <p className="text-xs text-stone-500 mt-0.5">{typeLabel(report.report_type)} — Generated {report.generated_at ? new Date(report.generated_at).toLocaleDateString() : '—'}</p>}
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-stone-400" /></div>
+          ) : previewData ? (
+            <div className="space-y-4">
+              {Object.entries(previewData).map(([key, value]) => (
+                <div key={key} className="bg-stone-50 rounded-xl p-4">
+                  <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">{key.replace(/_/g, ' ')}</h4>
+                  {typeof value === 'object' && value !== null ? (
+                    Array.isArray(value) ? (
+                      <div className="space-y-1">
+                        {(value as Record<string, unknown>[]).slice(0, 20).map((item, i) => (
+                          <div key={i} className="text-sm text-stone-700 bg-white rounded-lg px-3 py-2 border border-stone-100">
+                            {Object.entries(item).map(([k, v]) => (
+                              <span key={k} className="mr-4"><span className="text-stone-400 text-xs">{k.replace(/_/g, ' ')}:</span> <span className="font-medium">{String(v)}</span></span>
+                            ))}
+                          </div>
+                        ))}
+                        {(value as unknown[]).length > 20 && (
+                          <p className="text-xs text-stone-400 italic">...and {(value as unknown[]).length - 20} more</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+                          <div key={k} className="text-sm">
+                            <span className="text-stone-400 text-xs">{k.replace(/_/g, ' ')}:</span>{' '}
+                            <span className="font-medium text-stone-700">{String(v)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  ) : (
+                    <p className="text-2xl font-bold text-stone-900">{String(value)}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-stone-400 py-8">No preview data available.</p>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 p-5 border-t border-stone-100">
+          {report?.status === 'completed' && (
+            <a href={accreditationReportsApi.downloadUrl(reportId)} target="_blank" rel="noreferrer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors">
+              <Download className="w-4 h-4" /> Download PDF
+            </a>
+          )}
+          <button onClick={onClose} className="px-4 py-2.5 border border-stone-200 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">Close</button>
         </div>
       </div>
     </div>

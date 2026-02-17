@@ -1684,10 +1684,10 @@ export const accreditationReportsApi = {
     if (params?.page) qs.set('page', String(params.page))
     return api.get<PaginatedResponse<ApiAccreditationReport>>(`/accreditation-reports?${qs}`)
   },
-  generate: (data: { report_type: string; title?: string; university_id: string; parameters: Record<string, unknown> }) =>
-    api.post<{ report: ApiAccreditationReport }>('/accreditation-reports', data),
+  generate: (data: { report_type: string; title?: string; university_id: string; date_from: string; date_to: string; program_id?: string; site_id?: string }) =>
+    api.post<ApiAccreditationReport>('/accreditation-reports', data),
   preview: (id: string) =>
-    api.get<{ data: Record<string, unknown> }>(`/accreditation-reports/${id}/preview`),
+    api.get<{ report: ApiAccreditationReport; data: Record<string, unknown> }>(`/accreditation-reports/${id}/preview`),
   downloadUrl: (id: string) => {
     const token = localStorage.getItem('cliniclink_token')
     return `${API_URL}/accreditation-reports/${id}/download?token=${token}`
