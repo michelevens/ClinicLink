@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useAnimatedCounter } from '../hooks/useAnimatedCounter.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -19,6 +20,23 @@ import {
   UserCheck, Activity, Eye, Settings, ChevronRight, Plus,
 } from 'lucide-react'
 import { PageSkeleton } from '../components/ui/Skeleton.tsx'
+
+// ─── Animated value display ──────────────────────────────────
+function AnimatedValue({ value }: { value: string | number }) {
+  // Pure number — animate directly
+  if (typeof value === 'number') {
+    const animated = useAnimatedCounter(value)
+    return <>{animated}</>
+  }
+  // String like "125/500" — animate the first numeric segment
+  const match = String(value).match(/^(\d+)(.*)$/)
+  if (match) {
+    const animated = useAnimatedCounter(Number(match[1]))
+    return <>{animated}{match[2]}</>
+  }
+  // Non-numeric string (e.g. "N/A", "—") — render as-is
+  return <>{value}</>
+}
 
 // ─── Shared stat card with optional sparkline ──────────────────
 function StatCard({ icon, label, value, color = 'primary', spark }: {
@@ -42,7 +60,7 @@ function StatCard({ icon, label, value, color = 'primary', spark }: {
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color] || colors.primary}`}>{icon}</div>
         <div className="flex-1 min-w-0">
-          <p className="text-2xl font-bold text-stone-900">{value}</p>
+          <p className="text-2xl font-bold text-stone-900"><AnimatedValue value={value} /></p>
           <p className="text-xs text-stone-500">{label}</p>
         </div>
         {spark && spark.length > 1 && (
