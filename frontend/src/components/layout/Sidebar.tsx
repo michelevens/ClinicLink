@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
-  BarChart3, FileBarChart, KeyRound, Map
+  BarChart3, FileBarChart, KeyRound, Map, ChevronDown
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
@@ -16,40 +16,93 @@ interface NavItem {
   path: string
   icon: React.ReactNode
   roles: UserRole[]
+  group?: string
 }
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
-  { label: 'Search Rotations', path: '/rotations', icon: <Search className="w-5 h-5" />, roles: ['student'] },
-  { label: 'My Applications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'] },
-  { label: 'Hour Log', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'] },
-  { label: 'Evaluations', path: '/evaluations', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['student', 'preceptor'] },
-  { label: 'Certificates', path: '/certificates', icon: <Award className="w-5 h-5" />, roles: ['student', 'preceptor', 'coordinator', 'admin'] },
-  { label: 'CE Credits', path: '/ce-credits', icon: <BadgeCheck className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'admin'] },
-  { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'] },
-  { label: 'Agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
-  { label: 'Eval Templates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
-  { label: 'Compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'] },
-  { label: 'My Site', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'] },
-  { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'] },
-  { label: 'Preceptors', path: '/preceptors', icon: <UserCheck className="w-5 h-5" />, roles: ['site_manager'] },
-  { label: 'Applications', path: '/site-applications', icon: <FileText className="w-5 h-5" />, roles: ['site_manager', 'admin'] },
-  { label: 'My Students', path: '/students', icon: <Users className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'professor'] },
-  { label: 'My University', path: '/programs', icon: <BookOpen className="w-5 h-5" />, roles: ['coordinator'] },
-  { label: 'Placements', path: '/placements', icon: <GraduationCap className="w-5 h-5" />, roles: ['coordinator', 'professor'] },
-  { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
-  { label: 'Sites Map', path: '/sites-map', icon: <Map className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
-  { label: 'Universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['admin'] },
-  { label: 'All Users', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'] },
-  { label: 'License Codes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'] },
-  { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'] },
-  { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'] },
+  { label: 'Search Rotations', path: '/rotations', icon: <Search className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
+  { label: 'My Applications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
+  { label: 'Hour Log', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
+  { label: 'Evaluations', path: '/evaluations', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
+  { label: 'Certificates', path: '/certificates', icon: <Award className="w-5 h-5" />, roles: ['student', 'preceptor', 'coordinator', 'admin'], group: 'Credentials' },
+  { label: 'CE Credits', path: '/ce-credits', icon: <BadgeCheck className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'admin'], group: 'Credentials' },
+  { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'], group: 'Clinical' },
+  { label: 'Agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Academic' },
+  { label: 'Eval Templates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Credentials' },
+  { label: 'Compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'Credentials' },
+  { label: 'My Site', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
+  { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
+  { label: 'Preceptors', path: '/preceptors', icon: <UserCheck className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
+  { label: 'Applications', path: '/site-applications', icon: <FileText className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
+  { label: 'My Students', path: '/students', icon: <Users className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'professor'], group: 'Academic' },
+  { label: 'My University', path: '/programs', icon: <BookOpen className="w-5 h-5" />, roles: ['coordinator'], group: 'Academic' },
+  { label: 'Placements', path: '/placements', icon: <GraduationCap className="w-5 h-5" />, roles: ['coordinator', 'professor'], group: 'Academic' },
+  { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Sites' },
+  { label: 'Sites Map', path: '/sites-map', icon: <Map className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Sites' },
+  { label: 'Universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
+  { label: 'All Users', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
+  { label: 'License Codes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
+  { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Admin' },
+  { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Admin' },
 ]
+
+const GROUP_ORDER = ['Clinical', 'Credentials', 'Sites', 'Academic', 'Admin']
+
+function SidebarSection({ label, items, location, pendingSigCount, collapsed, onToggle }: {
+  label: string; items: NavItem[]; location: ReturnType<typeof useLocation>
+  pendingSigCount: number; collapsed: boolean; onToggle: () => void
+}) {
+  const hasActive = items.some(i => location.pathname === i.path)
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className={`flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${
+          hasActive ? 'text-primary-600' : 'text-stone-400 hover:text-stone-600'
+        }`}
+      >
+        {label}
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`} />
+      </button>
+      <div className={`overflow-hidden transition-all duration-200 ${collapsed ? 'max-h-0' : 'max-h-[500px]'}`}>
+        <div className="mt-0.5 space-y-0.5">
+          {items.map(item => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  isActive || location.pathname === item.path
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                }`
+              }
+            >
+              {item.icon}
+              <span className="flex-1">{item.label}</span>
+              {item.path === '/agreements' && pendingSigCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">
+                  {pendingSigCount > 9 ? '9+' : pendingSigCount}
+                </span>
+              )}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
   const { user, logout } = useAuth()
   const location = useLocation()
+
+  const toggleSection = (group: string) => {
+    setCollapsedSections(prev => ({ ...prev, [group]: !prev[group] }))
+  }
 
   useEffect(() => {
     setMobileOpen(false)
@@ -67,6 +120,10 @@ export function Sidebar() {
   const { data: pendingSigs } = useMyPendingSignatures()
   const pendingSigCount = pendingSigs?.data?.length ?? 0
   const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
+  const ungrouped = filteredItems.filter(i => !i.group)
+  const groups = GROUP_ORDER
+    .map(g => ({ label: g, items: filteredItems.filter(i => i.group === g) }))
+    .filter(g => g.items.length > 0)
 
   const sidebarContent = (
     <>
@@ -90,27 +147,38 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
-        {filteredItems.map(item => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-lg font-medium transition-all duration-200 ${
-                isActive || location.pathname === item.path
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
-              }`
-            }
-          >
-            {item.icon}
-            <span className="flex-1">{item.label}</span>
-            {item.path === '/agreements' && pendingSigCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center" title="Pending signatures">
-                {pendingSigCount > 9 ? '9+' : pendingSigCount}
-              </span>
-            )}
-          </NavLink>
+      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-3">
+        {/* Ungrouped items (Dashboard) */}
+        <div className="space-y-0.5">
+          {ungrouped.map(item => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  isActive || location.pathname === item.path
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                }`
+              }
+            >
+              {item.icon}
+              <span className="flex-1">{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+
+        {/* Grouped sections */}
+        {groups.map(g => (
+          <SidebarSection
+            key={g.label}
+            label={g.label}
+            items={g.items}
+            location={location}
+            pendingSigCount={pendingSigCount}
+            collapsed={!!collapsedSections[g.label]}
+            onToggle={() => toggleSection(g.label)}
+          />
         ))}
       </nav>
 
