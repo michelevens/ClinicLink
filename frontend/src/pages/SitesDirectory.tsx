@@ -4,6 +4,7 @@ import { Building2, MapPin, Phone, Globe, Star, Search, Stethoscope, ChevronLeft
 import { useSites, useCreateSite, useUpdateSite, useMyJoinRequests, useCreateJoinRequest } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
+import { CardSkeleton, TableRowSkeleton } from '../components/ui/Skeleton.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
@@ -275,9 +276,21 @@ export function SitesDirectory() {
 
       {/* Sites Content */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        viewMode === 'grid' ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : (
+          <Card padding="none">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <tbody>
+                  {Array.from({ length: 6 }).map((_, i) => <TableRowSkeleton key={i} cols={5} />)}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )
       ) : sites.length === 0 ? (
         <Card>
           <div className="text-center py-12">

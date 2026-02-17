@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Card } from '../components/ui/Card.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
+import { CardSkeleton } from '../components/ui/Skeleton.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
@@ -11,7 +12,7 @@ import type { ApiEvaluationTemplate, ApiRatingScaleLevel } from '../services/api
 import { toast } from 'sonner'
 import {
   Star, Plus, ClipboardCheck, User, Calendar,
-  Building2, Loader2, ChevronDown, ChevronUp,
+  Building2, ChevronDown, ChevronUp,
   TrendingUp, Award, BarChart3, MessageSquare, Filter, Download
 } from 'lucide-react'
 
@@ -262,8 +263,13 @@ export function Evaluations() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div><div className="h-7 w-48 bg-stone-200/60 rounded-lg animate-pulse" /><div className="h-4 w-72 bg-stone-200/60 rounded-lg animate-pulse mt-2" /></div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+        </div>
       </div>
     )
   }

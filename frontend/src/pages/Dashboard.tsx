@@ -14,18 +14,11 @@ import { toast } from 'sonner'
 import {
   Search, Clock, FileText, CheckCircle, AlertCircle,
   Building2, Users, CalendarDays, TrendingUp, Star,
-  GraduationCap, ClipboardCheck, BarChart3, BookOpen, Loader2,
+  GraduationCap, ClipboardCheck, BarChart3, BookOpen,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
   UserCheck, Activity, Eye, Settings, ChevronRight, Plus,
 } from 'lucide-react'
-
-function LoadingSpinner() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-    </div>
-  )
-}
+import { PageSkeleton } from '../components/ui/Skeleton.tsx'
 
 // ─── Shared stat card with optional sparkline ──────────────────
 function StatCard({ icon, label, value, color = 'primary', spark }: {
@@ -192,7 +185,7 @@ function StudentDashboard() {
     return sorted.map((_, i) => i + 1)
   }, [applications])
 
-  if (statsLoading) return <LoadingSpinner />
+  if (statsLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -376,7 +369,7 @@ function SiteManagerDashboard() {
   const openSlots = slots.filter(s => s.status === 'open')
   const sites = sitesData?.sites || []
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -526,7 +519,7 @@ function PreceptorDashboard() {
     }
   }
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -718,7 +711,7 @@ function CoordinatorDashboard() {
   const unplacedStudents = Math.max(totalStudents - placedStudents, 0)
   const placementRate = totalStudents > 0 ? Math.round((placedStudents / totalStudents) * 100) : 0
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -834,7 +827,7 @@ function ProfessorDashboard() {
   const placedStudents = stats?.active_placements || activeStudents.length
   const unplacedStudents = Math.max(totalStudents - placedStudents, 0)
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -949,7 +942,7 @@ function AdminDashboard() {
   const openSlots = slots.filter(s => s.status === 'open').length
   const pendingApps = applications.filter(a => a.status === 'pending').length
 
-  if (isLoading) return <LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">

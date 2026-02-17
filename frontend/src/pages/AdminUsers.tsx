@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useAdminUsers, useUpdateUser, useDeleteUser, useCreateUser, useBulkInviteUsers, useUniversities, useSites } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
+import { TableRowSkeleton } from '../components/ui/Skeleton.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
@@ -105,9 +106,15 @@ export function AdminUsers() {
 
       {/* Users Table */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-        </div>
+        <Card padding="none">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <tbody>
+                {Array.from({ length: 8 }).map((_, i) => <TableRowSkeleton key={i} cols={6} />)}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       ) : users.length === 0 ? (
         <Card>
           <EmptyState

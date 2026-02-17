@@ -10,11 +10,12 @@ import { toast } from 'sonner'
 import {
   Search, Clock, FileText, CheckCircle, AlertCircle,
   Building2, Users, CalendarDays, TrendingUp, Star,
-  GraduationCap, ClipboardCheck, BarChart3, BookOpen, Loader2,
+  GraduationCap, ClipboardCheck, BarChart3, BookOpen,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
   UserCheck, Activity, Eye, Settings, Plus,
   Target,
 } from 'lucide-react'
+import { PageSkeleton } from '../components/ui/Skeleton.tsx'
 
 // ─── V2 Design Primitives (Light Theme) ─────────────────────
 function V2Card({ children, className = '' }: {
@@ -108,13 +109,6 @@ function V2QuickAction({ icon, label, onClick, color = 'indigo' }: {
   )
 }
 
-function V2LoadingSpinner() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-    </div>
-  )
-}
 
 function V2ActionBanner({ items }: {
   items: { label: string; count: number; onClick: () => void; buttonLabel: string }[]
@@ -180,7 +174,7 @@ function StudentDashboardV2() {
   const expiredCreds = credentials.filter((c) => c.status === 'expired')
   const expiringSoonCreds = credentials.filter((c) => c.status === 'expiring_soon')
 
-  if (statsLoading) return <V2LoadingSpinner />
+  if (statsLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -376,7 +370,7 @@ function SiteManagerDashboardV2() {
   const openSlots = slots.filter((s) => s.status === 'open')
   const sites = sitesData?.sites || []
 
-  if (isLoading) return <V2LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -490,7 +484,7 @@ function PreceptorDashboardV2() {
     }
   }
 
-  if (isLoading) return <V2LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -598,7 +592,7 @@ function CoordinatorDashboardV2() {
   const unplacedStudents = Math.max(totalStudents - placedStudents, 0)
   const placementRate = totalStudents > 0 ? Math.round((placedStudents / totalStudents) * 100) : 0
 
-  if (isLoading) return <V2LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -701,7 +695,7 @@ function ProfessorDashboardV2() {
   const totalStudents = stats?.total_students || 0
   const unplacedStudents = Math.max(totalStudents - (stats?.active_placements || activeStudents.length), 0)
 
-  if (isLoading) return <V2LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
@@ -807,7 +801,7 @@ function AdminDashboardV2() {
   const openSlots = slots.filter((s) => s.status === 'open').length
   const pendingApps = applications.filter((a) => a.status === 'pending').length
 
-  if (isLoading) return <V2LoadingSpinner />
+  if (isLoading) return <PageSkeleton />
 
   return (
     <div className="space-y-6">
