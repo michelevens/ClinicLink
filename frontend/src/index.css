@@ -59,8 +59,8 @@
     @apply transition-all duration-300;
   }
   .hover-lift:hover {
-    @apply -translate-y-0.5;
-    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    @apply -translate-y-1;
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(99, 102, 241, 0.08);
   }
 }
 

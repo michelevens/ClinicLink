@@ -38,7 +38,7 @@ function StatCard({ icon, label, value, color = 'primary', spark }: {
     amber: '#f59e0b', red: '#ef4444', accent: '#f97316',
   }
   return (
-    <Card>
+    <Card hover>
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color] || colors.primary}`}>{icon}</div>
         <div className="flex-1 min-w-0">

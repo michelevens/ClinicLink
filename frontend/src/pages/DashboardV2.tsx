@@ -22,7 +22,7 @@ function V2Card({ children, className = '' }: {
   children: React.ReactNode; className?: string; glow?: string
 }) {
   return (
-    <div className={`bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${className}`}>
+    <div className={`bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ${className}`}>
       {children}
     </div>
   )
