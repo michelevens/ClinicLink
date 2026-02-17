@@ -23,8 +23,14 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-stone-50">
         <Sidebar />
         <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+          {/* Sticky top bar — stays visible while scrolling */}
+          <div className="sticky top-14 lg:top-0 z-20 bg-stone-50/95 backdrop-blur-sm border-b border-stone-100">
+            <div className="px-4 sm:px-6 max-w-7xl mx-auto py-2">
+              <TopBar />
+            </div>
+          </div>
+          {/* Page content */}
           <div className="p-4 sm:p-6 max-w-7xl mx-auto">
-            <TopBar />
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

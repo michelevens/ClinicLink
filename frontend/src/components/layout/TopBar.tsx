@@ -22,7 +22,7 @@ export function TopBar() {
   if (!user) return null
 
   return (
-    <div className="flex items-center justify-end gap-1.5 mb-4">
+    <div className="flex items-center justify-end gap-1.5">
       {/* Messages */}
       <NavLink
         to="/messages"
