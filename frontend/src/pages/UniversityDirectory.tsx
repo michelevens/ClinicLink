@@ -10,6 +10,7 @@ import { Modal } from '../components/ui/Modal.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { toast } from 'sonner'
 import type { ApiUniversity, ApiProgram } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const STATES = [
   { value: 'FL', label: 'Florida' },
@@ -58,6 +59,7 @@ const emptyForm = { name: '', address: '', city: '', state: '', zip: '', phone: 
 const DEGREE_TYPES = ['BSN', 'MSN', 'DNP', 'PA', 'NP', 'DPT', 'OTD', 'MSW', 'PharmD', 'other'] as const
 
 export function UniversityDirectory() {
+  usePageTitle('Universities')
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const isCoordinator = user?.role === 'coordinator'

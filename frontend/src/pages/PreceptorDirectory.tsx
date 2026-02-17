@@ -4,10 +4,12 @@ import { Search, UserSearch, Trophy, ChevronDown, ChevronUp } from 'lucide-react
 import { usePreceptorDirectory, usePreceptorLeaderboard } from '../hooks/useApi.ts'
 import { PreceptorProfileCard } from '../components/preceptor/PreceptorProfileCard.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const SPECIALTIES = ['Family Medicine', 'Internal Medicine', 'Pediatrics', 'OB/GYN', 'Psychiatry', 'Surgery', 'Emergency Medicine', 'Cardiology', 'Dermatology', 'Neurology', 'Oncology', 'Orthopedics', 'Radiology', 'Anesthesiology', 'Geriatrics', 'Other']
 
 export function PreceptorDirectory() {
+  usePageTitle('Preceptor Directory')
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [specialty, setSpecialty] = useState('')

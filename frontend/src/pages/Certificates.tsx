@@ -8,8 +8,10 @@ import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import type { ApiCertificate, ApiApplication } from '../services/api.ts'
 import { certificatesApi } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function Certificates() {
+  usePageTitle('Certificates')
   const { user } = useAuth()
   const isStudent = user?.role === 'student'
   const isPreceptor = user?.role === 'preceptor' || user?.role === 'site_manager'

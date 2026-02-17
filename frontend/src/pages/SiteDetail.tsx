@@ -12,6 +12,7 @@ import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
   open: 'success', filled: 'warning', closed: 'default',
@@ -20,6 +21,7 @@ const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'default'
 }
 
 export function SiteDetail() {
+  usePageTitle('Site Details')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user: currentUser } = useAuth()

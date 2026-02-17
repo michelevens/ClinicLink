@@ -10,8 +10,10 @@ import { Button } from '../components/ui/Button.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { BulkImportModal } from '../components/student/BulkImportModal.tsx'
 import type { ApiMyStudent } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function MyStudents() {
+  usePageTitle('My Students')
   const { user } = useAuth()
   const navigate = useNavigate()
   const isPreceptor = user?.role === 'preceptor' || user?.role === 'site_manager'

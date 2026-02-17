@@ -4,10 +4,12 @@ import { useApplications } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import type { ApiApplication } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 type PlacementTab = 'active' | 'pending' | 'completed'
 
 export function Placements() {
+  usePageTitle('Placements')
   const { data, isLoading } = useApplications()
   const applications = data?.data || []
 

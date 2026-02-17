@@ -13,8 +13,10 @@ import {
   CheckCircle2, AlertTriangle, Info
 } from 'lucide-react'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function SiteApplications() {
+  usePageTitle('Site Applications')
   const [statusFilter, setStatusFilter] = useState('all')
   const [reviewModal, setReviewModal] = useState<ApiApplication | null>(null)
   const [reviewAction, setReviewAction] = useState<'accepted' | 'declined' | 'waitlisted'>('accepted')

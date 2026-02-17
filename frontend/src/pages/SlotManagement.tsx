@@ -13,6 +13,7 @@ import {
   Clock, Building2, Loader2, Search, DollarSign, User
 } from 'lucide-react'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const SPECIALTIES = [
   'Emergency Medicine', 'Family Practice', 'Internal Medicine', 'Pediatrics',
@@ -37,6 +38,7 @@ const EMPTY_FORM = {
 }
 
 export function SlotManagement() {
+  usePageTitle('Rotation Slots')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)

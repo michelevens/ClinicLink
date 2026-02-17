@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
@@ -229,6 +230,7 @@ function injectStyles() {
    ───────────────────────────────────────── */
 
 export function Onboarding() {
+  usePageTitle('Welcome')
   const { user, completeOnboarding } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(0)

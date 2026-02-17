@@ -9,6 +9,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import { useCalendarEvents } from '../hooks/useApi.ts'
 import type { CalendarEvent } from '../services/api.ts'
 import type { DatesSetArg, EventClickArg } from '@fullcalendar/core'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const EVENT_TYPES = [
   { key: 'rotation', label: 'Rotations', color: '#3b82f6' },
@@ -19,6 +20,7 @@ const EVENT_TYPES = [
 ] as const
 
 export function Calendar() {
+  usePageTitle('Calendar')
   const navigate = useNavigate()
   const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null)
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())

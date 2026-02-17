@@ -8,8 +8,10 @@ import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { toast } from 'sonner'
 import type { ApiSite } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function MySite() {
+  usePageTitle('My Sites')
   const { user } = useAuth()
   const isPreceptor = user?.role === 'preceptor'
   const { data, isLoading } = useMySites()

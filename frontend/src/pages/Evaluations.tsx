@@ -27,10 +27,13 @@ const RATING_CATEGORIES = [
   { key: 'documentation', label: 'Documentation' },
 ]
 
+import { usePageTitle } from '../hooks/usePageTitle.ts'
+
 type ViewTab = 'list' | 'summary'
 type TypeFilter = 'all' | 'mid_rotation' | 'final' | 'student_feedback'
 
 export function Evaluations() {
+  usePageTitle('Evaluations')
   const { user } = useAuth()
   const [showCreate, setShowCreate] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)

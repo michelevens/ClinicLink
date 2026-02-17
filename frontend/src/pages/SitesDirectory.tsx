@@ -11,6 +11,7 @@ import { Modal } from '../components/ui/Modal.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { toast } from 'sonner'
 import { sitesApi, siteInvitesApi, type ApiSite } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const emptySiteForm = {
   name: '', address: '', city: '', state: '', zip: '', phone: '',
@@ -18,6 +19,7 @@ const emptySiteForm = {
 }
 
 export function SitesDirectory() {
+  usePageTitle('Sites Directory')
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const isSiteManager = user?.role === 'site_manager'

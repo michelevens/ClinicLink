@@ -12,8 +12,10 @@ import {
   ChevronRight, Sparkles, MapPin, Calendar, Phone, Mail, ExternalLink
 } from 'lucide-react'
 import type { UserRole } from '../types/index.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function LandingPage() {
+  usePageTitle('Home')
   const navigate = useNavigate()
   const { demoLogin } = useAuth()
   const { data: slotsData } = useSlots({ status: 'open' })

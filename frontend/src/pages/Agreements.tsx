@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import { SignatureCanvas } from '../components/ui/SignatureCanvas.tsx'
 import { toast } from 'sonner'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'secondary' }> = {
   draft: { label: 'Draft', variant: 'default' },
@@ -280,6 +281,7 @@ function SignaturePanel({ agreement }: { agreement: ApiAgreement }) {
 
 // --- Main Agreements Page ---
 export function Agreements() {
+  usePageTitle('Agreements')
   const { user } = useAuth()
   const canCreate = user?.role === 'coordinator' || user?.role === 'site_manager' || user?.role === 'admin'
   const canManage = user?.role === 'site_manager' || user?.role === 'admin'

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useSubscriptionCheckout, useSubscriptionStatus } from '../hooks/useApi.ts'
 import {
@@ -196,6 +197,7 @@ function PlanCard({ plan, onSubscribe, subscribing }: {
 }
 
 export function Pricing() {
+  usePageTitle('Pricing')
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
   const checkout = useSubscriptionCheckout()

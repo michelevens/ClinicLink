@@ -10,6 +10,7 @@ import { universitiesApi } from '../services/api.ts'
 import type { ApiProgram } from '../services/api.ts'
 import { toast } from 'sonner'
 import { QRCodeSVG } from 'qrcode.react'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import {
   User, Shield, Bell, GraduationCap, FileCheck,
   Mail, Phone, Save, Loader2, Trash2, Plus, Calendar,
@@ -40,6 +41,7 @@ const SPECIALTIES = [
 ]
 
 export function Settings() {
+  usePageTitle('Settings')
   const { user } = useAuth()
   // Support URL params for Stripe Connect callback (e.g., ?tab=payments&connected=1)
   const urlParams = new URLSearchParams(window.location.search)

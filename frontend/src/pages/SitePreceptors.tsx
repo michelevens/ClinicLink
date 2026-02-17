@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { useSitePreceptors, useSiteInvites, useCreateInvite, useBulkCreateInvites, useResendInvite, useRevokeInvite, useMySites, useSiteJoinRequests, useApproveJoinRequest, useDenyJoinRequest } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import {
   User, Mail, Phone, Calendar, Stethoscope, Loader2, UserX,
   Link2, Copy, Plus, Trash2, CheckCircle, Clock,
@@ -39,6 +40,7 @@ Join us and see how ClinicLink can simplify your workflow. Click the link below 
 ]
 
 export function SitePreceptors() {
+  usePageTitle('Site Preceptors')
   const { data, isLoading } = useSitePreceptors()
   const { data: invitesData } = useSiteInvites()
   const { data: sitesData } = useMySites()

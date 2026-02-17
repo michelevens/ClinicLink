@@ -15,10 +15,12 @@ import {
   Eye, Shield, BookOpen
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 type StatusFilter = 'all' | 'pending' | 'accepted' | 'declined' | 'waitlisted' | 'withdrawn'
 
 export function Applications() {
+  usePageTitle('My Applications')
   const navigate = useNavigate()
   const { data, isLoading } = useApplications()
   const withdrawMutation = useWithdrawApplication()

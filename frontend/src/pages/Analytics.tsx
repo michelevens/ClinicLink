@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { useAnalyticsSummary, usePlatformAnalytics, useUniversityAnalytics, useSiteAnalytics, useSpecialtyDemand, useMySites } from '../hooks/useApi.ts'
 import { MetricCard, PlacementTrendChart, SpecialtyDemandChart, PlacementFunnelChart, GeoDemandTable } from '../components/analytics/AnalyticsCharts.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 type Period = '7d' | '30d' | '90d' | '12m'
 
@@ -18,6 +19,7 @@ function periodDates(period: Period) {
 }
 
 export function Analytics() {
+  usePageTitle('Analytics')
   const { user } = useAuth()
   const [period, setPeriod] = useState<Period>('30d')
   const [tab, setTab] = useState<'platform' | 'university' | 'site'>('platform')

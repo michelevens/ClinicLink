@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Loader2, GripVertical, X, Copy, Eye, ChevronDown, ChevronRight } from 'lucide-react'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
 import type { ApiEvaluationTemplate, ApiRatingScaleLevel } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const PRESET_CATEGORIES = [
   'Clinical Skills',
@@ -85,6 +86,7 @@ interface CategoryForm {
 }
 
 export function EvaluationTemplates() {
+  usePageTitle('Evaluation Templates')
   const [selectedUni, setSelectedUni] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const { data: templates, isLoading } = useEvaluationTemplates({

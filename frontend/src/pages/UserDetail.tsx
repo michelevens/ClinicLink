@@ -16,6 +16,7 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import type { ApiUser, AdminUserStats, ApiProgram } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const ROLES = ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] as const
 const ROLE_LABELS: Record<string, string> = {
@@ -40,6 +41,7 @@ const BADGE_LABELS: Record<string, { label: string; color: string }> = {
 }
 
 export function UserDetail() {
+  usePageTitle('User Details')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data, isLoading, error } = useAdminUser(id!)

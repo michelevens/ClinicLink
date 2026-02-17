@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useAnimatedCounter } from '../hooks/useAnimatedCounter.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -1089,6 +1090,7 @@ function AdminDashboard() {
 // MAIN DASHBOARD ROUTER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export function Dashboard() {
+  usePageTitle('Dashboard')
   const { user } = useAuth()
   if (!user) return null
 

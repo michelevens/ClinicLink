@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import type { UserRole } from '../types/index.ts'
 import { universitiesApi, sitesApi, api } from '../services/api.ts'
 import type { ApiProgram } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const ROLE_OPTIONS: { value: UserRole; label: string; desc: string }[] = [
   { value: 'student', label: 'Student', desc: 'I need clinical rotation hours' },
@@ -56,6 +57,7 @@ function getPasswordStrength(pw: string): { score: number; label: string; color:
 }
 
 export function RegisterPage() {
+  usePageTitle('Create Account')
   const [searchParams] = useSearchParams()
   const prefillEmail = searchParams.get('email') || ''
   const prefillRole = (searchParams.get('role') as UserRole) || 'student'

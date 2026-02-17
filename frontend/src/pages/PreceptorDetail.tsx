@@ -11,6 +11,7 @@ import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const BADGE_INFO: Record<string, { label: string; color: string; icon: React.ReactNode; description: string }> = {
   mentor_bronze: { label: 'Bronze Mentor', color: 'bg-amber-100 text-amber-700', icon: <Award className="w-4 h-4" />, description: '5+ students mentored' },
@@ -35,6 +36,7 @@ const CATEGORY_LABELS: Record<string, { label: string; icon: React.ReactNode }> 
 }
 
 export function PreceptorDetail() {
+  usePageTitle('Preceptor Profile')
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const [showAllReviews, setShowAllReviews] = useState(false)

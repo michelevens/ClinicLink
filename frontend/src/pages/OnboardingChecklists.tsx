@@ -13,6 +13,7 @@ import {
 import type { ApiOnboardingTemplate, ApiOnboardingTask, ApiApplication } from '../services/api.ts'
 import { onboardingTasksApi } from '../services/api.ts'
 import { toast } from 'sonner'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import {
   ClipboardList, Plus, Trash2, Edit3, CheckCircle, Circle,
   Shield, ChevronDown, ChevronUp, Loader2, Inbox, GripVertical,
@@ -627,6 +628,7 @@ function StudentOnboardingView() {
 // ─── Main Page ────────────────────────────────────────────────────────
 
 export function OnboardingChecklists() {
+  usePageTitle('Onboarding Checklists')
   const { user } = useAuth()
   const isSiteManager = user?.role === 'site_manager' || user?.role === 'admin'
   const [tab, setTab] = useState<'templates' | 'progress'>('templates')

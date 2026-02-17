@@ -6,8 +6,10 @@ import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { Stethoscope, User, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react'
 import { toast } from 'sonner'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function LoginPage() {
+  usePageTitle('Sign In')
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)

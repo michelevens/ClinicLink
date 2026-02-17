@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { useAccreditationReports, useGenerateReport, useDeleteReport } from '../hooks/useApi.ts'
 import { accreditationReportsApi } from '../services/api.ts'
 import type { ApiAccreditationReport } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const REPORT_TYPES: { value: string; label: string }[] = [
   { value: 'annual_summary', label: 'Annual Summary' },
@@ -25,6 +26,7 @@ function statusBadge(status: string) {
 }
 
 export function AccreditationReports() {
+  usePageTitle('Accreditation Reports')
   const { user } = useAuth()
   const [page, setPage] = useState(1)
   const [showModal, setShowModal] = useState(false)

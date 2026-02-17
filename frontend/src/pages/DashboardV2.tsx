@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { useNavigate } from 'react-router-dom'
 import {
   useDashboardStats, useApplications, useHourLogs,
@@ -918,6 +919,7 @@ function AdminDashboardV2() {
 // MAIN DASHBOARD V2 ROUTER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export function DashboardV2() {
+  usePageTitle('Dashboard')
   const { user } = useAuth()
   if (!user) return null
 

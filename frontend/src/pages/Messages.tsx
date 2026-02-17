@@ -6,8 +6,10 @@ import { MessageThread } from '../components/messages/MessageThread.tsx'
 import { NewConversationModal } from '../components/messages/NewConversationModal.tsx'
 import { BroadcastModal } from '../components/messages/BroadcastModal.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function Messages() {
+  usePageTitle('Messages')
   const { id: conversationId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()

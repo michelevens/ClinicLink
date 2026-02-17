@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -65,6 +66,7 @@ function RotationMapUpdater({ center, zoom }: { center: [number, number]; zoom: 
 }
 
 export function RotationSearch() {
+  usePageTitle('Search Rotations')
   const { isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')

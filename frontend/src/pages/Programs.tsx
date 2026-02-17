@@ -17,6 +17,7 @@ import { api } from '../services/api.ts'
 import type { ApiUniversity, ApiProgram, ApiMyStudent, ApiLicenseCode, ApiStudentInvite } from '../services/api.ts'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const DEGREE_TYPES = ['BSN', 'MSN', 'DNP', 'PA', 'NP', 'DPT', 'OTD', 'MSW', 'PharmD', 'other'] as const
 
@@ -41,6 +42,7 @@ function useUniversityPrograms(id: string) {
 }
 
 export function Programs() {
+  usePageTitle('My University')
   const { user } = useAuth()
   const isCoordinator = user?.role === 'coordinator'
   const coordUniversityId = user?.universityId || null

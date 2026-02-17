@@ -9,6 +9,7 @@ import { Card } from '../components/ui/Card.tsx'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const STATUS_COLORS: Record<string, 'success' | 'warning' | 'danger' | 'default'> = {
   active: 'success', draft: 'default', pending_review: 'warning', expired: 'danger', terminated: 'danger',
@@ -21,6 +22,7 @@ const DEGREE_COLORS: Record<string, string> = {
 }
 
 export function UniversityDetail() {
+  usePageTitle('University Details')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: university, isLoading } = useUniversity(id!)

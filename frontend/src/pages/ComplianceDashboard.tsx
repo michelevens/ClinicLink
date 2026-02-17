@@ -7,6 +7,7 @@ import { exportsApi } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const STATUS_ICONS = {
   compliant: { icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50', label: 'Compliant' },
@@ -520,6 +521,7 @@ function StudentView() {
 
 // --- Main Component ---
 export function ComplianceDashboard() {
+  usePageTitle('Compliance')
   const { user } = useAuth()
   const [showExportMenu, setShowExportMenu] = useState(false)
 

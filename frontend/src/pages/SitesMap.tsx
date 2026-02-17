@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import type { ApiSite } from '../services/api.ts'
 import 'leaflet/dist/leaflet.css'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 // US state centroid coordinates for approximate site placement
 const STATE_COORDS: Record<string, [number, number]> = {
@@ -71,6 +72,7 @@ const SPECIALTIES = [
 ]
 
 export function SitesMap() {
+  usePageTitle('Sites Map')
   const { user } = useAuth()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')

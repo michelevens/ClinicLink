@@ -15,6 +15,7 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
 import type { ApiUser } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const ROLES = ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] as const
 const ROLE_LABELS: Record<string, string> = {
@@ -27,6 +28,7 @@ const ROLE_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'danger' |
 }
 
 export function AdminUsers() {
+  usePageTitle('User Management')
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')

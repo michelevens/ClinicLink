@@ -13,8 +13,10 @@ import {
   ChevronDown, ChevronUp, Shield, History, Ban, Eye, Hash,
   CalendarRange, User,
 } from 'lucide-react'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function CeCredits() {
+  usePageTitle('CE Credits')
   const { user } = useAuth()
 
   if (user?.role === 'preceptor') return <PreceptorCeView />

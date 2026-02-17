@@ -15,11 +15,13 @@ import {
   TrendingUp, Eye, Filter, BarChart3, XCircle, User,
   ClipboardCheck, Download
 } from 'lucide-react'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 type ViewTab = 'all' | 'by-rotation' | 'summary'
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected'
 
 export function HourLog() {
+  usePageTitle('Hour Log')
   const { user } = useAuth()
   const isPreceptor = user?.role === 'preceptor' || user?.role === 'site_manager'
 

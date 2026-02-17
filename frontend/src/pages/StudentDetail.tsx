@@ -12,8 +12,10 @@ import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function StudentDetail() {
+  usePageTitle('Student Details')
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()

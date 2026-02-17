@@ -8,8 +8,10 @@ import { toast } from 'sonner'
 import { useLicenseCodes, useCreateLicenseCode, useDeactivateLicenseCode } from '../hooks/useApi.ts'
 import { universitiesApi } from '../services/api.ts'
 import type { ApiLicenseCode } from '../services/api.ts'
+import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 export function LicenseCodes() {
+  usePageTitle('License Codes')
   const [universityFilter, setUniversityFilter] = useState('')
   const [page, setPage] = useState(1)
   const [showCreateModal, setShowCreateModal] = useState(false)
