@@ -416,11 +416,32 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
-## Phase 3.4: Intelligence & Advanced Features — NEXT
-- Preceptor management and recognition system
-- Smart matching algorithm (student prefs × site requirements)
+## Phase 3.4: Intelligence & Polish ✅ COMPLETE
+**Goal:** Bug fixes, security hardening, and polish across messaging, matching, and document systems
+
+### Messaging Improvements
+- Conversation list polling (15s auto-refresh) for near-real-time updates
+- Message pagination with "Load more messages" button (was limited to first 50)
+- Wired broadcast programs prop — coordinators now see "By Program" audience option
+
+### Smart Matching Algorithm Fixes
+- **Fixed API response key mismatch** — backend returned `results`, frontend expected `matches`
+- **Fixed N+1 query** — preceptor ratings now bulk-fetched instead of queried per slot
+- **Fixed city scoring bug** — city-only match was unreachable; now separate boolean tracking for state/city
+- **Added clinical interests** as secondary specialty signal (exact match=25pts, partial=15pts)
+
+### Document & Report Security Fixes
+- **Accreditation report download auth** — added token-based auth + university authorization check (was unauthenticated)
+- **Compliance export site validation** — site managers can no longer pass arbitrary site_id to export other sites' data
+- **Report preview modal** — new PreviewModal component for data visualization before PDF download
+- **Generate modal UX** — auto-populates university_id from user profile, fixed API payload structure (was sending nested params)
+
+---
+
+## Phase 3.5: Scale & Advanced Features — NEXT
+- Multi-discipline expansion (nursing, PA, NP, PT, OT, social work, pharmacy, MD)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)
-- Accreditation-ready report generation
+- Preceptor management and recognition system
 
 ---
 
@@ -449,7 +470,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Scheduled Jobs | Laravel Scheduler (5 daily commands) | ✅ |
 | Search | Algolia / Meilisearch | Planned |
 | Maps | Google Maps / Mapbox | Planned |
-| Payments | Stripe Connect | Planned |
+| Payments | Stripe Connect | ✅ |
 | Calendar | FullCalendar (6 packages) | ✅ |
 | Real-time | Polling (10s threads, 30s notifications) | ✅ |
 | Mobile | React Native | Planned |

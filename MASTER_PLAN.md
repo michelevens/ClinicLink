@@ -838,11 +838,13 @@ PRIORITY 5 — TRUST & IMMUTABILITY (Weeks 19-24)
 
 PRIORITY 6 — INTELLIGENCE (Weeks 25-32)
 ════════════════════════════════════════
-□ Smart matching algorithm
+✅ Smart matching algorithm (7-dimension scoring: specialty, location, cost, schedule, preceptor rating, date range, availability)
+✅ In-app messaging with polling, pagination, broadcasts
+✅ Accreditation report generator (5 report types with PDF + preview)
+✅ CSV/PDF exports (hour logs, evaluations, compliance)
 □ Recommendation engine
 □ Analytics dashboards (placement rates, trends)
 □ Demand heat maps
-□ Accreditation report generator
 
 PRIORITY 7 — MOBILE & SCALE (Weeks 33-44)
 ══════════════════════════════════════════
