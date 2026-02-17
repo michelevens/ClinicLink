@@ -39,10 +39,25 @@ class MatchingService
         }
 
         $slots = $query->get();
+
+        // Pre-fetch preceptor ratings in bulk to avoid N+1
+        $preceptorIds = $slots->pluck('preceptor_id')->filter()->unique()->values();
+        $preceptorRatings = [];
+        if ($preceptorIds->isNotEmpty()) {
+            $preceptorRatings = PreceptorReview::whereIn('preceptor_id', $preceptorIds)
+                ->groupBy('preceptor_id')
+                ->selectRaw('preceptor_id, AVG(overall_score) as avg_score')
+                ->pluck('avg_score', 'preceptor_id')
+                ->toArray();
+        }
+
+        // Load student clinical interests for secondary specialty matching
+        $clinicalInterests = $student->studentProfile?->clinical_interests ?? [];
+
         $results = [];
 
         foreach ($slots as $slot) {
-            $breakdown = $this->scoreSlot($slot, $prefs);
+            $breakdown = $this->scoreSlot($slot, $prefs, $preceptorRatings, $clinicalInterests);
             $total = array_sum($breakdown);
             $results[] = [
                 'slot' => $slot,
@@ -57,34 +72,53 @@ class MatchingService
         return array_slice($results, 0, $limit);
     }
 
-    private function scoreSlot(RotationSlot $slot, MatchingPreference $prefs): array
+    private function scoreSlot(RotationSlot $slot, MatchingPreference $prefs, array $preceptorRatings, array $clinicalInterests): array
     {
         return [
-            'specialty' => $this->scoreSpecialty($slot, $prefs),
+            'specialty' => $this->scoreSpecialty($slot, $prefs, $clinicalInterests),
             'location' => $this->scoreLocation($slot, $prefs),
             'cost' => $this->scoreCost($slot, $prefs),
             'schedule' => $this->scoreSchedule($slot, $prefs),
-            'preceptor_rating' => $this->scorePreceptorRating($slot, $prefs),
+            'preceptor_rating' => $this->scorePreceptorRating($slot, $prefs, $preceptorRatings),
             'date_range' => $this->scoreDateRange($slot, $prefs),
             'availability' => $this->scoreAvailability($slot),
         ];
     }
 
-    private function scoreSpecialty(RotationSlot $slot, MatchingPreference $prefs): float
+    private function scoreSpecialty(RotationSlot $slot, MatchingPreference $prefs, array $clinicalInterests): float
     {
         $preferred = $prefs->preferred_specialties ?? [];
-        if (empty($preferred)) return 15; // neutral
-
         $slotSpecialty = strtolower($slot->specialty ?? '');
-        foreach ($preferred as $pref) {
-            if (strtolower($pref) === $slotSpecialty) return 30;
-        }
-        foreach ($preferred as $pref) {
-            if (str_contains($slotSpecialty, strtolower($pref)) || str_contains(strtolower($pref), $slotSpecialty)) {
-                return 15;
+
+        // No preferences set: use clinical interests as fallback
+        if (empty($preferred) && empty($clinicalInterests)) return 15; // neutral
+
+        // Check explicit preferences first (highest weight)
+        if (!empty($preferred)) {
+            foreach ($preferred as $pref) {
+                if (strtolower($pref) === $slotSpecialty) return 30;
+            }
+            foreach ($preferred as $pref) {
+                if (str_contains($slotSpecialty, strtolower($pref)) || str_contains(strtolower($pref), $slotSpecialty)) {
+                    return 20;
+                }
             }
         }
-        return 0;
+
+        // Check clinical interests as secondary signal
+        if (!empty($clinicalInterests)) {
+            foreach ($clinicalInterests as $interest) {
+                if (strtolower($interest) === $slotSpecialty) return 25;
+            }
+            foreach ($clinicalInterests as $interest) {
+                if (str_contains($slotSpecialty, strtolower($interest)) || str_contains(strtolower($interest), $slotSpecialty)) {
+                    return 15;
+                }
+            }
+        }
+
+        // No match from either source
+        return empty($preferred) ? 15 : 0; // neutral if no explicit prefs, 0 if prefs set but no match
     }
 
     private function scoreLocation(RotationSlot $slot, MatchingPreference $prefs): float
@@ -96,28 +130,34 @@ class MatchingService
         $site = $slot->site;
         if (!$site) return 0;
 
-        $score = 0;
+        $stateMatch = false;
+        $cityMatch = false;
+
         if (!empty($preferredStates)) {
             $siteState = strtolower($site->state ?? '');
             foreach ($preferredStates as $state) {
                 if (strtolower($state) === $siteState) {
-                    $score = 20;
+                    $stateMatch = true;
                     break;
                 }
             }
         }
 
-        if (!empty($preferredCities) && $score > 0) {
+        if (!empty($preferredCities)) {
             $siteCity = strtolower($site->city ?? '');
             foreach ($preferredCities as $city) {
                 if (strtolower($city) === $siteCity) {
-                    $score = 20; // already max
+                    $cityMatch = true;
                     break;
                 }
             }
         }
 
-        return min($score, 20);
+        // City + state match = full score, city only = 15, state only = 12, neither = 0
+        if ($cityMatch && $stateMatch) return 20;
+        if ($cityMatch) return 15;
+        if ($stateMatch) return 12;
+        return 0;
     }
 
     private function scoreCost(RotationSlot $slot, MatchingPreference $prefs): float
@@ -144,13 +184,12 @@ class MatchingService
         return 0;
     }
 
-    private function scorePreceptorRating(RotationSlot $slot, MatchingPreference $prefs): float
+    private function scorePreceptorRating(RotationSlot $slot, MatchingPreference $prefs, array $preceptorRatings): float
     {
         $minRating = $prefs->min_preceptor_rating;
         if (!$minRating || !$slot->preceptor_id) return 5; // neutral
 
-        $avgRating = PreceptorReview::where('preceptor_id', $slot->preceptor_id)
-            ->avg('overall_score');
+        $avgRating = $preceptorRatings[$slot->preceptor_id] ?? null;
 
         if (!$avgRating) return 5; // no reviews, neutral
 

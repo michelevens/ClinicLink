@@ -92,6 +92,6 @@ class MatchingController extends Controller
             ];
         }, $results);
 
-        return response()->json(['results' => $formatted]);
+        return response()->json(['matches' => $formatted]);
     }
 }
