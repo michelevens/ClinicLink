@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { useMyPendingSignatures } from '../../hooks/useApi.ts'
 import { DesignToggle } from '../ui/DesignToggle.tsx'
+import { ThemeToggle } from '../ui/ThemeToggle.tsx'
 import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
@@ -59,7 +60,7 @@ function SidebarSection({ label, items, location, pendingSigCount, collapsed, on
       <button
         onClick={onToggle}
         className={`flex items-center justify-between w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors ${
-          hasActive ? 'text-primary-600' : 'text-stone-400 hover:text-stone-600'
+          hasActive ? 'text-primary-600 dark:text-primary-400' : 'text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300'
         }`}
       >
         {label}
@@ -74,8 +75,8 @@ function SidebarSection({ label, items, location, pendingSigCount, collapsed, on
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive || location.pathname === item.path
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-700/50 dark:hover:text-stone-200'
                 }`
               }
             >
@@ -128,7 +129,7 @@ export function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-stone-200">
+      <div className="h-16 flex items-center justify-between px-4 border-b border-stone-200 dark:border-stone-700">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
             <Stethoscope className="w-5 h-5 text-white" />
@@ -137,10 +138,11 @@ export function Sidebar() {
             ClinicLink
           </span>
           <DesignToggle />
+          <ThemeToggle />
         </div>
         <button
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+          className="lg:hidden p-1.5 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -157,8 +159,8 @@ export function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive || location.pathname === item.path
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900'
+                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                    : 'text-stone-600 hover:bg-stone-50 hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-700/50 dark:hover:text-stone-200'
                 }`
               }
             >
@@ -183,7 +185,7 @@ export function Sidebar() {
       </nav>
 
       {/* Bottom - pinned below scroll */}
-      <div className="border-t border-stone-200 p-2 shrink-0">
+      <div className="border-t border-stone-200 dark:border-stone-700 p-2 shrink-0">
         <button
           onClick={logout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-lg font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition-all w-full"
@@ -198,11 +200,11 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile top bar — only logo + hamburger, user info moved to TopBar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white border-b border-stone-200 flex items-center justify-between px-4 z-30">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between px-4 z-30">
         <div className="flex items-center">
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 -ml-2 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors"
+            className="p-2 -ml-2 rounded-lg text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             aria-label="Open menu"
           >
             <Menu className="w-6 h-6" />
@@ -228,7 +230,7 @@ export function Sidebar() {
 
       {/* Mobile drawer */}
       <aside
-        className={`lg:hidden fixed left-0 top-0 h-screen w-72 bg-white flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed left-0 top-0 h-screen w-72 bg-white dark:bg-stone-900 flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -236,7 +238,7 @@ export function Sidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-stone-200 flex-col z-40">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-700 flex-col z-40">
         {sidebarContent}
       </aside>
     </>

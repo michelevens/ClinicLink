@@ -29,8 +29,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `relative p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-700 bg-primary-50'
-              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
+              ? 'text-primary-700 bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50 dark:text-primary-400 dark:hover:text-primary-300 dark:hover:bg-primary-900/20'
           }`
         }
         title="Messages"
@@ -49,8 +49,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-700 bg-primary-50'
-              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
+              ? 'text-primary-700 bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50 dark:text-primary-400 dark:hover:text-primary-300 dark:hover:bg-primary-900/20'
           }`
         }
         title="Calendar"
@@ -64,8 +64,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-700 bg-primary-50'
-              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
+              ? 'text-primary-700 bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50 dark:text-primary-400 dark:hover:text-primary-300 dark:hover:bg-primary-900/20'
           }`
         }
         title="Preceptor Directory"
@@ -82,8 +82,8 @@ export function TopBar() {
         className={({ isActive }) =>
           `p-2 rounded-lg transition-colors ${
             isActive
-              ? 'text-primary-700 bg-primary-50'
-              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
+              ? 'text-primary-700 bg-primary-50 dark:bg-primary-900/30 dark:text-primary-300'
+              : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50 dark:text-primary-400 dark:hover:text-primary-300 dark:hover:bg-primary-900/20'
           }`
         }
         title="Settings"
@@ -92,15 +92,15 @@ export function TopBar() {
       </NavLink>
 
       {/* Divider */}
-      <div className="w-px h-6 bg-stone-200 mx-1" />
+      <div className="w-px h-6 bg-stone-200 dark:bg-stone-700 mx-1" />
 
       {/* User Info */}
       <div className="flex items-center gap-2.5">
         <div className="text-right hidden sm:block">
-          <p className="text-sm font-medium text-stone-900 leading-tight">{user.firstName} {user.lastName}</p>
-          <p className="text-xs text-stone-500">{roleLabels[user.role]}</p>
+          <p className="text-sm font-medium text-stone-900 dark:text-stone-100 leading-tight">{user.firstName} {user.lastName}</p>
+          <p className="text-xs text-stone-500 dark:text-stone-400">{roleLabels[user.role]}</p>
         </div>
-        <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
+        <div className="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center text-primary-700 dark:text-primary-300 font-semibold text-sm shrink-0">
           {user.firstName[0]}{user.lastName[0]}
         </div>
       </div>
@@ -108,7 +108,7 @@ export function TopBar() {
       {/* Logout - mobile only (desktop has sidebar logout) */}
       <button
         onClick={logout}
-        className="lg:hidden p-2 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+        className="lg:hidden p-2 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         title="Logout"
       >
         <LogOut className="w-4 h-4" />

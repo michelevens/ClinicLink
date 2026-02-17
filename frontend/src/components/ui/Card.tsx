@@ -12,7 +12,7 @@ export function Card({ children, hover = false, glass = false, padding = 'md', c
 
   return (
     <div
-      className={`rounded-2xl border border-stone-200 shadow-sm ${glass ? 'glass' : 'bg-white'} ${hover ? 'hover-lift cursor-pointer' : ''} ${paddings[padding]} ${className}`}
+      className={`rounded-2xl border border-stone-200 dark:border-stone-700 shadow-sm ${glass ? 'glass' : 'bg-white dark:bg-stone-800'} ${hover ? 'hover-lift cursor-pointer' : ''} ${paddings[padding]} ${className}`}
       {...props}
     >
       {children}

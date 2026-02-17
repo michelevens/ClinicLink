@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary-50: #f5f3ff;
   --color-primary-100: #ede9fe;
@@ -39,15 +42,16 @@
 
 @layer base {
   body {
-    @apply bg-stone-50 text-stone-900 antialiased;
+    @apply bg-stone-50 text-stone-900 antialiased dark:bg-stone-900 dark:text-stone-100;
     font-family: var(--font-sans);
     margin: 0;
+    transition: background-color 0.3s, color 0.3s;
   }
 }
 
 @layer components {
   .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-white/20;
+    @apply bg-white/80 backdrop-blur-xl border border-white/20 dark:bg-stone-800/80 dark:border-stone-700/30;
   }
   .shadow-glow-primary {
     box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.15);
@@ -69,10 +73,22 @@
     border-left: 2px solid transparent;
   }
   .table-row-hover:hover {
-    @apply bg-primary-50/40;
+    @apply bg-primary-50/40 dark:bg-primary-900/20;
     border-left-color: theme('colors.primary.400');
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Dark Mode — FullCalendar overrides
+   ═══════════════════════════════════════════════════════════ */
+.dark .fc {
+  --fc-border-color: #44403c;
+  --fc-today-bg-color: rgba(139, 92, 246, 0.08);
+  --fc-page-bg-color: transparent;
+}
+.dark .fc .fc-toolbar-title { color: #e7e5e4; }
+.dark .fc .fc-col-header-cell-cushion { color: #78716c; }
+.dark .fc .fc-daygrid-day-number { color: #a8a29e; }
 
 /* Page transition animation */
 @keyframes page-in {
