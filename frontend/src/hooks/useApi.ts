@@ -1037,15 +1037,16 @@ export function useConversations(params?: { page?: number }) {
   return useQuery({
     queryKey: ['conversations', params],
     queryFn: () => messagesApi.conversations(params),
+    refetchInterval: 15000,
   })
 }
 
-export function useConversation(conversationId: string | null) {
+export function useConversation(conversationId: string | null, page?: number) {
   return useQuery({
-    queryKey: ['conversation', conversationId],
-    queryFn: () => messagesApi.messages(conversationId!),
+    queryKey: ['conversation', conversationId, page],
+    queryFn: () => messagesApi.messages(conversationId!, page ? { page } : undefined),
     enabled: !!conversationId,
-    refetchInterval: 10000,
+    refetchInterval: !page || page === 1 ? 10000 : false,
   })
 }
 

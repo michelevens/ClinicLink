@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
-import { ArrowLeft, Send } from 'lucide-react'
+import { ArrowLeft, Send, ChevronDown } from 'lucide-react'
 import { useConversation, useSendMessage } from '../../hooks/useApi.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { MessageBubble } from './MessageBubble.tsx'
 import { MessageTemplateSelector } from './MessageTemplateSelector.tsx'
+import type { ApiMessage } from '../../services/api.ts'
 
 interface Props {
   conversationId: string
@@ -12,17 +13,24 @@ interface Props {
 
 export function MessageThread({ conversationId, onBack }: Props) {
   const { user } = useAuth()
-  const { data, isLoading } = useConversation(conversationId)
+  const [loadedPages, setLoadedPages] = useState<number[]>([1])
+  const maxPage = Math.max(...loadedPages)
+  const { data, isLoading } = useConversation(conversationId, maxPage)
   const sendMessage = useSendMessage()
   const [body, setBody] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [prevCount, setPrevCount] = useState(0)
+  const [accumulatedMessages, setAccumulatedMessages] = useState<ApiMessage[]>([])
 
-  const messages = data?.messages?.data ?? []
+  const pageMessages = data?.messages?.data ?? []
+  const lastPage = data?.messages?.last_page ?? 1
+  const hasMorePages = maxPage < lastPage
+  // Combine accumulated older messages with current page messages
+  const messages = [...accumulatedMessages, ...pageMessages]
   const conversation = data?.conversation
   const otherUser = conversation?.users?.find(u => u.id !== user?.id) || conversation?.users?.[0]
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages (only on first load or new messages on current page)
   useEffect(() => {
     if (messages.length > prevCount) {
       messagesEndRef.current?.scrollIntoView({ behavior: prevCount === 0 ? 'auto' : 'smooth' })
@@ -33,7 +41,15 @@ export function MessageThread({ conversationId, onBack }: Props) {
   // Reset on conversation change
   useEffect(() => {
     setPrevCount(0)
+    setAccumulatedMessages([])
+    setLoadedPages([1])
   }, [conversationId])
+
+  function loadMore() {
+    // Save current page messages into accumulated, then advance to next page
+    setAccumulatedMessages(prev => [...prev, ...pageMessages])
+    setLoadedPages(prev => [...prev, maxPage + 1])
+  }
 
   function handleSend() {
     const trimmed = body.trim()
@@ -83,27 +99,39 @@ export function MessageThread({ conversationId, onBack }: Props) {
         ) : messages.length === 0 ? (
           <div className="text-center text-stone-400 text-sm py-8">No messages yet. Say hello!</div>
         ) : (
-          messages.map((msg, i) => {
-            const prevMsg = messages[i - 1]
-            const showDate = !prevMsg || new Date(msg.created_at).toDateString() !== new Date(prevMsg.created_at).toDateString()
+          <>
+            {messages.map((msg, i) => {
+              const prevMsg = messages[i - 1]
+              const showDate = !prevMsg || new Date(msg.created_at).toDateString() !== new Date(prevMsg.created_at).toDateString()
 
-            return (
-              <div key={msg.id}>
-                {showDate && (
-                  <div className="flex items-center justify-center py-3">
-                    <span className="text-xs text-stone-400 bg-stone-100 px-3 py-1 rounded-full">
-                      {new Date(msg.created_at).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                )}
-                <MessageBubble
-                  message={msg}
-                  isMine={msg.sender_id === user?.id}
-                  showSender={msg.sender_id !== prevMsg?.sender_id || showDate}
-                />
+              return (
+                <div key={msg.id}>
+                  {showDate && (
+                    <div className="flex items-center justify-center py-3">
+                      <span className="text-xs text-stone-400 bg-stone-100 px-3 py-1 rounded-full">
+                        {new Date(msg.created_at).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
+                  <MessageBubble
+                    message={msg}
+                    isMine={msg.sender_id === user?.id}
+                    showSender={msg.sender_id !== prevMsg?.sender_id || showDate}
+                  />
+                </div>
+              )
+            })}
+            {hasMorePages && (
+              <div className="flex justify-center py-3">
+                <button
+                  onClick={loadMore}
+                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-full transition-colors"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" /> Load more messages
+                </button>
               </div>
-            )
-          })
+            )}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>

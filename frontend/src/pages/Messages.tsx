@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MessageSquare, Plus, Megaphone } from 'lucide-react'
 import { ConversationList } from '../components/messages/ConversationList.tsx'
@@ -7,6 +7,7 @@ import { NewConversationModal } from '../components/messages/NewConversationModa
 import { BroadcastModal } from '../components/messages/BroadcastModal.tsx'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
+import { universitiesApi } from '../services/api.ts'
 
 export function Messages() {
   usePageTitle('Messages')
@@ -16,6 +17,15 @@ export function Messages() {
   const [showNewModal, setShowNewModal] = useState(false)
   const [showBroadcast, setShowBroadcast] = useState(false)
   const canBroadcast = user?.role === 'coordinator' || user?.role === 'admin'
+  const [programs, setPrograms] = useState<{ id: string; name: string }[]>([])
+
+  // Fetch programs for broadcast audience targeting (coordinators)
+  useEffect(() => {
+    if (!canBroadcast || !user?.universityId) return
+    universitiesApi.programs(user.universityId).then(data => {
+      setPrograms(data.map(p => ({ id: p.id, name: p.name })))
+    }).catch(() => {})
+  }, [canBroadcast, user?.universityId])
 
   return (
     <div className="h-[calc(100vh-4rem)] lg:h-[calc(100vh-0rem)] flex flex-col">
@@ -92,6 +102,7 @@ export function Messages() {
             setShowBroadcast(false)
             navigate(`/messages/${id}`)
           }}
+          programs={programs}
         />
       )}
     </div>
