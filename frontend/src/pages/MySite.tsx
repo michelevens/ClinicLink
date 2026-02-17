@@ -44,19 +44,34 @@ export function MySite() {
   }
 
   const handleSubmit = async () => {
+    // Auto-prepend https:// to website if user entered a bare domain
+    let website = form.website.trim()
+    if (website && !/^https?:\/\//i.test(website)) {
+      website = 'https://' + website
+    }
+
     const payload = {
       ...form,
+      website: website || null,
       specialties: form.specialties.split(',').map(s => s.trim()).filter(Boolean),
     }
     try {
       if (editSite) {
         await updateSite.mutateAsync({ id: editSite.id, data: payload })
+        toast.success('Site updated successfully')
       } else {
         await createSite.mutateAsync(payload)
+        toast.success('Site created successfully')
       }
       setShowForm(false)
-    } catch {
-      // handled by mutation
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
+      if (error?.response?.data?.errors) {
+        const firstError = Object.values(error.response.data.errors)[0]?.[0]
+        toast.error(firstError || 'Validation failed. Please check your inputs.')
+      } else {
+        toast.error(error?.response?.data?.message || 'Failed to save site. Please try again.')
+      }
     }
   }
 
@@ -64,8 +79,8 @@ export function MySite() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">My Sites</h1>
-          <p className="text-stone-500 mt-1">Manage your rotation sites and their details</p>
+          <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">My Sites</h1>
+          <p className="text-stone-500 dark:text-stone-400 mt-1">Manage your rotation sites and their details</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="w-4 h-4 mr-2" />
@@ -81,8 +96,8 @@ export function MySite() {
         <Card>
           <div className="text-center py-12">
             <Building2 className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-            <h3 className="text-lg font-semibold text-stone-900 mb-1">No sites yet</h3>
-            <p className="text-stone-500 text-sm mb-4">Create your first rotation site to start accepting students.</p>
+            <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100 mb-1">No sites yet</h3>
+            <p className="text-stone-500 dark:text-stone-400 text-sm mb-4">Create your first rotation site to start accepting students.</p>
             <Button onClick={openCreate}>
               <Plus className="w-4 h-4 mr-2" /> Add Site
             </Button>
@@ -99,7 +114,7 @@ export function MySite() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <h3 className="text-lg font-semibold text-stone-900">{site.name}</h3>
+                      <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">{site.name}</h3>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-stone-500 mt-1">
                         <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {site.city}, {site.state} {site.zip}</span>
                         <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {site.phone}</span>
@@ -116,7 +131,7 @@ export function MySite() {
                       </Button>
                     </div>
                   </div>
-                  <p className="text-sm text-stone-600 line-clamp-2 mb-3">{site.description}</p>
+                  <p className="text-sm text-stone-600 dark:text-stone-400 line-clamp-2 mb-3">{site.description}</p>
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {site.specialties.map(s => (
                       <Badge key={s} variant="default" size="sm">{s}</Badge>
@@ -139,7 +154,7 @@ export function MySite() {
       {/* Preceptor: My Join Requests */}
       {isPreceptor && myJoinRequests.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-stone-900">My Join Requests</h2>
+          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">My Join Requests</h2>
           {myJoinRequests.map(req => (
             <Card key={req.id} className="!py-3">
               <div className="flex items-center justify-between gap-4">
@@ -155,7 +170,7 @@ export function MySite() {
                      <XCircle className="w-5 h-5" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-stone-900">{req.site?.name}</p>
+                    <p className="text-sm font-medium text-stone-900 dark:text-stone-100">{req.site?.name}</p>
                     <p className="text-xs text-stone-500">
                       {req.site?.city}, {req.site?.state}
                       <span className="mx-1">&middot;</span>
@@ -203,51 +218,51 @@ export function MySite() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">Site Name *</label>
-              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Mercy General Hospital" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Site Name *</label>
+              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Mercy General Hospital" />
             </div>
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">Address *</label>
-              <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Address *</label>
+              <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">City *</label>
-              <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">City *</label>
+              <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1 space-y-1.5">
-                <label className="block text-sm font-medium text-stone-700">State</label>
-                <input value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
+                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">State *</label>
+                <input value={form.state} onChange={e => setForm({ ...form, state: e.target.value.toUpperCase().slice(0, 2) })} maxLength={2} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="FL" />
               </div>
               <div className="flex-1 space-y-1.5">
-                <label className="block text-sm font-medium text-stone-700">ZIP</label>
-                <input value={form.zip} onChange={e => setForm({ ...form, zip: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
+                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">ZIP *</label>
+                <input value={form.zip} onChange={e => setForm({ ...form, zip: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="33101" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">Phone *</label>
-              <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Phone *</label>
+              <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="(305) 555-0100" />
+              </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Website</label>
+              <input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="example.com" />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">Website</label>
-              <input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">EHR System</label>
+              <input value={form.ehr_system} onChange={e => setForm({ ...form, ehr_system: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Epic, Cerner" />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">EHR System</label>
-              <input value={form.ehr_system} onChange={e => setForm({ ...form, ehr_system: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Epic, Cerner" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">Specialties (comma-separated)</label>
-              <input value={form.specialties} onChange={e => setForm({ ...form, specialties: e.target.value })} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Emergency Medicine, ICU" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Specialties (comma-separated)</label>
+              <input value={form.specialties} onChange={e => setForm({ ...form, specialties: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Emergency Medicine, ICU" />
             </div>
             <div className="sm:col-span-2 space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700">Description *</label>
-              <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none" />
+              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Description</label>
+              <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none resize-none" placeholder="Describe your site, facilities, and what students can expect..." />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-            <Button onClick={handleSubmit} disabled={!form.name || !form.phone} isLoading={createSite.isPending || updateSite.isPending}>
+            <Button onClick={handleSubmit} disabled={!form.name || !form.address || !form.city || !form.state || !form.zip || !form.phone} isLoading={createSite.isPending || updateSite.isPending}>
               {editSite ? 'Save Changes' : 'Create Site'}
             </Button>
           </div>
