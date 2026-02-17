@@ -40,9 +40,10 @@ class ApiClient {
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
       const message = body.message || body.error || `Request failed (${res.status})`
-      const error = new Error(message) as Error & { status: number; errors: Record<string, string[]> }
+      const error = new Error(message) as Error & { status: number; errors: Record<string, string[]>; body: Record<string, unknown> }
       error.status = res.status
       error.errors = body.errors || {}
+      error.body = body
       throw error
     }
 
@@ -97,9 +98,10 @@ class ApiClient {
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
       const message = body.message || body.error || `Request failed (${res.status})`
-      const error = new Error(message) as Error & { status: number; errors: Record<string, string[]> }
+      const error = new Error(message) as Error & { status: number; errors: Record<string, string[]>; body: Record<string, unknown> }
       error.status = res.status
       error.errors = body.errors || {}
+      error.body = body
       throw error
     }
 

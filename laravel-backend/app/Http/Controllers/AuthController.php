@@ -183,6 +183,14 @@ class AuthController extends Controller
             ], 403);
         }
 
+        if (!$user->email_verified) {
+            return response()->json([
+                'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
+                'email_not_verified' => true,
+                'email' => $user->email,
+            ], 403);
+        }
+
         // Successful password check — reset lockout counter
         $user->resetFailedLogins();
 

@@ -41,6 +41,8 @@ class User extends Authenticatable
         'subscription_ends_at',
         'sponsored_by_code_id',
         'system_id',
+        'email_verified',
+        'email_verified_at',
     ];
 
     protected static function booted(): void
@@ -65,6 +67,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'email_verified' => 'boolean',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'mfa_enabled' => 'boolean',

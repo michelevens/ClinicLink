@@ -350,6 +350,40 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
+## Phase 3.2.5: Database Seeder & Email Verification ✅ COMPLETE
+**Goal:** Comprehensive demo data seeder and email verification enforcement
+
+### What Was Built
+
+#### Expanded Database Seeder (3,261 lines → full demo coverage)
+- Added 11 missing models: PreceptorReviews, MatchingPreferences, SavedSearches, SlotBookmarks, EvaluationTemplates, AgreementTemplates, Signatures, StudentInvites, SiteJoinRequests, AnalyticsSnapshots, Notifications
+- Preceptor reviews with 1-5 rating rubrics (anonymous + named reviews)
+- Student matching preferences for smart matching demo
+- Saved searches with alert toggles
+- Slot bookmarks across students
+- Custom evaluation templates per university (mid-rotation, final, student feedback)
+- Agreement templates (4 boilerplates for UMiami, FIU, Nova)
+- E-signature records on affiliation agreements (signed + pending)
+- Student invites (pending, accepted, expired)
+- Site join requests (approved, pending, rejected)
+- Platform/university/site analytics snapshots (daily + monthly)
+- 12 database notifications for all demo users (bell icon populated)
+
+#### Email Verification Enforcement
+- Login now blocks unverified users with `email_not_verified` response
+- Frontend LoginPage catches the 403 and redirects to `/verify-email?email=...`
+- VerifyEmailPrompt page shows resend option and instructions
+- VerifyEmailCallback handles token verification from email link
+- User model updated with `email_verified` in fillable array and boolean cast
+- API error objects now include full response body for richer error handling
+
+#### SEO & Page Titles
+- Open Graph, Twitter Card, canonical meta tags in index.html
+- `usePageTitle` hook across all 40 pages for dynamic browser tab titles
+- robots.txt and sitemap.xml for search engine crawling
+
+---
+
 ## Phase 3.3: Payments & Intelligence — NEXT
 - Stripe Connect for paid rotation placements
 - Preceptor management and recognition system

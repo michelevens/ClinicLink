@@ -228,7 +228,7 @@ Payments ──── Invoices ──── Refunds
 | P0 | Email notifications (11 mail classes + 2 scheduled reminders) | ✅ Done |
 | P0 | Landing page accuracy fixes | ✅ Done |
 | P1 | Database seeder with realistic demo data | ✅ Done |
-| P1 | Email verification flow | Pending |
+| P1 | Email verification flow | ✅ Done |
 
 ### PHASE 2: Compliance & Communication (Weeks 9-16)
 
@@ -804,7 +804,7 @@ PRIORITY 2 — CORE VALUE ✅ COMPLETE
 ✅ Audit logging: platform-wide immutable AuditLog + CE-specific CeAuditEvent
 □ Hour log export (CSV/PDF per student)
 □ Evaluation rubric builder (customizable per program)
-□ Email verification flow
+✅ Email verification flow
 
 PRIORITY 3 — DIFFERENTIATION (Weeks 7-12)
 ══════════════════════════════════════════

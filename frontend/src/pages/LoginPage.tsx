@@ -36,6 +36,11 @@ export function LoginPage() {
       // If MFA is required, login won't throw but mfaPending will become true
       // Navigation happens via useEffect when isAuthenticated becomes true
     } catch (err: unknown) {
+      const apiError = err as Error & { body?: { email_not_verified?: boolean; email?: string } }
+      if (apiError.body?.email_not_verified && apiError.body?.email) {
+        navigate('/verify-email?email=' + encodeURIComponent(apiError.body.email))
+        return
+      }
       const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.'
       toast.error(message)
     }
