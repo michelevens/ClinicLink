@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '../components/ui/Card.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -12,11 +12,57 @@ import type { ApiSlot } from '../services/api.ts'
 import { SavedSearchesPanel } from '../components/student/SavedSearchesPanel.tsx'
 import {
   Search, MapPin, Calendar, Star, Heart,
-  Building2, Clock, Users, Send, Loader2,
+  Building2, Clock, Users, Send, Loader2, Map as MapIcon,
   Globe, Phone, Stethoscope, DollarSign,
   ChevronRight, Shield, BookOpen, CheckCircle2,
   ArrowLeft, ExternalLink, LogIn, Bookmark, Save
 } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+
+const STATE_COORDS: Record<string, [number, number]> = {
+  AL: [32.806671, -86.791130], AK: [61.370716, -152.404419], AZ: [33.729759, -111.431221],
+  AR: [34.969704, -92.373123], CA: [36.116203, -119.681564], CO: [39.059811, -105.311104],
+  CT: [41.597782, -72.755371], DE: [39.318523, -75.507141], FL: [27.766279, -81.686783],
+  GA: [33.040619, -83.643074], HI: [21.094318, -157.498337], ID: [44.240459, -114.478828],
+  IL: [40.349457, -88.986137], IN: [39.849426, -86.258278], IA: [42.011539, -93.210526],
+  KS: [38.526600, -96.726486], KY: [37.668140, -84.670067], LA: [31.169546, -91.867805],
+  ME: [44.693947, -69.381927], MD: [39.063946, -76.802101], MA: [42.230171, -71.530106],
+  MI: [43.326618, -84.536095], MN: [45.694454, -93.900192], MS: [32.741646, -89.678696],
+  MO: [38.456085, -92.288368], MT: [46.921925, -110.454353], NE: [41.125370, -98.268082],
+  NV: [38.313515, -117.055374], NH: [43.452492, -71.563896], NJ: [40.298904, -74.521011],
+  NM: [34.840515, -106.248482], NY: [42.165726, -74.948051], NC: [35.630066, -79.806419],
+  ND: [47.528912, -99.784012], OH: [40.388783, -82.764915], OK: [35.565342, -96.928917],
+  OR: [44.572021, -122.070938], PA: [40.590752, -77.209755], RI: [41.680893, -71.511780],
+  SC: [33.856892, -80.945007], SD: [44.299782, -99.438828], TN: [35.747845, -86.692345],
+  TX: [31.054487, -97.563461], UT: [40.150032, -111.862434], VT: [44.045876, -72.710686],
+  VA: [37.769337, -78.169968], WA: [47.400902, -121.490494], WV: [38.491226, -80.954456],
+  WI: [44.268543, -89.616508], WY: [42.755966, -107.302490], DC: [38.897438, -77.026817],
+}
+
+function slotJitter(coord: [number, number], index: number): [number, number] {
+  const angle = (index * 137.508) * (Math.PI / 180)
+  const r = 0.12 + (index % 5) * 0.06
+  return [coord[0] + r * Math.cos(angle), coord[1] + r * Math.sin(angle)]
+}
+
+function slotMarkerIcon(isOpen: boolean, isSelected: boolean) {
+  const size = isSelected ? 30 : 22
+  const color = isOpen ? '#22c55e' : '#94a3b8'
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div style="width:${size}px;height:${size}px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:all 0.2s;${isSelected ? 'transform:scale(1.2);' : ''}"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  })
+}
+
+function RotationMapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap()
+  useEffect(() => { map.flyTo(center, zoom, { duration: 0.8 }) }, [map, center, zoom])
+  return null
+}
 
 export function RotationSearch() {
   const { isAuthenticated, user } = useAuth()
@@ -29,7 +75,7 @@ export function RotationSearch() {
   const [showDetail, setShowDetail] = useState(false)
   const [showApplyModal, setShowApplyModal] = useState(false)
   const [coverLetter, setCoverLetter] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('list')
   const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all')
   const [showSaveSearch, setShowSaveSearch] = useState(false)
   const [saveSearchName, setSaveSearchName] = useState('')
@@ -261,14 +307,23 @@ export function RotationSearch() {
             <button
               onClick={() => setViewMode('list')}
               className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-primary-50 text-primary-600' : 'text-stone-400 hover:text-stone-600'}`}
+              title="List view"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
             </button>
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-primary-50 text-primary-600' : 'text-stone-400 hover:text-stone-600'}`}
+              title="Grid view"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'map' ? 'bg-primary-50 text-primary-600' : 'text-stone-400 hover:text-stone-600'}`}
+              title="Map view"
+            >
+              <MapIcon className="w-4 h-4" />
             </button>
           </div>
           </div>
@@ -426,6 +481,74 @@ export function RotationSearch() {
           })}
         </div>
       )}
+
+      {/* Results - Map View */}
+      {!isLoading && viewMode === 'map' && (() => {
+        const stateGroups: Record<string, number> = {}
+        const slotsWithCoords = displaySlots.map(slot => {
+          const st = slot.site?.state?.toUpperCase() || ''
+          const baseCoord = STATE_COORDS[st]
+          if (!baseCoord) return { slot, coords: null }
+          const idx = stateGroups[st] || 0
+          stateGroups[st] = idx + 1
+          return { slot, coords: slotJitter(baseCoord, idx) }
+        }).filter(s => s.coords)
+
+        return (
+          <div className="rounded-2xl overflow-hidden border border-stone-200 shadow-sm relative" style={{ height: '550px' }}>
+            <MapContainer
+              center={[39.8, -98.5]}
+              zoom={4}
+              className="w-full h-full"
+              scrollWheelZoom
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {slotsWithCoords.map(({ slot, coords }) => (
+                <Marker
+                  key={slot.id}
+                  position={coords as [number, number]}
+                  icon={slotMarkerIcon(slot.status === 'open', selectedSlot?.id === slot.id)}
+                  eventHandlers={{ click: () => openDetail(slot) }}
+                >
+                  <Popup>
+                    <div className="min-w-[200px]">
+                      <p className="font-semibold text-sm text-stone-900 mb-1">{slot.title}</p>
+                      <p className="text-xs text-stone-500 mb-2">{slot.site?.name} — {slot.site?.city}, {slot.site?.state}</p>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        <span className="inline-block px-1.5 py-0.5 bg-primary-50 text-primary-700 text-[10px] font-medium rounded">{slot.specialty}</span>
+                        <span className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded ${slot.status === 'open' ? 'bg-green-50 text-green-700' : 'bg-stone-100 text-stone-500'}`}>
+                          {slot.status === 'open' ? 'Open' : 'Filled'}
+                        </span>
+                        <span className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded ${slot.cost_type === 'free' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                          {slot.cost_type === 'free' ? 'Free' : `$${slot.cost}`}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => openDetail(slot)}
+                        className="text-xs text-primary-600 font-medium hover:underline"
+                      >
+                        View Details →
+                      </button>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
+            {/* Legend */}
+            <div className="absolute bottom-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg shadow-md px-3 py-2 text-xs">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500 border-2 border-white shadow-sm" /> Open</span>
+                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-stone-400 border-2 border-white shadow-sm" /> Filled</span>
+                <span className="text-stone-400">·</span>
+                <span className="text-stone-500">{slotsWithCoords.length} on map</span>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Empty State */}
       {displaySlots.length === 0 && !isLoading && (
