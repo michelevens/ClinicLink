@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useMyStudents, useApplications, useCeEligibility, useCompleteApplication } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 
@@ -50,10 +51,10 @@ export function StudentDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <button onClick={() => navigate('/students')} className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700">
-        <ArrowLeft className="w-4 h-4" /> Back to My Students
-      </button>
+      <Breadcrumbs items={[
+        { label: 'My Students', path: '/students' },
+        { label: `${student.first_name} ${student.last_name}` },
+      ]} />
 
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">

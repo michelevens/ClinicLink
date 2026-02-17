@@ -7,6 +7,7 @@ import {
 import { useState } from 'react'
 import { usePreceptorProfile, usePreceptorReviews, usePreceptorReviewStats } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 
@@ -76,10 +77,10 @@ export function PreceptorDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Back Link */}
-      <button onClick={() => navigate('/preceptor-directory')} className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700">
-        <ArrowLeft className="w-4 h-4" /> Back to Preceptor Directory
-      </button>
+      <Breadcrumbs items={[
+        { label: 'Preceptor Directory', path: '/preceptor-directory' },
+        { label: `${firstName} ${lastName}`.trim() || 'Preceptor' },
+      ]} />
 
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">

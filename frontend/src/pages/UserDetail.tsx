@@ -7,6 +7,7 @@ import {
   ShieldCheck, MessageSquare, BookOpen, Heart
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite, useAssignSiteManagerToSites, useRemoveSiteManagerFromSite, useUniversities, useAssignStudentProgram } from '../hooks/useApi.ts'
 import { universitiesApi } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
@@ -97,11 +98,12 @@ export function UserDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Back + Header */}
+      {/* Breadcrumbs + Header */}
       <div>
-        <button onClick={() => navigate('/admin/users')} className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to Users
-        </button>
+        <Breadcrumbs items={[
+          { label: 'All Users', path: '/admin/users' },
+          { label: `${user.first_name} ${user.last_name}` },
+        ]} />
 
         <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">
           <div className="flex items-start gap-4">

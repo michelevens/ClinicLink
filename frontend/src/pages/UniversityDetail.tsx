@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useUniversity } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 
@@ -53,11 +54,12 @@ export function UniversityDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Back + Header */}
+      {/* Breadcrumbs + Header */}
       <div>
-        <button onClick={() => navigate('/universities')} className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to Universities
-        </button>
+        <Breadcrumbs items={[
+          { label: 'Universities', path: '/universities' },
+          { label: university.name },
+        ]} />
 
         <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-2">

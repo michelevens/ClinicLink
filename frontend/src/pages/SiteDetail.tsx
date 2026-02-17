@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { useSite, useAssignManagerToSite, useAdminUsers } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
@@ -91,11 +92,12 @@ export function SiteDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Back + Header */}
+      {/* Breadcrumbs + Header */}
       <div>
-        <button onClick={() => navigate('/sites')} className="flex items-center gap-1.5 text-sm text-stone-500 hover:text-stone-700 mb-4">
-          <ArrowLeft className="w-4 h-4" /> Back to Sites Directory
-        </button>
+        <Breadcrumbs items={[
+          { label: 'Sites Directory', path: '/sites' },
+          { label: site.name },
+        ]} />
 
         <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">
           <div className="flex items-start justify-between">
