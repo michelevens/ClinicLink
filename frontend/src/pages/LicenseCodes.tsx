@@ -98,7 +98,7 @@ export function LicenseCodes() {
                 const isActive = code.is_active && !isExpired && !isUsed
 
                 return (
-                  <tr key={code.id} className="hover:bg-stone-50 transition-colors">
+                  <tr key={code.id} className="table-row-hover">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <code className="text-sm font-mono font-semibold text-stone-900 bg-stone-100 px-2 py-0.5 rounded">{code.code}</code>

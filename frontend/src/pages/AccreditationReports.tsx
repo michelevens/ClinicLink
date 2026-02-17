@@ -83,7 +83,7 @@ export function AccreditationReports() {
               </thead>
               <tbody>
                 {reports.map((report: ApiAccreditationReport) => (
-                  <tr key={report.id} className="border-b border-stone-50 hover:bg-stone-50 transition-colors">
+                  <tr key={report.id} className="border-b border-stone-50 table-row-hover">
                     <td className="py-3 px-4 font-medium text-stone-900">{report.title}</td>
                     <td className="py-3 px-4 text-stone-600">{typeLabel(report.report_type)}</td>
                     <td className="py-3 px-4 text-stone-500 text-xs">

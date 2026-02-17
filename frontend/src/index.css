@@ -62,6 +62,16 @@
     @apply -translate-y-1;
     box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(99, 102, 241, 0.08);
   }
+
+  /* Smooth table row hover with left accent */
+  .table-row-hover {
+    @apply transition-colors duration-150;
+    border-left: 2px solid transparent;
+  }
+  .table-row-hover:hover {
+    @apply bg-primary-50/40;
+    border-left-color: theme('colors.primary.400');
+  }
 }
 
 /* Page transition animation */

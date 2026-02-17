@@ -143,7 +143,7 @@ export function AdminUsers() {
                 {users.map(user => (
                   <tr
                     key={user.id}
-                    className="hover:bg-stone-50 transition-colors cursor-pointer"
+                    className="table-row-hover cursor-pointer"
                     onClick={() => navigate(`/admin/users/${user.id}`)}
                   >
                     <td className="px-4 py-3">

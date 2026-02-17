@@ -381,7 +381,7 @@ export function SitesDirectory() {
             </thead>
             <tbody>
               {sites.map(site => (
-                <tr key={site.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
+                <tr key={site.id} className="border-b border-stone-100 table-row-hover">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-stone-900">{site.name}</span>

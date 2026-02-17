@@ -333,7 +333,7 @@ export function UniversityDirectory() {
             </thead>
             <tbody>
               {universities.map(uni => (
-                <tr key={uni.id} className="border-b border-stone-100 hover:bg-stone-50 transition-colors">
+                <tr key={uni.id} className="border-b border-stone-100 table-row-hover">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-stone-900">{uni.name}</span>
