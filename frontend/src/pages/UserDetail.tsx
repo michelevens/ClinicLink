@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
+import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { useAdminUser, useUpdateUser, useDeleteUser, useResetUserPassword, useSites, useAssignPreceptorToSites, useRemovePreceptorFromSite, useAssignSiteManagerToSites, useRemoveSiteManagerFromSite, useUniversities, useAssignStudentProgram } from '../hooks/useApi.ts'
 import { universitiesApi } from '../services/api.ts'
 import { Card } from '../components/ui/Card.tsx'
@@ -107,9 +108,7 @@ export function UserDetail() {
 
         <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xl shrink-0">
-              {user.first_name[0]}{user.last_name[0]}
-            </div>
+            <GradientAvatar name={`${user.first_name} ${user.last_name}`} size="lg" />
             <div className="flex-1 min-w-0">
               <h1 className="text-2xl font-bold text-stone-900">{user.first_name} {user.last_name}</h1>
               <div className="flex items-center gap-2 mt-1 flex-wrap">

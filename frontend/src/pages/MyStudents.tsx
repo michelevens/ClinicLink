@@ -4,6 +4,7 @@ import { Users, Search, GraduationCap, Clock, BookOpen, ChevronRight, Upload } f
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useMyStudents } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
+import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { BulkImportModal } from '../components/student/BulkImportModal.tsx'
@@ -193,9 +194,7 @@ function StudentCard({ student, isPreceptor, onView, onReviewHours, onWriteEval 
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
-              {student.first_name[0]}{student.last_name[0]}
-            </div>
+            <GradientAvatar name={`${student.first_name} ${student.last_name}`} size="md" />
             <div>
               <h3 className="font-semibold text-stone-900">{student.first_name} {student.last_name}</h3>
               <p className="text-xs text-stone-500">{student.email}</p>

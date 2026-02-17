@@ -8,6 +8,7 @@ import {
 import { toast } from 'sonner'
 import { useAdminUsers, useUpdateUser, useDeleteUser, useCreateUser, useBulkInviteUsers, useUniversities, useSites } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
+import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { TableRowSkeleton } from '../components/ui/Skeleton.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
@@ -147,9 +148,7 @@ export function AdminUsers() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-sm shrink-0">
-                          {user.first_name[0]}{user.last_name[0]}
-                        </div>
+                        <GradientAvatar name={`${user.first_name} ${user.last_name}`} size="sm" />
                         <div>
                           <p className="text-sm font-medium text-stone-900">{user.first_name} {user.last_name}</p>
                           <p className="text-xs text-stone-500">{user.email}</p>

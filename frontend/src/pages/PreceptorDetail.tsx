@@ -8,6 +8,7 @@ import { useState } from 'react'
 import { usePreceptorProfile, usePreceptorReviews, usePreceptorReviewStats } from '../hooks/useApi.ts'
 import { Card } from '../components/ui/Card.tsx'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs.tsx'
+import { GradientAvatar } from '../components/ui/GradientAvatar.tsx'
 import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 
@@ -85,9 +86,7 @@ export function PreceptorDetail() {
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6">
         <div className="flex flex-col sm:flex-row gap-5">
-          <div className="w-20 h-20 rounded-2xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-2xl shrink-0">
-            {firstName[0] || '?'}{lastName[0] || '?'}
-          </div>
+          <GradientAvatar name={`${firstName} ${lastName}`} size="xl" className="rounded-2xl" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-stone-900">{firstName} {lastName}</h1>
