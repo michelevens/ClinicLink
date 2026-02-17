@@ -349,7 +349,7 @@ export function RegisterPage() {
                       value={siteSearch}
                       onChange={e => { setSiteSearch(e.target.value); setShowSiteDropdown(true) }}
                       onFocus={() => siteResults.length > 0 && setShowSiteDropdown(true)}
-                      placeholder="Search for your clinical site..."
+                      placeholder="Search by site name or ID..."
                       className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
                     />
                     {showSiteDropdown && siteResults.length > 0 && (
@@ -384,7 +384,7 @@ export function RegisterPage() {
                     )}
                   </div>
                 )}
-                <p className="text-xs text-stone-400">Select the clinical site where you practice</p>
+                <p className="text-xs text-stone-400">Search by site name, city, or system ID (e.g., "A3B7C1F")</p>
               </div>
             )}
 
@@ -423,7 +423,7 @@ export function RegisterPage() {
                       value={uniSearch}
                       onChange={e => { setUniSearch(e.target.value); setShowUniDropdown(true) }}
                       onFocus={() => uniResults.length > 0 && setShowUniDropdown(true)}
-                      placeholder={form.role === 'preceptor' ? 'Search for a university (optional)...' : 'Search for your school or organization...'}
+                      placeholder={form.role === 'preceptor' ? 'Search by university name or ID (optional)...' : 'Search by school name or ID...'}
                       className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
                     />
                     {showUniDropdown && uniResults.length > 0 && (
@@ -460,10 +460,10 @@ export function RegisterPage() {
                 )}
                 <p className="text-xs text-stone-400">
                   {form.role === 'student'
-                    ? 'Select the school you are enrolled in'
+                    ? 'Search by university name, city, or system ID (e.g., "B4E2D9A")'
                     : form.role === 'preceptor'
-                    ? 'Optionally select a university you are affiliated with'
-                    : 'Select the school or organization you are affiliated with'}
+                    ? 'Search by university name or ID — optional'
+                    : 'Search by organization name, city, or system ID'}
                 </p>
               </div>
             )}
