@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext.tsx'
 import { useDesignVersion } from './contexts/DesignVersionContext.tsx'
 import { MainLayout } from './components/layout/MainLayout.tsx'
 import { PublicNav } from './components/layout/PublicNav.tsx'
+import PWAPrompt from './components/pwa/PWAPrompt.tsx'
 import type { ReactNode } from 'react'
 
 // --- Lazy-loaded pages (route-based code splitting) ---
@@ -121,6 +122,7 @@ function OnboardingRoute() {
 export default function App() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <PWAPrompt />
       <Routes>
         {/* Public */}
         <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
