@@ -1,4 +1,4 @@
-export type UserRole = 'student' | 'preceptor' | 'site_manager' | 'coordinator' | 'professor' | 'admin'
+export type UserRole = 'student' | 'preceptor' | 'site_manager' | 'coordinator' | 'professor' | 'admin' | 'practitioner'
 
 export interface User {
   id: string
@@ -215,6 +215,25 @@ export interface CollaborationMatch {
   responded_at: string | null
   physician_profile?: PhysicianProfile
   request?: CollaborationRequest
+  created_at: string
+  updated_at: string
+}
+
+export interface PractitionerProfile {
+  id: string
+  user_id: string
+  profession_type: 'np' | 'pa'
+  licensed_states: string[]
+  primary_specialty: string
+  years_in_practice: number
+  current_employer: string | null
+  npi_number: string | null
+  license_numbers: { state: string; number: string }[] | null
+  license_document_url: string | null
+  malpractice_document_url: string | null
+  malpractice_confirmed: boolean
+  bio: string | null
+  is_active: boolean
   created_at: string
   updated_at: string
 }

@@ -40,6 +40,7 @@ use App\Http\Controllers\NpiController;
 use App\Http\Controllers\SamlController;
 use App\Http\Controllers\StudentInviteController;
 use App\Http\Controllers\StateRulesController;
+use App\Http\Controllers\PractitionerProfileController;
 use App\Http\Controllers\Collaborate\PhysicianProfileController;
 use App\Http\Controllers\Collaborate\CollaborationRequestController;
 use App\Http\Controllers\Collaborate\CollaborationMatchController;
@@ -217,8 +218,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:student,coordinator,professor')
         ->get('/student/profile', [StudentController::class, 'profile']);
 
-    // Student Profile updates & Credentials (students only)
-    Route::middleware('role:student')->group(function () {
+    // Student Profile updates & Credentials (students + practitioners)
+    Route::middleware('role:student,practitioner')->group(function () {
         Route::put('/student/profile', [StudentController::class, 'updateProfile']);
         Route::get('/student/credentials', [StudentController::class, 'credentials']);
         Route::post('/student/credentials', [StudentController::class, 'storeCredential']);
@@ -402,7 +403,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/subscription/portal', [SubscriptionController::class, 'portal']);
 
     // NPI Verification (authenticated)
-    Route::middleware('role:preceptor,site_manager,admin')->post('/npi/verify', [NpiController::class, 'verify']);
+    Route::middleware('role:preceptor,site_manager,practitioner,admin')->post('/npi/verify', [NpiController::class, 'verify']);
 
     // Preceptor Profiles
     Route::get('/preceptor-profiles', [PreceptorProfileController::class, 'directory']);
@@ -459,18 +460,36 @@ Route::middleware('auth:sanctum')->group(function () {
     */
     // ─── Collaborate Module ───
     Route::prefix('collaborate')->group(function () {
-        Route::get('/physician-profiles', [PhysicianProfileController::class, 'index']);
-        Route::post('/physician-profiles', [PhysicianProfileController::class, 'store']);
+        // Physician directory — browsable by practitioners, preceptors, admin
+        Route::middleware('role:practitioner,preceptor,admin')
+            ->get('/physician-profiles', [PhysicianProfileController::class, 'index']);
         Route::get('/physician-profiles/{id}', [PhysicianProfileController::class, 'show']);
-        Route::put('/physician-profiles/{id}', [PhysicianProfileController::class, 'update']);
 
-        Route::get('/requests', [CollaborationRequestController::class, 'index']);
-        Route::post('/requests', [CollaborationRequestController::class, 'store']);
-        Route::get('/requests/{id}', [CollaborationRequestController::class, 'show']);
-        Route::put('/requests/{id}', [CollaborationRequestController::class, 'update']);
+        // Physician profile CRUD — preceptors only (NPI gate in controller)
+        Route::middleware('role:preceptor')->group(function () {
+            Route::post('/physician-profiles', [PhysicianProfileController::class, 'store']);
+            Route::put('/physician-profiles/{id}', [PhysicianProfileController::class, 'update']);
+        });
 
-        Route::get('/matches', [CollaborationMatchController::class, 'index']);
-        Route::post('/matches/{id}/respond', [CollaborationMatchController::class, 'respond']);
+        // Collaboration requests — practitioners only
+        Route::middleware('role:practitioner')->group(function () {
+            Route::get('/requests', [CollaborationRequestController::class, 'index']);
+            Route::post('/requests', [CollaborationRequestController::class, 'store']);
+            Route::get('/requests/{id}', [CollaborationRequestController::class, 'show']);
+            Route::put('/requests/{id}', [CollaborationRequestController::class, 'update']);
+        });
+
+        // Matches — practitioners and preceptors
+        Route::middleware('role:practitioner,preceptor,admin')->group(function () {
+            Route::get('/matches', [CollaborationMatchController::class, 'index']);
+            Route::post('/matches/{id}/respond', [CollaborationMatchController::class, 'respond']);
+        });
+    });
+
+    // ─── Practitioner Profile ───
+    Route::middleware('role:practitioner')->group(function () {
+        Route::get('/practitioner-profile', [PractitionerProfileController::class, 'show']);
+        Route::put('/practitioner-profile', [PractitionerProfileController::class, 'update']);
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {

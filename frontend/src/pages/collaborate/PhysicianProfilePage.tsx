@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../../hooks/usePageTitle.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { collaborateApi, type ApiPhysicianProfile } from '../../services/api.ts'
 import { Button } from '../../components/ui/Button.tsx'
 import { toast } from 'sonner'
-import { Loader2, ShieldCheck, Save, MapPin } from 'lucide-react'
+import { Loader2, ShieldCheck, Save, MapPin, AlertTriangle } from 'lucide-react'
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DC','DE','FL','GA','HI','ID','IL','IN',
@@ -22,9 +23,12 @@ const SPECIALTIES = [
 export default function PhysicianProfilePage() {
   usePageTitle('Physician Profile')
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [existingProfile, setExistingProfile] = useState<ApiPhysicianProfile | null>(null)
+  const [npiRequired, setNpiRequired] = useState(false)
+  const [taxonomyMismatch, setTaxonomyMismatch] = useState(false)
 
   // Form state
   const [licensedStates, setLicensedStates] = useState<string[]>([])
@@ -82,8 +86,17 @@ export default function PhysicianProfilePage() {
         })
         toast.success('Profile created! You\'re now visible in the physician directory.')
       }
-    } catch {
-      toast.error('Failed to save profile')
+    } catch (err: unknown) {
+      const resp = (err as { response?: { data?: { npi_required?: boolean; taxonomy_mismatch?: boolean } } })?.response
+      if (resp?.data?.npi_required) {
+        setNpiRequired(true)
+        toast.error('NPI verification required before creating a physician profile')
+      } else if (resp?.data?.taxonomy_mismatch) {
+        setTaxonomyMismatch(true)
+        toast.error('Your NPI taxonomy does not indicate MD/DO credentials')
+      } else {
+        toast.error('Failed to save profile')
+      }
     } finally {
       setSaving(false)
     }
@@ -96,6 +109,46 @@ export default function PhysicianProfilePage() {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    )
+  }
+
+  if (npiRequired) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+            <AlertTriangle className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold text-stone-900">NPI Verification Required</h2>
+          <p className="text-stone-600 max-w-md mx-auto">
+            You must verify your NPI number before creating a supervising physician profile.
+            Complete NPI verification in your settings first.
+          </p>
+          <Button onClick={() => navigate('/settings')} className="!rounded-xl">
+            Go to Settings
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (taxonomyMismatch) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto">
+            <ShieldCheck className="w-8 h-8 text-red-600" />
+          </div>
+          <h2 className="text-xl font-bold text-stone-900">MD/DO Credentials Required</h2>
+          <p className="text-stone-600 max-w-md mx-auto">
+            Your NPI taxonomy does not indicate MD or DO credentials. Only physicians (MD/DO) can create a supervising
+            physician profile for collaborative practice agreements.
+          </p>
+          <Button onClick={() => navigate('/collaborate')} variant="outline" className="!rounded-xl">
+            Back to Collaborate
+          </Button>
+        </div>
       </div>
     )
   }

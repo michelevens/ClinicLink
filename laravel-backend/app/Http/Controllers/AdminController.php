@@ -30,7 +30,7 @@ class AdminController extends Controller
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users', 'regex:/^[a-z0-9._-]+$/'],
-            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
+            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin,practitioner'],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
             'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
@@ -69,6 +69,17 @@ class AdminController extends Controller
             StudentProfile::create([
                 'user_id' => $user->id,
                 'university_id' => $validated['university_id'],
+            ]);
+        }
+
+        // Create practitioner profile
+        if ($validated['role'] === 'practitioner') {
+            \App\Models\PractitionerProfile::create([
+                'user_id' => $user->id,
+                'profession_type' => 'np',
+                'licensed_states' => [],
+                'primary_specialty' => '',
+                'is_active' => true,
             ]);
         }
 
@@ -274,7 +285,7 @@ class AdminController extends Controller
             'email' => ['sometimes', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users,username,' . $user->id, 'regex:/^[a-z0-9._-]+$/'],
-            'role' => ['sometimes', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
+            'role' => ['sometimes', 'in:student,preceptor,site_manager,coordinator,professor,admin,practitioner'],
             'is_active' => ['sometimes', 'boolean'],
             'plan' => ['sometimes', 'in:free,pro'],
             'stripe_onboarded' => ['sometimes', 'boolean'],
@@ -397,7 +408,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:200'],
             'emails.*' => ['required', 'email', 'max:255'],
-            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin'],
+            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,admin,practitioner'],
             'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
             'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
             'site_ids' => ['sometimes', 'array'],

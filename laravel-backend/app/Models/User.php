@@ -197,6 +197,11 @@ class User extends Authenticatable
         return $this->hasOne(PhysicianProfile::class);
     }
 
+    public function practitionerProfile()
+    {
+        return $this->hasOne(PractitionerProfile::class);
+    }
+
     public function collaborationRequests()
     {
         return $this->hasMany(CollaborationRequest::class);
@@ -217,6 +222,11 @@ class User extends Authenticatable
     public function scopePreceptors($query)
     {
         return $query->where('role', 'preceptor');
+    }
+
+    public function scopePractitioners($query)
+    {
+        return $query->where('role', 'practitioner');
     }
 
     // Helpers
@@ -246,6 +256,11 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isPractitioner(): bool
+    {
+        return $this->role === 'practitioner';
+    }
+
     public function isSsoUser(): bool
     {
         return $this->sso_provider !== null;
@@ -256,9 +271,27 @@ class User extends Authenticatable
         return $this->role === 'preceptor' && $this->physicianProfile !== null;
     }
 
+    public function isVerifiedPhysician(): bool
+    {
+        if ($this->role !== 'preceptor') {
+            return false;
+        }
+        $pp = $this->preceptorProfile;
+        if (!$pp || !$pp->npi_verified_at || !$pp->npi_data) {
+            return false;
+        }
+        $taxonomies = collect(data_get($pp->npi_data, 'taxonomies', []));
+        return $taxonomies->contains(function ($t) {
+            $code = $t['code'] ?? '';
+            return str_starts_with($code, '207')
+                || str_starts_with($code, '208')
+                || $code === '171100000X';
+        });
+    }
+
     public function isNpPa(): bool
     {
-        return $this->role === 'student';
+        return $this->role === 'practitioner';
     }
 
     public function getFullNameAttribute(): string

@@ -31,6 +31,13 @@ class CollaborationRequestController extends Controller
     {
         $user = $request->user();
 
+        // Only practitioners (practicing NPs/PAs) can create collaboration requests
+        if ($user->role !== 'practitioner') {
+            return response()->json([
+                'message' => 'Only practicing NPs and PAs can create collaboration requests.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'profession_type' => ['required', 'in:np,pa'],
             'states_requested' => ['required', 'array', 'min:1'],

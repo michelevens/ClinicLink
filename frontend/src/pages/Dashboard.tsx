@@ -18,7 +18,7 @@ import {
   Building2, Users, CalendarDays, TrendingUp, Star,
   GraduationCap, ClipboardCheck, BarChart3, BookOpen,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
-  UserCheck, Activity, Eye, Settings, ChevronRight, Plus,
+  UserCheck, Activity, Eye, Settings, ChevronRight, Plus, Handshake,
 } from 'lucide-react'
 import { PageSkeleton } from '../components/ui/Skeleton.tsx'
 
@@ -1087,6 +1087,74 @@ function AdminDashboard() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PRACTITIONER DASHBOARD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function PractitionerDashboard() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { data: stats, isLoading } = useDashboardStats()
+
+  if (isLoading) return <PageSkeleton />
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Practitioner'}!</h1>
+        <p className="text-stone-500">Manage your collaborative practice agreements and find supervising physicians.</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard icon={<FileText className="w-5 h-5" />} label="Open Requests" value={stats?.open_requests || 0} color="primary" />
+        <StatCard icon={<Handshake className="w-5 h-5" />} label="Matched Requests" value={stats?.matched_requests || 0} color="green" />
+        <StatCard icon={<Users className="w-5 h-5" />} label="Total Matches" value={stats?.total_matches || 0} color="secondary" />
+        <StatCard icon={<CheckCircle className="w-5 h-5" />} label="Accepted Matches" value={stats?.accepted_matches || 0} color="accent" />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card hover className="cursor-pointer" onClick={() => navigate('/collaborate/requests')}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-primary-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-stone-900">New Request</p>
+              <p className="text-xs text-stone-500">Find a supervising physician</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-stone-400" />
+          </div>
+        </Card>
+        <Card hover className="cursor-pointer" onClick={() => navigate('/collaborate/directory')}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-secondary-50 flex items-center justify-center">
+              <Search className="w-5 h-5 text-secondary-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-stone-900">Physician Directory</p>
+              <p className="text-xs text-stone-500">Browse available physicians</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-stone-400" />
+          </div>
+        </Card>
+        <Card hover className="cursor-pointer" onClick={() => navigate('/collaborate/matches')}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+              <Handshake className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-stone-900">My Matches</p>
+              <p className="text-xs text-stone-500">Review collaboration matches</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-stone-400" />
+          </div>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN DASHBOARD ROUTER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export function Dashboard() {
@@ -1100,6 +1168,7 @@ export function Dashboard() {
     case 'coordinator': return <CoordinatorDashboard />
     case 'professor': return <ProfessorDashboard />
     case 'preceptor': return <PreceptorDashboard />
+    case 'practitioner': return <PractitionerDashboard />
     case 'admin': return <AdminDashboard />
     default: return <StudentDashboard />
   }

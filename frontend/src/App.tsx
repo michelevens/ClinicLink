@@ -180,11 +180,11 @@ export default function App() {
         <Route path="/sites-map" element={<ProtectedRoute roles={['coordinator', 'admin']}><SitesMap /></ProtectedRoute>} />
 
         {/* Collaborate module */}
-        <Route path="/collaborate" element={<ProtectedRoute><CollaborateLanding /></ProtectedRoute>} />
-        <Route path="/collaborate/directory" element={<ProtectedRoute><PhysicianDirectory /></ProtectedRoute>} />
-        <Route path="/collaborate/requests" element={<ProtectedRoute roles={['student']}><CollaborationRequests /></ProtectedRoute>} />
+        <Route path="/collaborate" element={<ProtectedRoute roles={['practitioner', 'preceptor', 'admin']}><CollaborateLanding /></ProtectedRoute>} />
+        <Route path="/collaborate/directory" element={<ProtectedRoute roles={['practitioner', 'preceptor', 'admin']}><PhysicianDirectory /></ProtectedRoute>} />
+        <Route path="/collaborate/requests" element={<ProtectedRoute roles={['practitioner']}><CollaborationRequests /></ProtectedRoute>} />
         <Route path="/collaborate/profile" element={<ProtectedRoute roles={['preceptor']}><PhysicianProfilePage /></ProtectedRoute>} />
-        <Route path="/collaborate/matches" element={<ProtectedRoute><CollaborationMatches /></ProtectedRoute>} />
+        <Route path="/collaborate/matches" element={<ProtectedRoute roles={['practitioner', 'preceptor', 'admin']}><CollaborationMatches /></ProtectedRoute>} />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

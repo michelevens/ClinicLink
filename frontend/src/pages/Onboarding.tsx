@@ -53,6 +53,12 @@ const mkSteps = (role: string): StepDef[] => {
     base.push(
       { id: 'university', title: 'University Details', subtitle: 'Your institution and department', icon: <BookOpen className="w-7 h-7" />, gradient: 'from-rose-300 via-purple-300 to-indigo-300', iconBg: 'from-purple-500 to-indigo-500' },
     )
+  } else if (role === 'practitioner') {
+    base.push(
+      { id: 'profession', title: 'Professional Info', subtitle: 'Your credentials and specialty', icon: <Briefcase className="w-7 h-7" />, gradient: 'from-rose-300 via-teal-300 to-cyan-300', iconBg: 'from-teal-500 to-cyan-500' },
+      { id: 'practice', title: 'Practice Details', subtitle: 'Where you practice', icon: <MapPin className="w-7 h-7" />, gradient: 'from-teal-300 via-cyan-300 to-blue-300', iconBg: 'from-cyan-500 to-blue-500' },
+      { id: 'documents', title: 'Documents', subtitle: 'Upload license & insurance', icon: <FileText className="w-7 h-7" />, gradient: 'from-cyan-300 via-blue-300 to-indigo-300', iconBg: 'from-blue-500 to-indigo-500' },
+    )
   }
   base.push(
     { id: 'complete', title: 'You\'re All Set!', subtitle: 'Welcome to ClinicLink', icon: <CheckCircle className="w-7 h-7" />, gradient: 'from-emerald-300 via-teal-300 to-cyan-300', iconBg: 'from-emerald-500 to-teal-500' },
@@ -69,6 +75,13 @@ const SPECIALTIES = [
 ]
 
 const EHR_OPTIONS = ['Epic', 'Cerner', 'Athenahealth', 'eClinicalWorks', 'NextGen', 'Allscripts', 'Meditech', 'Other']
+
+const US_STATES = [
+  'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
+  'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+  'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
+  'VA','WA','WV','WI','WY','DC',
+]
 
 /* ─────────────────────────────────────────
    Confetti Component (CSS-only)
@@ -300,6 +313,20 @@ export function Onboarding() {
   const [coordUniversitySearch, setCoordUniversitySearch] = useState('')
   const [department, setDepartment] = useState('')
 
+  // Practitioner — profession, practice, documents
+  const [professionType, setProfessionType] = useState<'np' | 'pa' | ''>('')
+  const [practitionerStates, setPractitionerStates] = useState<string[]>([])
+  const [primarySpecialty, setPrimarySpecialty] = useState('')
+  const [yearsInPractice, setYearsInPractice] = useState('')
+  const [currentEmployer, setCurrentEmployer] = useState('')
+  const [practitionerNpi, setPractitionerNpi] = useState('')
+  const [licenseNumbers, setLicenseNumbers] = useState<Record<string, string>>({})
+  const [malpracticeConfirmed, setMalpracticeConfirmed] = useState(false)
+  const [licenseDocFile, setLicenseDocFile] = useState<string | null>(null)
+  const [malpracticeDocFile, setMalpracticeDocFile] = useState<string | null>(null)
+  const [uploadingPractDoc, setUploadingPractDoc] = useState<string | null>(null)
+  const practDocInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+
   // Inject CSS animations
   useEffect(() => { injectStyles() }, [])
 
@@ -348,6 +375,10 @@ export function Onboarding() {
     setFacilitySpecialties(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
   }, [])
 
+  const togglePractitionerState = useCallback((s: string) => {
+    setPractitionerStates(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
+  }, [])
+
   // Filter universities
   const filteredUniversities = universities.filter(u =>
     u.name.toLowerCase().includes(
@@ -368,6 +399,9 @@ export function Onboarding() {
     if (step.id === 'academic') return !!universityId
     if (step.id === 'facility') return !!facilityName.trim()
     if (step.id === 'university') return !!coordUniversityId
+    if (step.id === 'profession') return !!professionType && practitionerStates.length > 0
+    if (step.id === 'practice') return true
+    if (step.id === 'documents') return true
     return true
   }
 
@@ -402,6 +436,18 @@ export function Onboarding() {
       } else if (role === 'coordinator' || role === 'professor') {
         data.university_id = coordUniversityId || undefined
         data.department = department || undefined
+      } else if (role === 'practitioner') {
+        data.profession_type = professionType
+        data.licensed_states = practitionerStates
+        data.primary_specialty = primarySpecialty || undefined
+        data.years_in_practice = yearsInPractice ? parseInt(yearsInPractice) : 0
+        data.current_employer = currentEmployer || undefined
+        data.npi_number = practitionerNpi || undefined
+        data.license_numbers = practitionerStates
+          .filter(st => licenseNumbers[st])
+          .map(st => ({ state: st, number: licenseNumbers[st] }))
+        data.malpractice_confirmed = malpracticeConfirmed
+        data.bio = bio || undefined
       }
 
       await completeOnboarding(data)
@@ -527,6 +573,7 @@ export function Onboarding() {
                   {role === 'preceptor' && 'We\'ll connect you with motivated students and make clinical supervision seamless.'}
                   {role === 'site_manager' && 'We\'ll help you manage rotation opportunities, review applications, and track students at your facility.'}
                   {(role === 'coordinator' || role === 'professor') && 'We\'ll give you full visibility into student placements, compliance, and clinical progress.'}
+                  {role === 'practitioner' && 'We\'ll help you find collaborative practice agreements and connect with supervising physicians in your state.'}
                   {role === 'admin' && 'Welcome to the ClinicLink admin panel. Let\'s complete your profile.'}
                 </p>
 
@@ -569,6 +616,16 @@ export function Onboarding() {
                   ].map(f => (
                     <div key={f.label} className="flex items-center gap-2 bg-indigo-50 rounded-xl px-3 py-2.5 text-sm font-medium text-indigo-800 border border-indigo-200/50">
                       <span className="text-indigo-500">{f.icon}</span> {f.label}
+                    </div>
+                  ))}
+                  {role === 'practitioner' && [
+                    { icon: <Search className="w-4 h-4" />, label: 'Find Physicians' },
+                    { icon: <FileText className="w-4 h-4" />, label: 'Request Collab' },
+                    { icon: <Shield className="w-4 h-4" />, label: 'Verify Credentials' },
+                    { icon: <Users className="w-4 h-4" />, label: 'Manage Agreements' },
+                  ].map(f => (
+                    <div key={f.label} className="flex items-center gap-2 bg-teal-50 rounded-xl px-3 py-2.5 text-sm font-medium text-teal-800 border border-teal-200/50">
+                      <span className="text-teal-500">{f.icon}</span> {f.label}
                     </div>
                   ))}
                 </div>
@@ -620,14 +677,16 @@ export function Onboarding() {
                   />
                 )}
 
-                {role === 'student' && (
+                {(role === 'student' || role === 'practitioner') && (
                   <div className="space-y-1.5">
                     <label className="block text-sm font-semibold text-stone-700">About You</label>
                     <textarea
                       value={bio}
                       onChange={e => setBio(e.target.value)}
                       rows={3}
-                      placeholder="Tell clinical sites about yourself, your experience, and what makes you a great candidate..."
+                      placeholder={role === 'practitioner'
+                        ? "Tell us about your practice, experience, and what you're looking for in a collaborative agreement..."
+                        : "Tell clinical sites about yourself, your experience, and what makes you a great candidate..."}
                       className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm bg-white/80 backdrop-blur-sm focus:border-rose-400 focus:ring-2 focus:ring-rose-400/20 focus:outline-none resize-none transition-all duration-200"
                     />
                   </div>
@@ -1059,6 +1118,252 @@ export function Onboarding() {
               </div>
             )}
 
+            {/* ─── Profession Info (Practitioner) ─── */}
+            {step.id === 'profession' && (
+              <div className="space-y-5">
+                <p className="text-sm text-stone-500">
+                  Tell us about your professional background so we can match you with the right collaborative physicians.
+                </p>
+
+                {/* NP vs PA toggle */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-stone-700">Profession Type *</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {([['np', 'Nurse Practitioner (NP)'], ['pa', 'Physician Assistant (PA)']] as const).map(([val, label]) => (
+                      <button
+                        key={val}
+                        onClick={() => setProfessionType(val)}
+                        className={`p-4 rounded-2xl border text-sm font-medium transition-all duration-300 text-left ${
+                          professionType === val
+                            ? 'bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-300 shadow-md shadow-teal-500/10'
+                            : 'bg-white/50 border-stone-200 hover:border-stone-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                            professionType === val ? 'bg-teal-500 text-white' : 'bg-stone-100 text-stone-400'
+                          }`}>
+                            <Stethoscope className="w-4 h-4" />
+                          </div>
+                          <span className={professionType === val ? 'text-teal-800' : 'text-stone-600'}>{label}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Primary Specialty */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-stone-700">Primary Specialty</label>
+                  <select
+                    value={primarySpecialty}
+                    onChange={e => setPrimarySpecialty(e.target.value)}
+                    className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm bg-white/80 backdrop-blur-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 focus:outline-none transition-all duration-200"
+                  >
+                    <option value="">Select specialty...</option>
+                    {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                {/* Licensed States */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-stone-700">Licensed States *</label>
+                  <p className="text-xs text-stone-400">Select all states where you hold an active license</p>
+                  <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto p-1">
+                    {US_STATES.map(st => (
+                      <button
+                        key={st}
+                        onClick={() => togglePractitionerState(st)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
+                          practitionerStates.includes(st)
+                            ? 'bg-teal-500 text-white shadow-sm shadow-teal-500/20'
+                            : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                  {practitionerStates.length > 0 && (
+                    <div className="flex items-center gap-2 bg-teal-50 text-teal-700 rounded-xl px-3 py-2 text-sm font-semibold border border-teal-200/50">
+                      <MapPin className="w-4 h-4" />
+                      {practitionerStates.length} {practitionerStates.length === 1 ? 'state' : 'states'}: {practitionerStates.join(', ')}
+                    </div>
+                  )}
+                </div>
+
+                {/* Years in Practice */}
+                <Input
+                  label="Years in Practice"
+                  type="number"
+                  placeholder="5"
+                  min="0"
+                  max="50"
+                  value={yearsInPractice}
+                  onChange={e => setYearsInPractice(e.target.value)}
+                  icon={<Clock className="w-4 h-4" />}
+                />
+              </div>
+            )}
+
+            {/* ─── Practice Details (Practitioner) ─── */}
+            {step.id === 'practice' && (
+              <div className="space-y-5">
+                <Input
+                  label="Current Employer"
+                  placeholder="Memorial Healthcare System"
+                  value={currentEmployer}
+                  onChange={e => setCurrentEmployer(e.target.value)}
+                  icon={<Building2 className="w-4 h-4" />}
+                />
+
+                <NpiLookup
+                  entityType="individual"
+                  label="NPI Number (Optional)"
+                  onVerified={(_result, npi) => {
+                    setPractitionerNpi(npi)
+                  }}
+                  onClear={() => setPractitionerNpi('')}
+                />
+
+                {/* License Numbers per State */}
+                {practitionerStates.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-semibold text-stone-700">License Numbers</label>
+                    <p className="text-xs text-stone-400">Enter your license number for each state (optional)</p>
+                    <div className="space-y-2">
+                      {practitionerStates.map(st => (
+                        <div key={st} className="flex items-center gap-3">
+                          <span className="w-10 text-center text-xs font-bold text-teal-600 bg-teal-50 rounded-lg py-2 border border-teal-200/50">{st}</span>
+                          <input
+                            type="text"
+                            placeholder={`License # for ${st}`}
+                            value={licenseNumbers[st] || ''}
+                            onChange={e => setLicenseNumbers(prev => ({ ...prev, [st]: e.target.value }))}
+                            className="flex-1 rounded-2xl border border-stone-200 px-4 py-2.5 text-sm bg-white/80 backdrop-blur-sm focus:border-teal-400 focus:ring-2 focus:ring-teal-400/20 focus:outline-none transition-all duration-200"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ─── Documents (Practitioner) ─── */}
+            {step.id === 'documents' && (
+              <div className="space-y-5">
+                <p className="text-sm text-stone-500">
+                  Upload your professional documents. These help verify your credentials for collaborative agreements. You can also upload them later.
+                </p>
+
+                {/* License Document Upload */}
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl border border-stone-200/50 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${licenseDocFile ? 'bg-emerald-100 text-emerald-600' : 'bg-teal-100 text-teal-600'}`}>
+                      {licenseDocFile ? <CheckCircle className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-stone-700">Professional License</span>
+                      {licenseDocFile && <p className="text-xs text-emerald-600">{licenseDocFile}</p>}
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    ref={el => { practDocInputRefs.current['license'] = el }}
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setUploadingPractDoc('license')
+                        setLicenseDocFile(file.name)
+                        setUploadingPractDoc(null)
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="!rounded-xl"
+                    disabled={uploadingPractDoc === 'license'}
+                    onClick={() => practDocInputRefs.current['license']?.click()}
+                  >
+                    {uploadingPractDoc === 'license' ? (
+                      <><span className="w-3.5 h-3.5 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" /> Uploading...</>
+                    ) : licenseDocFile ? (
+                      <><Upload className="w-3.5 h-3.5" /> Replace</>
+                    ) : (
+                      <><Upload className="w-3.5 h-3.5" /> Upload</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Malpractice Insurance Upload */}
+                <div className="flex items-center justify-between p-4 bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl border border-stone-200/50 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${malpracticeDocFile ? 'bg-emerald-100 text-emerald-600' : 'bg-teal-100 text-teal-600'}`}>
+                      {malpracticeDocFile ? <CheckCircle className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-stone-700">Malpractice Insurance</span>
+                      {malpracticeDocFile && <p className="text-xs text-emerald-600">{malpracticeDocFile}</p>}
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    ref={el => { practDocInputRefs.current['malpractice'] = el }}
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setUploadingPractDoc('malpractice')
+                        setMalpracticeDocFile(file.name)
+                        setMalpracticeConfirmed(true)
+                        setUploadingPractDoc(null)
+                      }
+                      e.target.value = ''
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="!rounded-xl"
+                    disabled={uploadingPractDoc === 'malpractice'}
+                    onClick={() => practDocInputRefs.current['malpractice']?.click()}
+                  >
+                    {uploadingPractDoc === 'malpractice' ? (
+                      <><span className="w-3.5 h-3.5 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" /> Uploading...</>
+                    ) : malpracticeDocFile ? (
+                      <><Upload className="w-3.5 h-3.5" /> Replace</>
+                    ) : (
+                      <><Upload className="w-3.5 h-3.5" /> Upload</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Malpractice Confirmation Checkbox */}
+                <label className="flex items-start gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-200/50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={malpracticeConfirmed}
+                    onChange={e => setMalpracticeConfirmed(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-stone-300 text-teal-600 focus:ring-teal-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-stone-700">I confirm I have active malpractice insurance</span>
+                    <p className="text-xs text-stone-500 mt-0.5">Required for collaborative practice agreements</p>
+                  </div>
+                </label>
+
+                <p className="text-xs text-stone-400 text-center bg-stone-50 rounded-xl p-3">
+                  You can always upload or update documents later from <strong>Settings → Profile</strong>
+                </p>
+              </div>
+            )}
+
             {/* ─── Complete Step ─── */}
             {step.id === 'complete' && (
               <div className="text-center space-y-6 py-6">
@@ -1073,6 +1378,7 @@ export function Onboarding() {
                     {role === 'preceptor' && 'Your profile is ready. Students will be able to find and connect with you!'}
                     {role === 'site_manager' && 'Your facility is set up. Start listing rotation slots for students!'}
                     {(role === 'coordinator' || role === 'professor') && 'Your profile is ready. Start managing student placements and compliance!'}
+                    {role === 'practitioner' && 'Your profile is ready. Start browsing the physician directory and requesting collaborative agreements!'}
                     {role === 'admin' && 'Your admin account is configured. Head to the dashboard!'}
                   </p>
                 </div>
@@ -1100,6 +1406,21 @@ export function Onboarding() {
                   {role === 'preceptor' && selectedInterests.length > 0 && (
                     <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 rounded-full px-3 py-1.5 text-sm font-medium border border-blue-200/50">
                       <Stethoscope className="w-3.5 h-3.5" /> {selectedInterests.length} Specialties
+                    </span>
+                  )}
+                  {role === 'practitioner' && professionType && (
+                    <span className="inline-flex items-center gap-1.5 bg-teal-50 text-teal-700 rounded-full px-3 py-1.5 text-sm font-medium border border-teal-200/50">
+                      <Stethoscope className="w-3.5 h-3.5" /> {professionType === 'np' ? 'Nurse Practitioner' : 'Physician Assistant'}
+                    </span>
+                  )}
+                  {role === 'practitioner' && practitionerStates.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 bg-cyan-50 text-cyan-700 rounded-full px-3 py-1.5 text-sm font-medium border border-cyan-200/50">
+                      <MapPin className="w-3.5 h-3.5" /> {practitionerStates.length} {practitionerStates.length === 1 ? 'State' : 'States'}
+                    </span>
+                  )}
+                  {role === 'practitioner' && malpracticeConfirmed && (
+                    <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 rounded-full px-3 py-1.5 text-sm font-medium border border-emerald-200/50">
+                      <Shield className="w-3.5 h-3.5" /> Malpractice Verified
                     </span>
                   )}
                 </div>

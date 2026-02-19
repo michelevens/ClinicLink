@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Application;
+use App\Models\CollaborationMatch;
 use App\Models\HourLog;
 use App\Models\RotationSite;
 use App\Models\RotationSlot;
@@ -23,6 +24,7 @@ class DashboardController extends Controller
             'preceptor' => $this->preceptorStats($user),
             'site_manager' => $this->siteManagerStats($user),
             'coordinator' => $this->coordinatorStats($user),
+            'practitioner' => $this->practitionerStats($user),
             'admin' => $this->adminStats(),
             default => [],
         };
@@ -102,6 +104,16 @@ class DashboardController extends Controller
                 ->count(),
             'total_sites' => RotationSite::active()->count(),
             'available_slots' => RotationSlot::open()->count(),
+        ];
+    }
+
+    private function practitionerStats(User $user): array
+    {
+        return [
+            'open_requests' => $user->collaborationRequests()->where('status', 'open')->count(),
+            'matched_requests' => $user->collaborationRequests()->where('status', 'matched')->count(),
+            'total_matches' => CollaborationMatch::whereHas('request', fn ($q) => $q->where('user_id', $user->id))->count(),
+            'accepted_matches' => CollaborationMatch::whereHas('request', fn ($q) => $q->where('user_id', $user->id))->where('status', 'accepted')->count(),
         ];
     }
 

@@ -21,7 +21,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] },
+  { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'] },
   { label: 'Search Rotations', path: '/rotations', icon: <Search className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
   { label: 'My Applications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
   { label: 'Hour Log', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
@@ -46,11 +46,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'License Codes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
   { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Admin' },
   { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Admin' },
-  { label: 'Collaborate', path: '/collaborate', icon: <Handshake className="w-5 h-5" />, roles: ['student', 'preceptor', 'admin'], group: 'Collaborate' },
-  { label: 'Physician Directory', path: '/collaborate/directory', icon: <Search className="w-5 h-5" />, roles: ['student', 'preceptor', 'admin'], group: 'Collaborate' },
-  { label: 'My Requests', path: '/collaborate/requests', icon: <FileText className="w-5 h-5" />, roles: ['student'], group: 'Collaborate' },
+  { label: 'Collaborate', path: '/collaborate', icon: <Handshake className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
+  { label: 'Physician Directory', path: '/collaborate/directory', icon: <Search className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
+  { label: 'My Requests', path: '/collaborate/requests', icon: <FileText className="w-5 h-5" />, roles: ['practitioner'], group: 'Collaborate' },
   { label: 'Physician Profile', path: '/collaborate/profile', icon: <Stethoscope className="w-5 h-5" />, roles: ['preceptor'], group: 'Collaborate' },
-  { label: 'Matches', path: '/collaborate/matches', icon: <Users className="w-5 h-5" />, roles: ['student', 'preceptor', 'admin'], group: 'Collaborate' },
+  { label: 'Matches', path: '/collaborate/matches', icon: <Users className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
 ]
 
 const GROUP_ORDER = ['Clinical', 'Credentials', 'Sites', 'Academic', 'Admin']

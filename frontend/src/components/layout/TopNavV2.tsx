@@ -122,6 +122,7 @@ export function TopNavV2() {
     site_manager: 'Site Manager',
     coordinator: 'Coordinator',
     professor: 'Professor',
+    practitioner: 'Practitioner',
     admin: 'Admin',
   }
 

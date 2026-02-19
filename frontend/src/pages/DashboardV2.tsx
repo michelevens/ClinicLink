@@ -14,7 +14,7 @@ import {
   GraduationCap, ClipboardCheck, BarChart3, BookOpen,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
   UserCheck, Activity, Eye, Settings, Plus,
-  Target,
+  Target, Handshake, ChevronRight,
 } from 'lucide-react'
 import { PageSkeleton } from '../components/ui/Skeleton.tsx'
 
@@ -916,6 +916,78 @@ function AdminDashboardV2() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PRACTITIONER DASHBOARD V2
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function PractitionerDashboardV2() {
+  const navigate = useNavigate()
+  const { user } = useAuth()
+  const { data: stats, isLoading } = useDashboardStats()
+
+  if (isLoading) return <PageSkeleton />
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.firstName || 'Practitioner'}!</h1>
+        <p className="text-gray-500">Manage your collaborative practice agreements and find supervising physicians.</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <V2StatCard icon={<FileText className="w-5 h-5" />} label="Open Requests" value={stats?.open_requests || 0} color="indigo" />
+        <V2StatCard icon={<Handshake className="w-5 h-5" />} label="Matched Requests" value={stats?.matched_requests || 0} color="emerald" />
+        <V2StatCard icon={<Users className="w-5 h-5" />} label="Total Matches" value={stats?.total_matches || 0} color="cyan" />
+        <V2StatCard icon={<CheckCircle className="w-5 h-5" />} label="Accepted Matches" value={stats?.accepted_matches || 0} color="amber" />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="cursor-pointer" onClick={() => navigate('/collaborate/requests')}>
+          <V2Card>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <Plus className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">New Request</p>
+                <p className="text-xs text-gray-500">Find a supervising physician</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </div>
+          </V2Card>
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate('/collaborate/directory')}>
+          <V2Card>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
+                <Search className="w-5 h-5 text-sky-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">Physician Directory</p>
+                <p className="text-xs text-gray-500">Browse available physicians</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </div>
+          </V2Card>
+        </div>
+        <div className="cursor-pointer" onClick={() => navigate('/collaborate/matches')}>
+          <V2Card>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <Handshake className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900">My Matches</p>
+                <p className="text-xs text-gray-500">Review collaboration matches</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-gray-400" />
+            </div>
+          </V2Card>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN DASHBOARD V2 ROUTER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export function DashboardV2() {
@@ -929,6 +1001,7 @@ export function DashboardV2() {
     case 'coordinator': return <CoordinatorDashboardV2 />
     case 'professor': return <ProfessorDashboardV2 />
     case 'preceptor': return <PreceptorDashboardV2 />
+    case 'practitioner': return <PractitionerDashboardV2 />
     case 'admin': return <AdminDashboardV2 />
     default: return <StudentDashboardV2 />
   }

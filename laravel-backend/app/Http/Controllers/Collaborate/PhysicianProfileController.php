@@ -55,6 +55,38 @@ class PhysicianProfileController extends Controller
     {
         $user = $request->user();
 
+        // Gate 1: Must be a preceptor
+        if ($user->role !== 'preceptor') {
+            return response()->json([
+                'message' => 'Only preceptors can create a physician profile.',
+            ], 403);
+        }
+
+        // Gate 2: NPI must be verified
+        $preceptorProfile = $user->preceptorProfile;
+        if (!$preceptorProfile || !$preceptorProfile->npi_verified_at) {
+            return response()->json([
+                'message' => 'You must verify your NPI number before creating a physician profile.',
+                'npi_required' => true,
+            ], 422);
+        }
+
+        // Gate 3: NPI taxonomy must confirm MD/DO
+        $taxonomies = collect(data_get($preceptorProfile->npi_data, 'taxonomies', []));
+        $isMdDo = $taxonomies->contains(function ($t) {
+            $code = $t['code'] ?? '';
+            return str_starts_with($code, '207')
+                || str_starts_with($code, '208')
+                || $code === '171100000X';
+        });
+
+        if (!$isMdDo) {
+            return response()->json([
+                'message' => 'Your NPI taxonomy does not indicate MD or DO credentials. Only physicians (MD/DO) can create a supervising physician profile.',
+                'taxonomy_mismatch' => true,
+            ], 422);
+        }
+
         if ($user->physicianProfile) {
             return response()->json(['message' => 'Profile already exists'], 409);
         }

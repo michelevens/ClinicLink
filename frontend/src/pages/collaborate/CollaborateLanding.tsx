@@ -27,7 +27,7 @@ export default function CollaborateLanding() {
             Connecting NPs and PAs with supervising physicians for state-mandated collaborative practice. Compliance tracking, matching, and capacity management — all in one place.
           </p>
           <div className="flex flex-wrap gap-3">
-            {user?.role === 'student' && (
+            {user?.role === 'practitioner' && (
               <Button onClick={() => navigate('/collaborate/requests')} className="bg-white text-indigo-700 hover:bg-white/90 !rounded-xl">
                 Create a Request <ArrowRight className="w-4 h-4" />
               </Button>

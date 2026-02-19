@@ -11,6 +11,7 @@ const roleLabels: Record<UserRole, string> = {
   site_manager: 'Site Manager',
   coordinator: 'Coordinator',
   professor: 'Professor',
+  practitioner: 'Practitioner',
   admin: 'Admin',
 }
 

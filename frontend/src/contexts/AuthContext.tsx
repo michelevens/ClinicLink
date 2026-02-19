@@ -62,6 +62,7 @@ const DEMO_USERS: Record<UserRole, User> = {
   coordinator: { id: 'demo-coord-1', email: 'coordinator@cliniclink.health', firstName: 'Dr. Lisa', lastName: 'Thompson', role: 'coordinator', createdAt: new Date().toISOString(), onboardingCompleted: true },
   professor: { id: 'demo-prof-1', email: 'professor@cliniclink.health', firstName: 'Prof. Robert', lastName: 'Martinez', role: 'professor', createdAt: new Date().toISOString(), onboardingCompleted: true },
   admin: { id: 'demo-admin-1', email: 'admin@cliniclink.health', firstName: 'Admin', lastName: 'User', role: 'admin', createdAt: new Date().toISOString(), onboardingCompleted: true },
+  practitioner: { id: 'demo-practitioner-1', email: 'practitioner@cliniclink.health', firstName: 'Emily', lastName: 'Reyes', role: 'practitioner', createdAt: new Date().toISOString(), onboardingCompleted: true },
 }
 
 const DEFAULT_STATE: AuthState = { user: null, token: null, isAuthenticated: false, isLoading: false, mfaPending: false, mfaToken: null }
@@ -208,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       coordinator: 'coordinator@cliniclink.health',
       professor: 'professor@cliniclink.health',
       admin: 'admin@cliniclink.health',
+      practitioner: 'practitioner@cliniclink.health',
     }
     try {
       const res = await authApi.login({ login: emailMap[role], password: 'ClinicLink2026!' })

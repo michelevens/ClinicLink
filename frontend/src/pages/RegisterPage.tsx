@@ -13,6 +13,7 @@ import { usePageTitle } from '../hooks/usePageTitle.ts'
 
 const ROLE_OPTIONS: { value: UserRole; label: string; desc: string }[] = [
   { value: 'student', label: 'Student', desc: 'I need clinical rotation hours' },
+  { value: 'practitioner', label: 'Practicing NP/PA', desc: 'I need a collaborative practice agreement' },
   { value: 'site_manager', label: 'Site Manager', desc: 'I manage a clinical facility' },
   { value: 'preceptor', label: 'Preceptor', desc: 'I supervise students clinically' },
   { value: 'coordinator', label: 'University Coordinator', desc: 'I manage student placements' },

@@ -971,6 +971,11 @@ export interface ApiDashboardStats {
   total_students?: number
   active_placements?: number
   available_slots?: number
+  // Practitioner stats
+  open_requests?: number
+  matched_requests?: number
+  total_matches?: number
+  accepted_matches?: number
   // Site Manager + Admin stats
   total_users?: number
   total_universities?: number
@@ -1990,4 +1995,28 @@ export const collaborateApi = {
   },
   respondToMatch: (id: string, status: 'accepted' | 'declined') =>
     api.post<ApiCollaborationMatch>(`/collaborate/matches/${id}/respond`, { status }),
+}
+
+// ─── Practitioner Profile API ───
+export interface ApiPractitionerProfile {
+  id: string
+  user_id: string
+  profession_type: 'np' | 'pa'
+  licensed_states: string[]
+  primary_specialty: string
+  years_in_practice: number
+  current_employer: string | null
+  npi_number: string | null
+  license_numbers: { state: string; number: string }[] | null
+  license_document_url: string | null
+  malpractice_document_url: string | null
+  malpractice_confirmed: boolean
+  bio: string | null
+  is_active: boolean
+}
+
+export const practitionerApi = {
+  getProfile: () => api.get<ApiPractitionerProfile>('/practitioner-profile'),
+  updateProfile: (data: Partial<ApiPractitionerProfile>) =>
+    api.put<ApiPractitionerProfile>('/practitioner-profile', data),
 }

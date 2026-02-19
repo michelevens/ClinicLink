@@ -9,7 +9,7 @@ import {
   Search, Clock, Shield, ArrowRight, Users, CheckCircle,
   Zap, Award, BarChart3, Globe, Lock, FileCheck,
   Brain, Smartphone, ClipboardCheck,
-  ChevronRight, Sparkles, MapPin, Calendar, Phone, Mail, ExternalLink
+  ChevronRight, Sparkles, MapPin, Calendar, Phone, Mail, ExternalLink, Handshake
 } from 'lucide-react'
 import type { UserRole } from '../types/index.ts'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
@@ -387,6 +387,7 @@ export function LandingPage() {
               { role: 'preceptor' as UserRole, label: 'Preceptor', icon: <Stethoscope className="w-5 h-5" />, desc: 'Approve hours, write evaluations' },
               { role: 'coordinator' as UserRole, label: 'Coordinator', icon: <BookOpen className="w-5 h-5" />, desc: 'Monitor placements, run reports' },
               { role: 'professor' as UserRole, label: 'Professor', icon: <Users className="w-5 h-5" />, desc: 'Track student progress' },
+              { role: 'practitioner' as UserRole, label: 'Practitioner', icon: <Handshake className="w-5 h-5" />, desc: 'Find collaborative physicians' },
               { role: 'admin' as UserRole, label: 'Admin', icon: <Shield className="w-5 h-5" />, desc: 'Platform management' },
             ].map(demo => (
               <button

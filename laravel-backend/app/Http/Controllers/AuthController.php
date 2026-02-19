@@ -7,6 +7,7 @@ use App\Mail\NewUserRegistrationMail;
 use App\Mail\RegistrationReceivedMail;
 use App\Mail\WelcomeMail;
 use App\Models\AuditLog;
+use App\Models\PractitionerProfile;
 use App\Models\PreceptorProfile;
 use App\Models\RotationSite;
 use App\Models\SiteInvite;
@@ -35,7 +36,7 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'username' => ['sometimes', 'nullable', 'string', 'max:50', 'unique:users', 'regex:/^[a-z0-9._-]+$/'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor'],
+            'role' => ['required', 'in:student,preceptor,site_manager,coordinator,professor,practitioner'],
             'university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
             'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
             'site_id' => ['sometimes', 'nullable', 'exists:rotation_sites,id'],
@@ -97,6 +98,17 @@ class AuthController extends Controller
                     'reviewed_at' => now(),
                 ]);
             }
+        }
+
+        // Create practitioner profile with defaults
+        if ($validated['role'] === 'practitioner') {
+            PractitionerProfile::create([
+                'user_id' => $user->id,
+                'profession_type' => 'np',
+                'licensed_states' => [],
+                'primary_specialty' => '',
+                'is_active' => true,
+            ]);
         }
 
         // Send email verification link
@@ -257,7 +269,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $user->load(['studentProfile', 'credentials']);
+        $user->load(['studentProfile', 'credentials', 'practitionerProfile']);
 
         $data = $user->toArray();
         $data['onboarding_completed'] = !is_null($user->onboarding_completed_at);
@@ -349,6 +361,25 @@ class AuthController extends Controller
                     $profileData['npi_number'] = $request->input('npi_number');
                 }
                 PreceptorProfile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    $profileData
+                );
+                break;
+
+            case 'practitioner':
+                $profileData = array_filter([
+                    'profession_type' => $request->input('profession_type'),
+                    'licensed_states' => $request->input('licensed_states', []),
+                    'primary_specialty' => $request->input('primary_specialty'),
+                    'years_in_practice' => $request->input('years_in_practice'),
+                    'current_employer' => $request->input('current_employer'),
+                    'npi_number' => $request->input('npi_number'),
+                    'license_numbers' => $request->input('license_numbers'),
+                    'malpractice_confirmed' => $request->input('malpractice_confirmed'),
+                    'bio' => $request->input('bio'),
+                ], fn ($v) => !is_null($v));
+
+                PractitionerProfile::updateOrCreate(
                     ['user_id' => $user->id],
                     $profileData
                 );
