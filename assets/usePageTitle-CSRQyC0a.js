@@ -1,0 +1,1 @@
+import{r as i}from"./index-GzcG7CSS.js";const n=" | ClinicLink";function o(t){i.useEffect(()=>(document.title=t+n,()=>{document.title="ClinicLink - Clinical Rotation Matching Platform"}),[t])}export{o as u};
