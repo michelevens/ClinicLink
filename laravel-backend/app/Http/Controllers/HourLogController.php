@@ -92,14 +92,37 @@ class HourLogController extends Controller
             'category' => $validated['category'],
         ]);
 
-        // Notify the slot's preceptor about the new hour log
+        // Notify preceptor and site manager about the new hour log
         try {
-            if ($log->slot && $log->slot->preceptor_id) {
-                $preceptor = \App\Models\User::find($log->slot->preceptor_id);
-                $preceptor?->notify(new HourLogSubmittedNotification($log));
+            if ($log->slot) {
+                // Notify preceptor (email + in-app)
+                if ($log->slot->preceptor_id) {
+                    $preceptor = \App\Models\User::find($log->slot->preceptor_id);
+                    if ($preceptor) {
+                        // Send email to preceptor
+                        Mail::to($preceptor->email)->send(
+                            new \App\Mail\HourLogSubmittedMail($log)
+                        );
+                        // Send in-app notification to preceptor
+                        $preceptor->notify(new HourLogSubmittedNotification($log));
+                    }
+                }
+
+                // Notify site manager (email + in-app)
+                if ($log->slot->site && $log->slot->site->manager_id) {
+                    $siteManager = \App\Models\User::find($log->slot->site->manager_id);
+                    if ($siteManager) {
+                        // Send email to site manager
+                        Mail::to($siteManager->email)->send(
+                            new \App\Mail\HourLogSubmittedMail($log)
+                        );
+                        // Send in-app notification to site manager
+                        $siteManager->notify(new HourLogSubmittedNotification($log));
+                    }
+                }
             }
         } catch (\Throwable $e) {
-            Log::warning('Failed to send hour-log submitted notification: ' . $e->getMessage());
+            Log::warning('Failed to send hour-log submitted notifications: ' . $e->getMessage());
         }
 
         return response()->json($log, 201);
