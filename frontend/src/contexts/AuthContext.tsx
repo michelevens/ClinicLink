@@ -52,6 +52,24 @@ function mapApiUser(u: ApiUser): User {
     onboardingCompleted: u.onboarding_completed ?? false,
     universityId: u.student_profile?.university_id || undefined,
     programId: u.student_profile?.program_id || undefined,
+    // Profile relationships for role distinction
+    preceptorProfile: u.preceptor_profile ? {
+      id: u.preceptor_profile.id,
+      npi_number: u.preceptor_profile.npi_number || undefined,
+      npi_verified_at: u.preceptor_profile.npi_verified_at || undefined,
+      specialties: u.preceptor_profile.specialties,
+    } : undefined,
+    physicianProfile: u.physician_profile ? {
+      id: u.physician_profile.id,
+      licensed_states: u.physician_profile.licensed_states,
+      specialties: u.physician_profile.specialties,
+      stripe_connect_status: u.physician_profile.stripe_connect_status || undefined,
+    } : undefined,
+    practitionerProfile: u.practitioner_profile ? {
+      id: u.practitioner_profile.id,
+      profession_type: u.practitioner_profile.profession_type,
+      licensed_states: u.practitioner_profile.licensed_states,
+    } : undefined,
   }
 }
 

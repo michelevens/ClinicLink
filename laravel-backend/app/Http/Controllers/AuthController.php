@@ -269,7 +269,13 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        $user->load(['studentProfile', 'credentials', 'practitionerProfile']);
+        $user->load([
+            'studentProfile',
+            'credentials',
+            'practitionerProfile',
+            'preceptorProfile',
+            'physicianProfile',
+        ]);
 
         $data = $user->toArray();
         $data['onboarding_completed'] = !is_null($user->onboarding_completed_at);

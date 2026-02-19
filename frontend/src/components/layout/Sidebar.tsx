@@ -125,7 +125,20 @@ export function Sidebar() {
 
   const { data: pendingSigs } = useMyPendingSignatures()
   const pendingSigCount = pendingSigs?.data?.length ?? 0
-  const filteredItems = NAV_ITEMS.filter(item => user && item.roles.includes(user.role))
+
+  // Filter nav items by role, with special handling for Collaborate (preceptors need physician_profile)
+  const filteredItems = NAV_ITEMS.filter(item => {
+    if (!user) return false
+    if (!item.roles.includes(user.role)) return false
+
+    // Collaborate module: preceptors must have physician_profile (MD/DO only)
+    if (item.group === 'Collaborate' && user.role === 'preceptor') {
+      return !!user.physicianProfile
+    }
+
+    return true
+  })
+
   const ungrouped = filteredItems.filter(i => !i.group)
   const groups = GROUP_ORDER
     .map(g => ({ label: g, items: filteredItems.filter(i => i.group === g) }))

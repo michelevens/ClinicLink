@@ -659,6 +659,8 @@ export interface ApiUser {
   onboarding_completed_at?: string | null
   student_profile?: ApiStudentProfile
   preceptor_profile?: ApiPreceptorProfile
+  physician_profile?: ApiPhysicianProfile
+  practitioner_profile?: ApiPractitionerProfile
   credentials?: ApiCredential[]
   applications?: ApiApplication[]
   hour_logs?: ApiHourLog[]
@@ -1893,6 +1895,9 @@ export interface ApiPhysicianProfile {
   malpractice_confirmed: boolean
   bio: string | null
   is_active?: boolean
+  stripe_connect_account_id?: string | null
+  stripe_connect_status?: string | null
+  stripe_connect_onboarded_at?: string | null
   created_at?: string
   updated_at?: string
 }

@@ -14,6 +14,24 @@ export interface User {
   onboardingCompleted: boolean
   universityId?: string
   programId?: string
+  // Nested profile relationships (loaded when present)
+  preceptorProfile?: {
+    id: string
+    npi_number?: string
+    npi_verified_at?: string
+    specialties?: string[]
+  }
+  physicianProfile?: {
+    id: string
+    licensed_states: string[]
+    specialties: string[]
+    stripe_connect_status?: string
+  }
+  practitionerProfile?: {
+    id: string
+    profession_type: string
+    licensed_states: string[]
+  }
 }
 
 export interface StudentProfile extends User {
