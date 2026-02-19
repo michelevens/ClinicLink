@@ -207,7 +207,7 @@ Payments ──── Invoices ──── Refunds
 
 | Priority | Feature | Status |
 |----------|---------|--------|
-| P0 | Auth system (6 roles, Sanctum tokens) | ✅ Done |
+| P0 | Auth system (7 roles, Sanctum tokens + SAML SSO) | ✅ Done |
 | P0 | Student profile + credential management | ✅ Done |
 | P0 | Rotation search with filters | ✅ Done |
 | P0 | Application submission + tracking | ✅ Done |
@@ -848,7 +848,11 @@ PRIORITY 6 — INTELLIGENCE (Weeks 25-32)
 
 PRIORITY 7 — ENTERPRISE & INTEGRATIONS (Weeks 33-40)
 ═════════════════════════════════════════════════════
-□ SSO/SAML authentication (university single sign-on)
+✅ SSO/SAML authentication (university single sign-on)
+✅ Collaborate module (physician directory, collaboration requests, matching)
+✅ Practitioner role (NP/PA profiles, onboarding, dashboard)
+✅ NPI verification gate (MD/DO taxonomy check for physician profiles)
+✅ Admin approval workflow (registration gate + admin dashboard pending approvals)
 □ LMS integration (Canvas, Blackboard — grade passback, roster sync)
 □ Background check API integration (Castle Branch, Verified Credentials)
 □ Accreditation body-specific reports (CCNE, ACEN, CAAHEP, ARC-PA)
@@ -882,4 +886,4 @@ The combination of:
 ---
 *Last Updated: February 2026*
 *Author: Evens Michel & Claude (AI Architect)*
-*Status: Phases 1-2 Complete — Full MVP with compliance, MFA, security hardening, email notifications, CE certificates, and audit logging deployed*
+*Status: Phases 1-3.8 Complete — Full MVP with compliance, MFA, security hardening, email notifications, CE certificates, audit logging, SSO/SAML, Collaborate module (NP/PA collaborative practice), practitioner role, NPI verification, admin approval workflow, in-app messaging, calendar, Stripe payments, and exports deployed*

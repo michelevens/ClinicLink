@@ -7,8 +7,8 @@ import { useSlots } from '../hooks/useApi.ts'
 import {
   Stethoscope, GraduationCap, Building2, BookOpen,
   Search, Clock, Shield, ArrowRight, Users, CheckCircle,
-  Zap, Award, BarChart3, Globe, Lock, FileCheck,
-  Brain, Smartphone, ClipboardCheck,
+  Award, BarChart3, Globe, Lock, FileCheck,
+  Brain, ClipboardCheck,
   ChevronRight, Sparkles, MapPin, Calendar, Phone, Mail, ExternalLink, Handshake
 } from 'lucide-react'
 import type { UserRole } from '../types/index.ts'
@@ -68,17 +68,17 @@ export function LandingPage() {
               <span className="bg-gradient-to-r from-accent-300 to-amber-300 bg-clip-text text-transparent">Verified Credential</span>
             </h1>
             <p className="text-base sm:text-xl text-white/80 max-w-3xl mx-auto mb-4">
-              The all-in-one platform that handles the <strong className="text-white">entire clinical education lifecycle</strong> — from finding a rotation to earning digitally verified credentials.
+              The all-in-one platform that handles the <strong className="text-white">entire clinical education lifecycle</strong> — from finding a rotation to earning digitally verified credentials, plus <strong className="text-white">collaborative practice agreements</strong> for NPs and PAs.
             </p>
 
             {/* Lifecycle Flow */}
             <div className="flex items-center justify-center gap-1 sm:gap-2 my-8 flex-wrap">
-              {['Discover', 'Apply', 'Onboard', 'Track', 'Evaluate', 'Certify'].map((step, i) => (
+              {['Discover', 'Apply', 'Onboard', 'Track', 'Evaluate', 'Certify', 'Collaborate'].map((step, i) => (
                 <span key={step} className="flex items-center gap-1 sm:gap-2">
                   <span className="px-2 sm:px-3 py-1 rounded-full bg-white/20 text-white text-xs sm:text-sm font-medium backdrop-blur-sm">
                     {step}
                   </span>
-                  {i < 5 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white/50" />}
+                  {i < 6 && <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-white/50" />}
                 </span>
               ))}
             </div>
@@ -99,10 +99,10 @@ export function LandingPage() {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               {[
-                { label: 'Role-Based Dashboards', value: '6', icon: Building2 },
-                { label: 'Lifecycle Stages', value: '7', icon: GraduationCap },
-                { label: 'Compliance Tracking', value: '✓', icon: BookOpen },
-                { label: 'Hour Logging & Approval', value: '✓', icon: Clock },
+                { label: 'Role-Based Dashboards', value: '7', icon: Building2 },
+                { label: 'Lifecycle Stages', value: '7+', icon: GraduationCap },
+                { label: 'Collaborative Practice', value: '✓', icon: Handshake },
+                { label: 'SSO & MFA Security', value: '✓', icon: Lock },
               ].map(stat => (
                 <div key={stat.label} className="text-center">
                   <stat.icon className="w-5 h-5 text-white/60 mx-auto mb-1" />
@@ -148,7 +148,7 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10 sm:mb-16">
             <span className="inline-block px-3 py-1 rounded-full bg-primary-50 text-primary-600 text-sm font-medium mb-4">How It Works</span>
-            <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-4">Three Steps to Your Next Rotation</h2>
+            <h2 className="text-2xl sm:text-4xl font-bold text-stone-900 mb-4">Three Steps to Your Next Rotation or Collaboration</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -241,10 +241,10 @@ export function LandingPage() {
               { icon: <Clock className="w-6 h-6" />, title: 'Digital Hour Logging', desc: 'Log hours online with preceptor approval workflow. Track progress toward required hours with a complete audit trail.', color: 'secondary' },
               { icon: <ClipboardCheck className="w-6 h-6" />, title: 'Structured Evaluations', desc: 'Mid-rotation and final evaluations with standardized rubrics (1-5 scale). Draft, submit, and review evaluations digitally.', color: 'amber' },
               { icon: <Lock className="w-6 h-6" />, title: 'Verified Credentials', desc: 'Earn completion certificates with unique verification links. Employers and schools can verify credentials instantly.', color: 'purple' },
-              { icon: <Search className="w-6 h-6" />, title: 'Multi-Criteria Search', desc: 'Filter rotations by specialty, schedule, location, cost, and availability to find the right match for your program.', color: 'rose' },
+              { icon: <Handshake className="w-6 h-6" />, title: 'Collaborative Practice', desc: 'NPs and PAs find NPI-verified collaborative physicians. Browse physician profiles, send requests, and manage practice agreements.', color: 'rose' },
               { icon: <BarChart3 className="w-6 h-6" />, title: 'Compliance Dashboard', desc: 'Real-time placement tracking, hour summaries, credential status, and compliance overview for every stakeholder.', color: 'indigo' },
-              { icon: <Zap className="w-6 h-6" />, title: 'Compliance Tracking', desc: 'Manage affiliation agreements, onboarding checklists, and credential requirements with status tracking dashboards.', color: 'orange' },
-              { icon: <Smartphone className="w-6 h-6" />, title: 'Responsive Design', desc: 'Works on any device — desktop, tablet, or phone. Manage rotations, log hours, and review applications on the go.', color: 'teal' },
+              { icon: <Users className="w-6 h-6" />, title: 'In-App Messaging', desc: 'Thread-based conversations between students, preceptors, and coordinators. Broadcast announcements and real-time unread counts.', color: 'orange' },
+              { icon: <Calendar className="w-6 h-6" />, title: 'Calendar & Scheduling', desc: 'View rotations, hour logs, evaluations, and deadlines in month, week, or list views. Color-coded by event type.', color: 'teal' },
             ].map(feature => (
               <Card key={feature.title} hover>
                 <div className={`w-12 h-12 rounded-xl bg-${feature.color}-50 text-${feature.color}-600 flex items-center justify-center mb-4`}>
@@ -292,8 +292,15 @@ export function LandingPage() {
                 icon: <Shield className="w-6 h-6" />,
                 role: 'Preceptors',
                 tagline: 'Teach, evaluate, and earn recognition',
-                features: ['Approve hours digitally', 'Structured evaluation rubrics', 'Earn CE credit hours', 'Grow your precepting experience', 'Track your precepting activity'],
+                features: ['Approve hours digitally', 'Structured evaluation rubrics', 'Earn CE credit hours', 'List as collaborative physician', 'Track your precepting activity'],
                 color: 'primary',
+              },
+              {
+                icon: <Handshake className="w-6 h-6" />,
+                role: 'Practitioners (NP/PA)',
+                tagline: 'Find collaborative physicians for practice agreements',
+                features: ['Browse NPI-verified physician directory', 'Send collaboration requests', 'Manage active agreements', 'Track collaboration status', 'Role-specific dashboard'],
+                color: 'secondary',
               },
             ].map(item => (
               <Card key={item.role} hover>
@@ -329,7 +336,7 @@ export function LandingPage() {
           </p>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
-              { title: 'All-in-One', desc: 'Search, apply, track, evaluate, certify — no more stitching together 5 tools', icon: <Globe className="w-6 h-6" /> },
+              { title: 'All-in-One', desc: 'Rotations, compliance, evaluations, collaborative practice, messaging, and calendar — no more stitching together 5 tools', icon: <Globe className="w-6 h-6" /> },
               { title: 'Instantly Verifiable', desc: 'Every certificate includes a unique verification link — employers can confirm credentials in seconds', icon: <Lock className="w-6 h-6" /> },
               { title: 'Purpose-Built', desc: 'Designed specifically for clinical education with role-specific workflows for students, preceptors, sites, and universities', icon: <Brain className="w-6 h-6" /> },
             ].map(item => (
@@ -352,7 +359,7 @@ export function LandingPage() {
             {[
               { quote: "Imagine eliminating your placement scramble. Students browse and apply for rotations themselves.", author: 'University Coordinator', title: 'Example use case', icon: <BookOpen className="w-5 h-5" /> },
               { quote: "Search available rotations, apply with one click, and track your hours — all in one place.", author: 'Nursing Student', title: 'Example use case', icon: <GraduationCap className="w-5 h-5" /> },
-              { quote: "Manage all your rotation slots, review applications, and track student compliance from one dashboard.", author: 'Site Manager', title: 'Example use case', icon: <Building2 className="w-5 h-5" /> },
+              { quote: "Find NPI-verified collaborative physicians, send requests, and manage your practice agreements — all in one place.", author: 'Nurse Practitioner', title: 'Example use case', icon: <Handshake className="w-5 h-5" /> },
             ].map(item => (
               <Card key={item.author}>
                 <div className="flex gap-1 mb-3">
@@ -414,7 +421,7 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-4xl font-bold mb-4">Ready to Transform Clinical Education?</h2>
           <p className="text-lg text-white/80 mb-8">
-            Join students, clinical sites, and universities building the future of clinical education.
+            Join students, practitioners, clinical sites, and universities building the future of clinical education.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button className="inline-flex items-center justify-center font-medium rounded-xl px-7 py-3 text-base gap-2.5 bg-white text-primary-600 hover:bg-white/90 shadow-lg hover:-translate-y-0.5 transition-all duration-300 w-full sm:w-auto" onClick={() => navigate('/register')}>
@@ -436,7 +443,7 @@ export function LandingPage() {
                 <Stethoscope className="w-5 h-5 text-primary-400" />
                 <span className="font-semibold text-white">ClinicLink</span>
               </div>
-              <p className="text-sm text-stone-500">The all-in-one clinical rotation platform.</p>
+              <p className="text-sm text-stone-500">The all-in-one clinical rotation and collaborative practice platform.</p>
             </div>
             <div>
               <h4 className="font-medium text-white text-sm mb-3">Platform</h4>
@@ -454,6 +461,7 @@ export function LandingPage() {
                 <li><span className="hover:text-white transition-colors cursor-default">Clinical Sites</span></li>
                 <li><span className="hover:text-white transition-colors cursor-default">Universities</span></li>
                 <li><span className="hover:text-white transition-colors cursor-default">Preceptors</span></li>
+                <li><span className="hover:text-white transition-colors cursor-default">Practitioners (NP/PA)</span></li>
               </ul>
             </div>
             <div>

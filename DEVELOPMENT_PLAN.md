@@ -12,7 +12,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 - React 18 + TypeScript + Vite + Tailwind frontend with premium UI
 - Laravel 12 backend with PostgreSQL on Railway
 - Auth system with Sanctum (register, login, forgot/reset password)
-- 6 user roles: Student, Preceptor, Site Manager, Coordinator, Professor, Admin
+- 7 user roles: Student, Preceptor, Site Manager, Coordinator, Professor, Practitioner, Admin
 - Full onboarding flow per role with profile setup
 - Student profile with credential management
 - Rotation search with filters (specialty, location, dates, cost)
@@ -438,23 +438,116 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 
 ---
 
-## Phase 3.5: Scale & Advanced Features — NEXT
-- SSO/SAML authentication (university single sign-on integration)
+## Phase 3.5: SSO/SAML Authentication ✅ COMPLETE
+**Goal:** University single sign-on for seamless institutional access
+
+### What Was Built
+
+#### SAML 2.0 Integration
+- SAML authentication flow for university SSO providers
+- IdP metadata configuration per university
+- Attribute mapping (email, name, role) from SAML assertions
+- Auto-provisioning: new users created on first SSO login with correct role and university linkage
+- Session bridging: SAML session → Sanctum token for API access
+
+#### University SSO Management
+- Admin interface for configuring university SSO connections
+- IdP metadata URL or XML upload
+- Test connection flow for validation
+- Fallback to email/password login when SSO is unavailable
+
+---
+
+## Phase 3.6: Collaborate Module ✅ COMPLETE
+**Goal:** Enable NP/PA practitioners to find and connect with collaborative physicians for practice agreements
+
+### What Was Built
+
+#### Physician Directory
+- PhysicianProfile model for MD/DO preceptors who opt into collaborative supervision
+- Directory page with search and filters (specialty, location, availability, collaboration type)
+- Profile cards showing physician details, practice info, and collaboration preferences
+- Preceptors create physician profiles to list themselves as available for collaboration
+
+#### Collaboration Requests
+- Practitioners browse physician directory and send collaboration requests
+- Request includes message, preferred terms, and practice details
+- Request status workflow: pending → accepted/declined
+- Email and in-app notifications on request status changes
+
+#### Collaboration Matching
+- Match model linking practitioners to physicians with agreement details
+- Match status tracking: pending → active → completed/terminated
+- Both parties can view and manage their active collaborations
+- Dashboard stats for collaboration activity
+
+#### NPI Verification Gate
+- Preceptors must have verified NPI before creating a PhysicianProfile
+- NPI taxonomy check ensures only MD/DO providers (taxonomy codes 207*, 208*, 171100000X) can list as collaborative physicians
+- NP/PA preceptors blocked with clear messaging explaining the MD/DO requirement
+
+---
+
+## Phase 3.7: Practitioner Role & NPI Gate ✅ COMPLETE
+**Goal:** Add dedicated practitioner role for practicing NPs/PAs seeking collaborative practice agreements
+
+### What Was Built
+
+#### Practitioner Role
+- New `practitioner` role added to user role system (7 roles total)
+- PractitionerProfile model: profession type (NP/PA), licensed states, specialty, years in practice, employer, NPI, license numbers, malpractice insurance
+- Registration flow with practitioner option
+- Practitioner onboarding: 3-step flow (profession details, practice info, document uploads)
+- Role-based dashboard with collaboration stats (open requests, matches, accepted matches)
+
+#### Route & Access Control
+- Collaborate module scoped: practitioners create requests, preceptors create physician profiles
+- Physician directory visible to practitioners, preceptors, and admins
+- Sidebar navigation updated with Collaborate group for relevant roles
+- Frontend route guards enforce role access
+
+#### Practitioner Demo User
+- Seeded practitioner demo account (Emily Reyes, NP) via migration
+- DatabaseSeeder updated for fresh deployments
+- Demo login accessible from landing page
+
+---
+
+## Phase 3.8: Admin Approval & Security ✅ COMPLETE
+**Goal:** Require admin approval for all new user registrations; prominent admin action items
+
+### What Was Built
+
+#### Registration Approval Gate
+- New user registrations set `is_active = false` (was auto-approved)
+- Users cannot login until admin activates their account
+- Login page shows friendly "Account Pending Approval" banner with clock icon when blocked
+- Approval email sent automatically when admin activates an account
+
+#### Admin Dashboard Pending Approvals
+- Prominent red-bordered "Pending User Approvals" section at top of admin dashboard
+- Lists all inactive users with name, email, role, and registration date
+- One-click "Approve" button per user (sets is_active=true, triggers approval email)
+- "Review" button navigates to full user management
+- Pending Approvals count as stat card in dashboard overview
+- API endpoint: `GET /admin/pending-approvals` returns inactive users
+
+#### Backend
+- `AdminController::pendingApprovals()` endpoint with role-scoped query
+- `DashboardController` includes `pending_approvals` in admin stats
+- React Query hooks with cache invalidation (approving a user refreshes both pending list and dashboard stats)
+
+---
+
+## Phase 4: Scale & Advanced Features — NEXT
 - LMS integration (Canvas, Blackboard — grade passback, roster sync)
 - Background check provider integration (Castle Branch, Verified Credentials)
 - Multi-discipline expansion (nursing, PA, NP, PT, OT, social work, pharmacy, MD)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)
 - Accreditation body-specific report templates (CCNE, ACEN, CAAHEP, ARC-PA)
 - Preceptor management and recognition system
-
----
-
-## Phase 4: Scale
-- Multi-discipline expansion (nursing, PA, NP, PT, OT, social work, pharmacy, MD)
 - Post-graduation job board ("rotation to hire" pipeline)
 - React Native mobile app
-- LMS integration (Canvas, Blackboard)
-- Background check provider integration
 
 ---
 
@@ -464,7 +557,7 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Frontend | React 18 + TypeScript + Vite + Tailwind | ✅ |
 | Backend | Laravel 12 + PHP 8.4 | ✅ |
 | Database | PostgreSQL (Railway) | ✅ |
-| Auth | Laravel Sanctum | ✅ |
+| Auth | Laravel Sanctum + SAML 2.0 SSO | ✅ |
 | File Storage | Cloudflare R2 (S3-compatible) | ✅ |
 | PDF Generation | DomPDF | ✅ |
 | QR Codes | Simple QRCode | ✅ |
@@ -516,8 +609,13 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 | Calendar | `/calendar` | All authenticated roles |
 | CE Credits | `/ce-credits` | Preceptor, Coordinator, Admin |
 | Admin Users | `/admin/users` | Admin |
+| Collaborate Landing | `/collaborate` | Practitioner, Preceptor, Admin |
+| Physician Directory | `/collaborate/directory` | Practitioner, Preceptor, Admin |
+| Collaboration Requests | `/collaborate/requests` | Practitioner |
+| Collaboration Matches | `/collaborate/matches` | Practitioner, Preceptor, Admin |
+| Physician Profile | `/collaborate/physician-profile` | Preceptor |
 
-### Backend API Endpoints (65+)
+### Backend API Endpoints (80+)
 - **Auth:** register, login, logout, me, forgot-password, reset-password, mfa/setup, mfa/confirm, mfa/disable, mfa/verify, mfa/backup-codes, mfa/status
 - **Students:** profile, credentials (CRUD + file upload/download), hour logs, evaluations
 - **Slots:** CRUD with search/filter, preceptor assignment
@@ -533,6 +631,10 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 - **CE Credits:** policy CRUD, certificate approve/reject/revoke, download, audit trail, eligibility check
 - **Messages:** conversations (list, create), messages (list, send), unread count, user search
 - **Calendar:** role-scoped events with date range filtering
+- **Collaborate:** physician profiles (CRUD), collaboration requests (CRUD + status), matches, physician directory search
+- **Practitioner:** practitioner profile (get + update), NPI verification
+- **SSO:** SAML login, IdP configuration, SSO connection management
+- **Admin Approvals:** pending approvals list, user activation
 
 ---
 
@@ -557,7 +659,7 @@ Revenue mix: 60% university subscriptions, 25% site subscriptions, 15% placement
 | InPlace | Work-integrated learning | Generic (not healthcare-specific) |
 | Spreadsheets + cold calls | Manual process | No visibility, months wasted, no tracking |
 
-**Our edge:** True two-sided marketplace (not just management), affordable, student-free, healthcare-specific, beautiful modern UX.
+**Our edge:** True two-sided marketplace (not just management), affordable, student-free, healthcare-specific, beautiful modern UX, collaborative practice agreements for NPs/PAs, university SSO integration.
 
 ---
 
