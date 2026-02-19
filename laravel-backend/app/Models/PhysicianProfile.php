@@ -19,6 +19,9 @@ class PhysicianProfile extends Model
         'malpractice_confirmed',
         'malpractice_document_url',
         'bio',
+        'stripe_connect_account_id',
+        'stripe_connect_status',
+        'stripe_connect_onboarded_at',
         'is_active',
     ];
 
@@ -28,6 +31,7 @@ class PhysicianProfile extends Model
             'licensed_states' => 'array',
             'specialties' => 'array',
             'malpractice_confirmed' => 'boolean',
+            'stripe_connect_onboarded_at' => 'datetime',
             'is_active' => 'boolean',
         ];
     }
@@ -50,5 +54,11 @@ class PhysicianProfile extends Model
     public function hasCapacity(): bool
     {
         return $this->activeSuperviseeCount() < $this->max_supervisees;
+    }
+
+    public function hasStripeConnectVerified(): bool
+    {
+        return $this->stripe_connect_status === 'verified'
+            && $this->stripe_connect_account_id !== null;
     }
 }

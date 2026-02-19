@@ -37,4 +37,9 @@ class CollaborationMatch extends Model
     {
         return $this->belongsTo(PhysicianProfile::class);
     }
+
+    public function supervisionAgreement()
+    {
+        return $this->hasOne(SupervisionAgreement::class, 'collaboration_match_id');
+    }
 }

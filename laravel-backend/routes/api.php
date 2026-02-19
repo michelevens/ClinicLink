@@ -44,6 +44,8 @@ use App\Http\Controllers\PractitionerProfileController;
 use App\Http\Controllers\Collaborate\PhysicianProfileController;
 use App\Http\Controllers\Collaborate\CollaborationRequestController;
 use App\Http\Controllers\Collaborate\CollaborationMatchController;
+use App\Http\Controllers\Collaborate\SupervisionAgreementController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -111,6 +113,9 @@ Route::get('/sso/metadata', [SamlController::class, 'metadata']);
 // State rules (public — compliance reference data)
 Route::get('/state-rules', [StateRulesController::class, 'index']);
 Route::get('/state-rules/{state}', [StateRulesController::class, 'show']);
+
+// Stripe webhooks (public — signature-verified in controller)
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -487,6 +492,26 @@ Route::middleware('auth:sanctum')->group(function () {
         // Match response — physicians (preceptors) and admin only
         Route::middleware('role:preceptor,admin')
             ->post('/matches/{id}/respond', [CollaborationMatchController::class, 'respond']);
+
+        // Supervision agreements
+        Route::middleware('role:practitioner,preceptor,admin')->group(function () {
+            Route::get('/agreements', [SupervisionAgreementController::class, 'index']);
+            Route::get('/agreements/{id}', [SupervisionAgreementController::class, 'show']);
+        });
+
+        Route::middleware('role:preceptor')->group(function () {
+            Route::post('/agreements', [SupervisionAgreementController::class, 'store']);
+            Route::put('/agreements/{id}', [SupervisionAgreementController::class, 'update']);
+        });
+
+        Route::middleware('role:practitioner')
+            ->post('/agreements/{id}/activate', [SupervisionAgreementController::class, 'activate']);
+
+        Route::middleware('role:preceptor,admin')
+            ->post('/agreements/{id}/pause', [SupervisionAgreementController::class, 'pause']);
+
+        Route::middleware('role:practitioner,preceptor,admin')
+            ->post('/agreements/{id}/terminate', [SupervisionAgreementController::class, 'terminate']);
     });
 
     // ─── Practitioner Profile ───
