@@ -148,6 +148,83 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // =====================================================================
+        // COLLABORATE MODULE — Physician vs Non-Physician Preceptor Distinction
+        // =====================================================================
+
+        // 1. Physician Preceptor (MD) — Has BOTH preceptor AND physician profiles
+        // This user can supervise students (rotations) AND provide NP/PA supervision (Collaborate)
+        PreceptorProfile::create([
+            'user_id' => $demoPreceptor->id,
+            'specialties' => ['Emergency Medicine', 'Family Medicine'],
+            'years_experience' => 15,
+            'bio' => 'Board-certified Emergency Medicine physician with 15 years of experience. Available for clinical supervision and collaborative practice agreements.',
+            'credentials' => [
+                ['type' => 'MD', 'name' => 'Doctor of Medicine', 'issuer' => 'University of Florida', 'year' => 2009],
+                ['type' => 'Board Certification', 'name' => 'Emergency Medicine', 'issuer' => 'ABEM', 'year' => 2013],
+            ],
+            'availability_status' => 'available',
+            'max_students' => 4,
+            'profile_visibility' => 'public',
+            'npi_number' => '1234567890',
+            'npi_verified_at' => now(),
+            'npi_data' => [
+                'taxonomies' => [
+                    ['code' => '207P00000X', 'desc' => 'Emergency Medicine', 'primary' => true],
+                ],
+            ],
+        ]);
+
+        \App\Models\PhysicianProfile::create([
+            'user_id' => $demoPreceptor->id,
+            'licensed_states' => ['FL', 'GA', 'AL'],
+            'specialties' => ['Emergency Medicine', 'Family Medicine'],
+            'max_supervisees' => 3,
+            'supervision_model' => 'hybrid',
+            'malpractice_confirmed' => true,
+            'bio' => 'Available for collaborative practice agreements with NPs and PAs. Experienced in telehealth supervision and in-person consultation.',
+            'is_active' => true,
+        ]);
+
+        // 2. Non-Physician Preceptor (NP) — Has ONLY preceptor profile
+        // This user can supervise students (rotations) but CANNOT provide NP/PA supervision (no Collaborate access)
+        $npPreceptor = User::create([
+            'first_name' => 'Amanda',
+            'last_name' => 'Rodriguez',
+            'email' => 'np-preceptor@cliniclink.health',
+            'username' => 'amandarodriguez',
+            'password' => $demoPassword,
+            'role' => 'preceptor',
+            'phone' => '(407) 555-0108',
+            'is_active' => true,
+            'email_verified' => true,
+        ]);
+
+        PreceptorProfile::create([
+            'user_id' => $npPreceptor->id,
+            'specialties' => ['Family Practice', 'Pediatrics'],
+            'years_experience' => 8,
+            'bio' => 'Nurse Practitioner with 8 years of experience in family practice. Available to supervise NP and PA students for clinical rotations.',
+            'credentials' => [
+                ['type' => 'MSN', 'name' => 'Master of Science in Nursing', 'issuer' => 'UCF', 'year' => 2016],
+                ['type' => 'FNP-BC', 'name' => 'Family Nurse Practitioner', 'issuer' => 'ANCC', 'year' => 2017],
+            ],
+            'availability_status' => 'available',
+            'max_students' => 2,
+            'profile_visibility' => 'public',
+            'npi_number' => '9876543210',
+            'npi_verified_at' => now(),
+            'npi_data' => [
+                'taxonomies' => [
+                    ['code' => '363LF0000X', 'desc' => 'Nurse Practitioner, Family', 'primary' => true],
+                ],
+            ],
+        ]);
+
+        // NOTE: Amanda (npPreceptor) does NOT have a PhysicianProfile
+        // Her NPI taxonomy (363LF0000X) is NP, not MD/DO (207*/208*)
+        // Therefore, she will NOT see the Collaborate module in the navigation
+
+        // =====================================================================
         // 2. ADDITIONAL USERS — diverse roles and statuses
         // =====================================================================
 
