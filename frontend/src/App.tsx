@@ -64,6 +64,8 @@ const PhysicianDirectory = lazy(() => import('./pages/collaborate/PhysicianDirec
 const CollaborationRequests = lazy(() => import('./pages/collaborate/CollaborationRequests.tsx'))
 const PhysicianProfilePage = lazy(() => import('./pages/collaborate/PhysicianProfilePage.tsx'))
 const CollaborationMatches = lazy(() => import('./pages/collaborate/CollaborationMatches.tsx'))
+const SupervisionAgreements = lazy(() => import('./pages/collaborate/SupervisionAgreements.tsx'))
+const SupervisionAgreementDetail = lazy(() => import('./pages/collaborate/SupervisionAgreementDetail.tsx'))
 
 // --- Loading fallback ---
 function PageLoader() {
@@ -187,6 +189,8 @@ export default function App() {
         <Route path="/collaborate/requests" element={<ProtectedRoute roles={['practitioner']}><CollaborationRequests /></ProtectedRoute>} />
         <Route path="/collaborate/profile" element={<ProtectedRoute roles={['preceptor']}><PhysicianProfilePage /></ProtectedRoute>} />
         <Route path="/collaborate/matches" element={<ProtectedRoute roles={['practitioner', 'preceptor', 'admin']}><CollaborationMatches /></ProtectedRoute>} />
+        <Route path="/collaborate/agreements" element={<ProtectedRoute roles={['practitioner', 'preceptor', 'admin']}><SupervisionAgreements /></ProtectedRoute>} />
+        <Route path="/collaborate/agreements/:id" element={<ProtectedRoute roles={['practitioner', 'preceptor', 'admin']}><SupervisionAgreementDetail /></ProtectedRoute>} />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

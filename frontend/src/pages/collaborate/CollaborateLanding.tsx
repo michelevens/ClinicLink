@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { usePageTitle } from '../../hooks/usePageTitle.ts'
 import {
-  Users, Search, FileCheck, ShieldCheck, ArrowRight, Stethoscope, GraduationCap
+  Users, Search, FileCheck, ShieldCheck, ArrowRight, Stethoscope, GraduationCap, FileText
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button.tsx'
 
@@ -85,7 +85,7 @@ export default function CollaborateLanding() {
       </div>
 
       {/* Quick links */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <button
           onClick={() => navigate('/collaborate/directory')}
           className="bg-white rounded-2xl border border-stone-200 p-6 text-left hover:shadow-lg hover:border-indigo-200 transition-all duration-300 group"
@@ -115,6 +115,22 @@ export default function CollaborateLanding() {
               <p className="text-sm text-stone-500">View and manage your collaboration matches</p>
             </div>
             <ArrowRight className="w-5 h-5 text-stone-400 ml-auto group-hover:text-purple-600 transition-colors" />
+          </div>
+        </button>
+
+        <button
+          onClick={() => navigate('/collaborate/agreements')}
+          className="bg-white rounded-2xl border border-stone-200 p-6 text-left hover:shadow-lg hover:border-emerald-200 transition-all duration-300 group"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileText className="w-6 h-6 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-stone-900">Agreements</h3>
+              <p className="text-sm text-stone-500">Manage active supervision agreements and billing</p>
+            </div>
+            <ArrowRight className="w-5 h-5 text-stone-400 ml-auto group-hover:text-emerald-600 transition-colors" />
           </div>
         </button>
       </div>

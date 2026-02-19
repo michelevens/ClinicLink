@@ -1923,6 +1923,29 @@ export interface ApiCollaborationMatch {
   responded_at: string | null
   physician_profile?: ApiPhysicianProfile
   request?: ApiCollaborationRequest
+  supervision_agreement?: ApiSupervisionAgreement
+  created_at: string
+  updated_at: string
+}
+
+export interface ApiSupervisionAgreement {
+  id: string
+  collaboration_match_id: string
+  status: 'draft' | 'pending_signature' | 'active' | 'paused' | 'terminated'
+  monthly_fee_cents: number
+  platform_fee_percent: number
+  platform_fee_cents: number
+  billing_anchor: number | null
+  stripe_subscription_id: string | null
+  stripe_customer_id: string | null
+  stripe_connected_account_id: string | null
+  last_payment_status: string | null
+  signed_at: string | null
+  activated_at: string | null
+  paused_at: string | null
+  terminated_at: string | null
+  termination_reason: string | null
+  collaboration_match?: ApiCollaborationMatch
   created_at: string
   updated_at: string
 }
@@ -1998,6 +2021,44 @@ export const collaborateApi = {
   },
   respondToMatch: (id: string, status: 'accepted' | 'declined') =>
     api.post<ApiCollaborationMatch>(`/collaborate/matches/${id}/respond`, { status }),
+}
+
+export const supervisionAgreementsApi = {
+  // List supervision agreements
+  list: (page?: number) => {
+    const qs = page ? `?page=${page}` : ''
+    return api.get<{ data: ApiSupervisionAgreement[]; current_page: number; last_page: number }>(`/collaborate/agreements${qs}`)
+  },
+
+  // Get single agreement
+  get: (id: string) =>
+    api.get<{ data: ApiSupervisionAgreement }>(`/collaborate/agreements/${id}`),
+
+  // Create agreement (physician only)
+  create: (data: {
+    collaboration_match_id: string
+    monthly_fee_cents: number
+    platform_fee_percent?: number
+  }) => api.post<ApiSupervisionAgreement>('/collaborate/agreements', data),
+
+  // Update agreement (draft/pending_signature only)
+  update: (id: string, data: {
+    monthly_fee_cents?: number
+    platform_fee_percent?: number
+    billing_anchor?: number
+  }) => api.put<ApiSupervisionAgreement>(`/collaborate/agreements/${id}`, data),
+
+  // Activate agreement (practitioner only)
+  activate: (id: string, billing_anchor?: number) =>
+    api.post<ApiSupervisionAgreement>(`/collaborate/agreements/${id}/activate`, { billing_anchor }),
+
+  // Pause agreement (physician/admin)
+  pause: (id: string) =>
+    api.post<ApiSupervisionAgreement>(`/collaborate/agreements/${id}/pause`, {}),
+
+  // Terminate agreement (both parties/admin)
+  terminate: (id: string, termination_reason: string) =>
+    api.post<ApiSupervisionAgreement>(`/collaborate/agreements/${id}/terminate`, { termination_reason }),
 }
 
 // ─── Practitioner Profile API ───
