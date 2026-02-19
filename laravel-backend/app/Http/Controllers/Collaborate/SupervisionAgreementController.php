@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Collaborate;
 use App\Http\Controllers\Controller;
 use App\Models\CollaborationMatch;
 use App\Models\SupervisionAgreement;
+use App\Services\SupervisionAgreementStripeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -184,16 +185,30 @@ class SupervisionAgreementController extends Controller
             'billing_anchor' => ['sometimes', 'integer', 'min:1', 'max:28'],
         ]);
 
-        // TODO: Create Stripe subscription here
-        // For now, mark as active
+        // Set billing anchor before creating subscription
+        $billingAnchor = $validated['billing_anchor'] ?? now()->day;
+        $agreement->update(['billing_anchor' => $billingAnchor]);
 
-        $agreement->update([
-            'status' => 'active',
-            'activated_at' => now(),
-            'billing_anchor' => $validated['billing_anchor'] ?? now()->day,
-        ]);
+        // Create Stripe subscription with application fee
+        try {
+            $stripeService = new SupervisionAgreementStripeService();
+            $subscriptionData = $stripeService->createSubscription($agreement, $user);
 
-        return response()->json($agreement->fresh());
+            $agreement->update([
+                'status' => 'active',
+                'activated_at' => now(),
+                'stripe_subscription_id' => $subscriptionData['subscription_id'],
+                'stripe_customer_id' => $subscriptionData['customer_id'],
+                'stripe_connected_account_id' => $subscriptionData['connected_account_id'],
+                'last_payment_status' => 'pending',
+            ]);
+
+            return response()->json($agreement->fresh());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to create subscription: ' . $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function pause(Request $request, string $id): JsonResponse
@@ -218,14 +233,21 @@ class SupervisionAgreementController extends Controller
             return response()->json(['message' => 'Can only pause active agreements'], 422);
         }
 
-        $agreement->update([
-            'status' => 'paused',
-            'paused_at' => now(),
-        ]);
+        try {
+            $stripeService = new SupervisionAgreementStripeService();
+            $stripeService->pauseSubscription($agreement);
 
-        // TODO: Pause Stripe subscription
+            $agreement->update([
+                'status' => 'paused',
+                'paused_at' => now(),
+            ]);
 
-        return response()->json($agreement->fresh());
+            return response()->json($agreement->fresh());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to pause subscription: ' . $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function terminate(Request $request, string $id): JsonResponse
@@ -258,14 +280,22 @@ class SupervisionAgreementController extends Controller
             return response()->json(['message' => 'Agreement already terminated'], 422);
         }
 
-        $agreement->update([
-            'status' => 'terminated',
-            'terminated_at' => now(),
-            'termination_reason' => $validated['termination_reason'],
-        ]);
+        try {
+            // Cancel subscription at period end (not immediate) to honor billing period
+            $stripeService = new SupervisionAgreementStripeService();
+            $stripeService->cancelSubscription($agreement, immediate: false);
 
-        // TODO: Cancel Stripe subscription
+            $agreement->update([
+                'status' => 'terminated',
+                'terminated_at' => now(),
+                'termination_reason' => $validated['termination_reason'],
+            ]);
 
-        return response()->json($agreement->fresh());
+            return response()->json($agreement->fresh());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to cancel subscription: ' . $e->getMessage(),
+            ], 422);
+        }
     }
 }

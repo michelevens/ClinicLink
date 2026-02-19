@@ -16,11 +16,8 @@ class StripeWebhookController extends Controller
         $endpoint_secret = config('services.stripe.webhook_secret');
 
         try {
-            // TODO: Verify webhook signature using Stripe SDK
-            // $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
-
-            // For now, just parse the payload
-            $event = json_decode($payload, true);
+            // Verify webhook signature
+            $event = \Stripe\Webhook::constructEvent($payload, $sig_header, $endpoint_secret);
 
             // Handle the event
             switch ($event['type']) {
