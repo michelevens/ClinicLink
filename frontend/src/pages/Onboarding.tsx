@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
-import { universitiesApi, sitesApi, type ApiUniversity, type ApiProgram, type ApiSite, type NpiResult } from '../services/api.ts'
+import { universitiesApi, sitesApi, studentApi, type ApiUniversity, type ApiProgram, type ApiSite, type NpiResult } from '../services/api.ts'
 import { NpiLookup } from '../components/ui/NpiLookup.tsx'
 import { toast } from 'sonner'
 import {
@@ -242,15 +242,16 @@ export function Onboarding() {
   const [phone, setPhone] = useState('')
   const [bio, setBio] = useState('')
 
-  // Student — academic
+  // Student — academic (pre-populate from registration if available)
   const [universities, setUniversities] = useState<ApiUniversity[]>([])
   const [programs, setPrograms] = useState<ApiProgram[]>([])
-  const [universityId, setUniversityId] = useState('')
-  const [programId, setProgramId] = useState('')
+  const [universityId, setUniversityId] = useState(user?.universityId || '')
+  const [programId, setProgramId] = useState(user?.programId || '')
   const [universitySearch, setUniversitySearch] = useState('')
   const [graduationDate, setGraduationDate] = useState('')
   const [gpa, setGpa] = useState('')
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const universityFromRegistration = !!(user?.universityId)
 
   // Preceptor — site & specialties
   const [sites, setSites] = useState<ApiSite[]>([])
@@ -271,6 +272,29 @@ export function Onboarding() {
   const [facilitySpecialties, setFacilitySpecialties] = useState<string[]>([])
   const [ehrSystem, setEhrSystem] = useState('')
 
+  // Student — credential uploads
+  const [uploadedCreds, setUploadedCreds] = useState<Record<string, string>>({})
+  const [uploadingCred, setUploadingCred] = useState<string | null>(null)
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+
+  const handleCredentialUpload = async (credType: string, credName: string, file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File must be under 10MB')
+      return
+    }
+    setUploadingCred(credType)
+    try {
+      const { credential } = await studentApi.addCredential({ type: credType, name: credName, status: 'pending' })
+      await studentApi.uploadCredentialFile(credential.id, file)
+      setUploadedCreds(prev => ({ ...prev, [credType]: file.name }))
+      toast.success(`${credName} uploaded successfully`)
+    } catch {
+      toast.error(`Failed to upload ${credName}`)
+    } finally {
+      setUploadingCred(null)
+    }
+  }
+
   // Coordinator / Professor — university
   const [coordUniversityId, setCoordUniversityId] = useState('')
   const [coordUniversitySearch, setCoordUniversitySearch] = useState('')
@@ -279,12 +303,17 @@ export function Onboarding() {
   // Inject CSS animations
   useEffect(() => { injectStyles() }, [])
 
-  // Fetch universities
+  // Fetch universities + pre-populate search text if university was set during registration
   useEffect(() => {
     universitiesApi.list({ page: 1 }).then(res => {
-      setUniversities(res.data || [])
+      const list = res.data || []
+      setUniversities(list)
+      if (user?.universityId) {
+        const match = list.find((u: ApiUniversity) => u.id === user.universityId)
+        if (match) setUniversitySearch(match.name)
+      }
     }).catch(() => {})
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch programs when university changes (students)
   useEffect(() => {
@@ -612,36 +641,48 @@ export function Onboarding() {
                 {/* University Search & Select */}
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-stone-700">University *</label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                    <input
-                      type="text"
-                      placeholder="Search universities..."
-                      value={universitySearch}
-                      onChange={e => { setUniversitySearch(e.target.value); setUniversityId(''); setProgramId('') }}
-                      className="w-full rounded-2xl border border-stone-200 pl-10 pr-4 py-3 text-sm bg-white/80 backdrop-blur-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
-                    />
-                  </div>
-                  {universitySearch && !universityId && filteredUniversities.length > 0 && (
-                    <div className="bg-white rounded-2xl border border-stone-200 shadow-lg max-h-48 overflow-y-auto">
-                      {filteredUniversities.map(u => (
-                        <button
-                          key={u.id}
-                          onClick={() => { setUniversityId(u.id); setUniversitySearch(u.name); setProgramId('') }}
-                          className="w-full text-left px-4 py-3 text-sm hover:bg-purple-50 transition-colors flex items-center gap-3 border-b border-stone-100 last:border-0"
-                        >
-                          <GraduationCap className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                          <span>{u.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {universityId && (
-                    <div className="flex items-center gap-2 bg-purple-50 text-purple-700 rounded-xl px-3 py-2 text-sm font-medium border border-purple-200/50">
-                      <GraduationCap className="w-4 h-4" />
-                      {universitySearch}
-                      <button onClick={() => { setUniversityId(''); setUniversitySearch(''); setProgramId('') }} className="ml-auto text-purple-400 hover:text-purple-600">&times;</button>
-                    </div>
+                  {universityFromRegistration && universityId ? (
+                    <>
+                      <div className="flex items-center gap-2 bg-stone-100 text-stone-500 rounded-xl px-3 py-3 text-sm font-medium border border-stone-200 cursor-not-allowed">
+                        <GraduationCap className="w-4 h-4" />
+                        {universitySearch || 'Selected during registration'}
+                        <span className="ml-auto text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-lg">From registration</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                        <input
+                          type="text"
+                          placeholder="Search universities..."
+                          value={universitySearch}
+                          onChange={e => { setUniversitySearch(e.target.value); setUniversityId(''); setProgramId('') }}
+                          className="w-full rounded-2xl border border-stone-200 pl-10 pr-4 py-3 text-sm bg-white/80 backdrop-blur-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
+                        />
+                      </div>
+                      {universitySearch && !universityId && filteredUniversities.length > 0 && (
+                        <div className="bg-white rounded-2xl border border-stone-200 shadow-lg max-h-48 overflow-y-auto">
+                          {filteredUniversities.map(u => (
+                            <button
+                              key={u.id}
+                              onClick={() => { setUniversityId(u.id); setUniversitySearch(u.name); setProgramId('') }}
+                              className="w-full text-left px-4 py-3 text-sm hover:bg-purple-50 transition-colors flex items-center gap-3 border-b border-stone-100 last:border-0"
+                            >
+                              <GraduationCap className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                              <span>{u.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {universityId && (
+                        <div className="flex items-center gap-2 bg-purple-50 text-purple-700 rounded-xl px-3 py-2 text-sm font-medium border border-purple-200/50">
+                          <GraduationCap className="w-4 h-4" />
+                          {universitySearch}
+                          <button onClick={() => { setUniversityId(''); setUniversitySearch(''); setProgramId('') }} className="ml-auto text-purple-400 hover:text-purple-600">&times;</button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -652,7 +693,10 @@ export function Onboarding() {
                     <select
                       value={programId}
                       onChange={e => setProgramId(e.target.value)}
-                      className="w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm bg-white/80 backdrop-blur-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200"
+                      disabled={universityFromRegistration && !!user?.programId}
+                      className={`w-full rounded-2xl border border-stone-200 px-4 py-3 text-sm backdrop-blur-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 focus:outline-none transition-all duration-200 ${
+                        universityFromRegistration && user?.programId ? 'bg-stone-100 text-stone-500 cursor-not-allowed' : 'bg-white/80'
+                      }`}
                     >
                       <option value="">Select a program...</option>
                       {programs.map(p => (
@@ -725,22 +769,50 @@ export function Onboarding() {
                   Most rotation sites require these credentials. You can upload them now or later from your profile.
                 </p>
                 {[
-                  { name: 'BLS/CPR Certification', icon: <Heart className="w-4 h-4" /> },
-                  { name: 'Background Check', icon: <Shield className="w-4 h-4" /> },
-                  { name: 'Drug Screen', icon: <Activity className="w-4 h-4" /> },
-                  { name: 'Immunization Records', icon: <ShieldCheck className="w-4 h-4" /> },
-                  { name: 'Liability Insurance', icon: <FileText className="w-4 h-4" /> },
-                  { name: 'HIPAA Training', icon: <Award className="w-4 h-4" /> },
+                  { name: 'BLS/CPR Certification', type: 'bls_cpr', icon: <Heart className="w-4 h-4" /> },
+                  { name: 'Background Check', type: 'background_check', icon: <Shield className="w-4 h-4" /> },
+                  { name: 'Drug Screen', type: 'drug_screen', icon: <Activity className="w-4 h-4" /> },
+                  { name: 'Immunization Records', type: 'immunization', icon: <ShieldCheck className="w-4 h-4" /> },
+                  { name: 'Liability Insurance', type: 'liability_insurance', icon: <FileText className="w-4 h-4" /> },
+                  { name: 'HIPAA Training', type: 'hipaa', icon: <Award className="w-4 h-4" /> },
                 ].map(cred => (
-                  <div key={cred.name} className="flex items-center justify-between p-4 bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl border border-stone-200/50 hover:shadow-md transition-all duration-200">
+                  <div key={cred.type} className="flex items-center justify-between p-4 bg-gradient-to-r from-stone-50 to-stone-100 rounded-2xl border border-stone-200/50 hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
-                        {cred.icon}
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${uploadedCreds[cred.type] ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                        {uploadedCreds[cred.type] ? <CheckCircle className="w-4 h-4" /> : cred.icon}
                       </div>
-                      <span className="text-sm font-medium text-stone-700">{cred.name}</span>
+                      <div>
+                        <span className="text-sm font-medium text-stone-700">{cred.name}</span>
+                        {uploadedCreds[cred.type] && (
+                          <p className="text-xs text-emerald-600">{uploadedCreds[cred.type]}</p>
+                        )}
+                      </div>
                     </div>
-                    <Button size="sm" variant="outline" className="!rounded-xl">
-                      <Upload className="w-3.5 h-3.5" /> Upload
+                    <input
+                      type="file"
+                      ref={el => { fileInputRefs.current[cred.type] = el }}
+                      className="hidden"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={e => {
+                        const file = e.target.files?.[0]
+                        if (file) handleCredentialUpload(cred.type, cred.name, file)
+                        e.target.value = ''
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="!rounded-xl"
+                      disabled={uploadingCred === cred.type}
+                      onClick={() => fileInputRefs.current[cred.type]?.click()}
+                    >
+                      {uploadingCred === cred.type ? (
+                        <><span className="w-3.5 h-3.5 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" /> Uploading...</>
+                      ) : uploadedCreds[cred.type] ? (
+                        <><Upload className="w-3.5 h-3.5" /> Replace</>
+                      ) : (
+                        <><Upload className="w-3.5 h-3.5" /> Upload</>
+                      )}
                     </Button>
                   </div>
                 ))}

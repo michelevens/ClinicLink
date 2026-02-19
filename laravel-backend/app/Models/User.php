@@ -190,6 +190,18 @@ class User extends Authenticatable
         return $this->hasMany(Payment::class, 'payee_id');
     }
 
+    // Collaborate relationships
+
+    public function physicianProfile()
+    {
+        return $this->hasOne(PhysicianProfile::class);
+    }
+
+    public function collaborationRequests()
+    {
+        return $this->hasMany(CollaborationRequest::class);
+    }
+
     // Scopes
 
     public function scopeRole($query, string $role)
@@ -237,6 +249,16 @@ class User extends Authenticatable
     public function isSsoUser(): bool
     {
         return $this->sso_provider !== null;
+    }
+
+    public function isPhysician(): bool
+    {
+        return $this->role === 'preceptor' && $this->physicianProfile !== null;
+    }
+
+    public function isNpPa(): bool
+    {
+        return $this->role === 'student';
     }
 
     public function getFullNameAttribute(): string

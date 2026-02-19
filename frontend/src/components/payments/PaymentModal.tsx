@@ -103,7 +103,13 @@ export function PaymentModal({ open, onClose, onSuccess, applicationId, slotTitl
             </div>
           </div>
 
-          {!clientSecret && !checkoutError && (
+          {!stripePromise && (
+            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+              Payment processing is not configured yet. Please contact support.
+            </div>
+          )}
+
+          {!clientSecret && !checkoutError && stripePromise && (
             <button onClick={initCheckout} disabled={checkout.isPending} className="w-full px-4 py-3 bg-primary-600 text-white rounded-xl text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {checkout.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Preparing...</> : `Pay $${amount.toFixed(2)}`}
             </button>

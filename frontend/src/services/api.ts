@@ -1857,3 +1857,137 @@ export const npiApi = {
   verify: (data: { npi_number: string; entity_type: 'preceptor' | 'site'; site_id?: string }) =>
     api.post<{ verified: boolean; data: NpiResult }>('/npi/verify', data),
 }
+
+// --- Collaborate Module ---
+
+export interface ApiStateRule {
+  id: string
+  state: string
+  practice_level: 'full' | 'reduced' | 'restricted'
+  supervision_required: boolean
+  max_np_ratio: number | null
+  chart_review_percent: number | null
+  telehealth_allowed: boolean
+  last_updated: string
+}
+
+export interface ApiPhysicianProfile {
+  id: string
+  user_id: string
+  first_name: string
+  last_name: string
+  licensed_states: string[]
+  specialties: string[]
+  max_supervisees: number
+  active_supervisees: number
+  has_capacity: boolean
+  supervision_model: string
+  malpractice_confirmed: boolean
+  bio: string | null
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ApiCollaborationRequest {
+  id: string
+  user_id: string
+  profession_type: string
+  states_requested: string[]
+  specialty: string
+  practice_model: string
+  expected_start_date: string
+  preferred_supervision_model: string | null
+  status: string
+  matches_count?: number
+  matches?: ApiCollaborationMatch[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ApiCollaborationMatch {
+  id: string
+  request_id: string
+  physician_profile_id: string
+  status: string
+  match_score: number
+  match_reasons: string[]
+  responded_at: string | null
+  physician_profile?: ApiPhysicianProfile
+  request?: ApiCollaborationRequest
+  created_at: string
+  updated_at: string
+}
+
+export const stateRulesApi = {
+  getAll: (params?: { practice_level?: string; supervision_required?: boolean }) => {
+    const qs = new URLSearchParams()
+    if (params?.practice_level) qs.set('practice_level', params.practice_level)
+    if (params?.supervision_required) qs.set('supervision_required', '1')
+    const query = qs.toString()
+    return api.get<{ data: ApiStateRule[] }>(`/state-rules${query ? `?${query}` : ''}`)
+  },
+  getByState: (state: string) =>
+    api.get<{ data: ApiStateRule }>(`/state-rules/${state}`),
+}
+
+export const collaborateApi = {
+  // Physician profiles
+  listProfiles: (params?: { state?: string; specialty?: string; supervision_model?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.state) qs.set('state', params.state)
+    if (params?.specialty) qs.set('specialty', params.specialty)
+    if (params?.supervision_model) qs.set('supervision_model', params.supervision_model)
+    if (params?.page) qs.set('page', String(params.page))
+    const query = qs.toString()
+    return api.get<{ data: ApiPhysicianProfile[]; current_page: number; last_page: number }>(`/collaborate/physician-profiles${query ? `?${query}` : ''}`)
+  },
+  createProfile: (data: {
+    licensed_states: string[]
+    specialties: string[]
+    max_supervisees?: number
+    supervision_model: string
+    malpractice_confirmed: boolean
+    bio?: string
+  }) => api.post<ApiPhysicianProfile>('/collaborate/physician-profiles', data),
+  getProfile: (id: string) =>
+    api.get<{ data: ApiPhysicianProfile }>(`/collaborate/physician-profiles/${id}`),
+  updateProfile: (id: string, data: Partial<{
+    licensed_states: string[]
+    specialties: string[]
+    max_supervisees: number
+    supervision_model: string
+    malpractice_confirmed: boolean
+    bio: string
+    is_active: boolean
+  }>) => api.put<ApiPhysicianProfile>(`/collaborate/physician-profiles/${id}`, data),
+
+  // Collaboration requests
+  listRequests: (params?: { status?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.status) qs.set('status', params.status)
+    if (params?.page) qs.set('page', String(params.page))
+    const query = qs.toString()
+    return api.get<{ data: ApiCollaborationRequest[]; current_page: number; last_page: number }>(`/collaborate/requests${query ? `?${query}` : ''}`)
+  },
+  createRequest: (data: {
+    profession_type: string
+    states_requested: string[]
+    specialty: string
+    practice_model: string
+    expected_start_date: string
+    preferred_supervision_model?: string
+  }) => api.post<ApiCollaborationRequest>('/collaborate/requests', data),
+  getRequest: (id: string) =>
+    api.get<{ data: ApiCollaborationRequest }>(`/collaborate/requests/${id}`),
+  closeRequest: (id: string) =>
+    api.put<ApiCollaborationRequest>(`/collaborate/requests/${id}`, { status: 'closed' }),
+
+  // Matches
+  listMatches: (page?: number) => {
+    const qs = page ? `?page=${page}` : ''
+    return api.get<{ data: ApiCollaborationMatch[]; current_page: number; last_page: number }>(`/collaborate/matches${qs}`)
+  },
+  respondToMatch: (id: string, status: 'accepted' | 'declined') =>
+    api.post<ApiCollaborationMatch>(`/collaborate/matches/${id}/respond`, { status }),
+}

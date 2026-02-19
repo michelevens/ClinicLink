@@ -3354,5 +3354,10 @@ class DatabaseSeeder extends Seeder
             'refunded_at' => now()->subDays(10),
             'metadata' => ['slot_title' => 'Internal Medicine PA Rotation', 'site_name' => 'Orlando Health', 'refund_reason' => 'Schedule conflict — rotation rescheduled'],
         ]);
+
+        // =====================================================================
+        // STATE RULES — Collaborate module
+        // =====================================================================
+        $this->call(StateRulesSeeder::class);
     }
 }

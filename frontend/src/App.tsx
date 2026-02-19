@@ -57,6 +57,13 @@ const AccreditationReports = lazy(() => import('./pages/AccreditationReports.tsx
 const SitesMap = lazy(() => import('./pages/SitesMap.tsx').then(m => ({ default: m.SitesMap })))
 const SsoCallback = lazy(() => import('./pages/SsoCallback.tsx').then(m => ({ default: m.SsoCallback })))
 
+// Collaborate module
+const CollaborateLanding = lazy(() => import('./pages/collaborate/CollaborateLanding.tsx'))
+const PhysicianDirectory = lazy(() => import('./pages/collaborate/PhysicianDirectory.tsx'))
+const CollaborationRequests = lazy(() => import('./pages/collaborate/CollaborationRequests.tsx'))
+const PhysicianProfilePage = lazy(() => import('./pages/collaborate/PhysicianProfilePage.tsx'))
+const CollaborationMatches = lazy(() => import('./pages/collaborate/CollaborationMatches.tsx'))
+
 // --- Loading fallback ---
 function PageLoader() {
   return (
@@ -171,6 +178,13 @@ export default function App() {
         <Route path="/analytics" element={<ProtectedRoute roles={['coordinator', 'site_manager', 'admin']}><Analytics /></ProtectedRoute>} />
         <Route path="/accreditation-reports" element={<ProtectedRoute roles={['coordinator', 'admin']}><AccreditationReports /></ProtectedRoute>} />
         <Route path="/sites-map" element={<ProtectedRoute roles={['coordinator', 'admin']}><SitesMap /></ProtectedRoute>} />
+
+        {/* Collaborate module */}
+        <Route path="/collaborate" element={<ProtectedRoute><CollaborateLanding /></ProtectedRoute>} />
+        <Route path="/collaborate/directory" element={<ProtectedRoute><PhysicianDirectory /></ProtectedRoute>} />
+        <Route path="/collaborate/requests" element={<ProtectedRoute roles={['student']}><CollaborationRequests /></ProtectedRoute>} />
+        <Route path="/collaborate/profile" element={<ProtectedRoute roles={['preceptor']}><PhysicianProfilePage /></ProtectedRoute>} />
+        <Route path="/collaborate/matches" element={<ProtectedRoute><CollaborationMatches /></ProtectedRoute>} />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

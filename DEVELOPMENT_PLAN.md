@@ -439,8 +439,12 @@ The marketplace that solves healthcare education's biggest bottleneck — connec
 ---
 
 ## Phase 3.5: Scale & Advanced Features — NEXT
+- SSO/SAML authentication (university single sign-on integration)
+- LMS integration (Canvas, Blackboard — grade passback, roster sync)
+- Background check provider integration (Castle Branch, Verified Credentials)
 - Multi-discipline expansion (nursing, PA, NP, PT, OT, social work, pharmacy, MD)
 - Advanced analytics (placement rates, time-to-place, demand heat maps)
+- Accreditation body-specific report templates (CCNE, ACEN, CAAHEP, ARC-PA)
 - Preceptor management and recognition system
 
 ---

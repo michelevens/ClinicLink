@@ -846,13 +846,18 @@ PRIORITY 6 — INTELLIGENCE (Weeks 25-32)
 □ Analytics dashboards (placement rates, trends)
 □ Demand heat maps
 
-PRIORITY 7 — MOBILE & SCALE (Weeks 33-44)
+PRIORITY 7 — ENTERPRISE & INTEGRATIONS (Weeks 33-40)
+═════════════════════════════════════════════════════
+□ SSO/SAML authentication (university single sign-on)
+□ LMS integration (Canvas, Blackboard — grade passback, roster sync)
+□ Background check API integration (Castle Branch, Verified Credentials)
+□ Accreditation body-specific reports (CCNE, ACEN, CAAHEP, ARC-PA)
+
+PRIORITY 8 — MOBILE & SCALE (Weeks 41-52)
 ══════════════════════════════════════════
 □ React Native app (iOS + Android)
 □ GPS-verified hour logging
 □ Push notifications
-□ LMS integration (Canvas, Blackboard)
-□ Background check API integration
 □ Multi-discipline expansion
 □ Rotation-to-hire pipeline
 ```

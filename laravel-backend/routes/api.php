@@ -39,6 +39,10 @@ use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\NpiController;
 use App\Http\Controllers\SamlController;
 use App\Http\Controllers\StudentInviteController;
+use App\Http\Controllers\StateRulesController;
+use App\Http\Controllers\Collaborate\PhysicianProfileController;
+use App\Http\Controllers\Collaborate\CollaborationRequestController;
+use App\Http\Controllers\Collaborate\CollaborationMatchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -102,6 +106,10 @@ Route::get('/sso/universities', [SamlController::class, 'universities']);
 Route::get('/sso/login/{university}', [SamlController::class, 'login']);
 Route::post('/sso/acs/{university}', [SamlController::class, 'acs']);
 Route::get('/sso/metadata', [SamlController::class, 'metadata']);
+
+// State rules (public — compliance reference data)
+Route::get('/state-rules', [StateRulesController::class, 'index']);
+Route::get('/state-rules/{state}', [StateRulesController::class, 'show']);
 
 // Public browsing (no sensitive user data)
 Route::get('/sites', [RotationSiteController::class, 'index']);
@@ -449,6 +457,22 @@ Route::middleware('auth:sanctum')->group(function () {
     | Admin-only Routes (require admin role via middleware)
     |--------------------------------------------------------------------------
     */
+    // ─── Collaborate Module ───
+    Route::prefix('collaborate')->group(function () {
+        Route::get('/physician-profiles', [PhysicianProfileController::class, 'index']);
+        Route::post('/physician-profiles', [PhysicianProfileController::class, 'store']);
+        Route::get('/physician-profiles/{id}', [PhysicianProfileController::class, 'show']);
+        Route::put('/physician-profiles/{id}', [PhysicianProfileController::class, 'update']);
+
+        Route::get('/requests', [CollaborationRequestController::class, 'index']);
+        Route::post('/requests', [CollaborationRequestController::class, 'store']);
+        Route::get('/requests/{id}', [CollaborationRequestController::class, 'show']);
+        Route::put('/requests/{id}', [CollaborationRequestController::class, 'update']);
+
+        Route::get('/matches', [CollaborationMatchController::class, 'index']);
+        Route::post('/matches/{id}/respond', [CollaborationMatchController::class, 'respond']);
+    });
+
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('/users', [AdminController::class, 'users']);
         Route::post('/users', [AdminController::class, 'createUser']);

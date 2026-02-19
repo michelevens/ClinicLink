@@ -157,3 +157,64 @@ export interface DashboardStats {
   averageRating?: number
   completionRate?: number
 }
+
+// ─── Collaborate Module ───
+
+export interface StateRule {
+  id: string
+  state: string
+  practice_level: 'full' | 'reduced' | 'restricted'
+  supervision_required: boolean
+  max_np_ratio: number | null
+  chart_review_percent: number | null
+  telehealth_allowed: boolean
+  last_updated: string
+}
+
+export interface PhysicianProfile {
+  id: string
+  user_id: string
+  first_name: string
+  last_name: string
+  licensed_states: string[]
+  specialties: string[]
+  max_supervisees: number
+  active_supervisees: number
+  has_capacity: boolean
+  supervision_model: 'in_person' | 'telehealth' | 'hybrid'
+  malpractice_confirmed: boolean
+  bio: string | null
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CollaborationRequest {
+  id: string
+  user_id: string
+  profession_type: 'np' | 'pa'
+  states_requested: string[]
+  specialty: string
+  practice_model: 'telehealth' | 'in_person' | 'hybrid'
+  expected_start_date: string
+  preferred_supervision_model: string | null
+  status: 'open' | 'matched' | 'closed'
+  matches_count?: number
+  matches?: CollaborationMatch[]
+  created_at: string
+  updated_at: string
+}
+
+export interface CollaborationMatch {
+  id: string
+  request_id: string
+  physician_profile_id: string
+  status: 'pending' | 'accepted' | 'declined'
+  match_score: number
+  match_reasons: string[]
+  responded_at: string | null
+  physician_profile?: PhysicianProfile
+  request?: CollaborationRequest
+  created_at: string
+  updated_at: string
+}
