@@ -53,7 +53,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Matches', path: '/collaborate/matches', icon: <Users className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
 ]
 
-const GROUP_ORDER = ['Clinical', 'Credentials', 'Sites', 'Academic', 'Admin']
+const GROUP_ORDER = ['Clinical', 'Credentials', 'Sites', 'Academic', 'Admin', 'Collaborate']
 
 function SidebarSection({ label, items, location, pendingSigCount, collapsed, onToggle }: {
   label: string; items: NavItem[]; location: ReturnType<typeof useLocation>

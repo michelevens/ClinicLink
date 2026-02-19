@@ -123,6 +123,30 @@ class DatabaseSeeder extends Seeder
             'email_verified' => true,
         ]);
 
+        $demoPractitioner = User::create([
+            'first_name' => 'Emily',
+            'last_name' => 'Reyes',
+            'email' => 'practitioner@cliniclink.health',
+            'username' => 'emilyreyes',
+            'password' => $demoPassword,
+            'role' => 'practitioner',
+            'phone' => '(407) 555-0107',
+            'is_active' => true,
+            'email_verified' => true,
+        ]);
+
+        \App\Models\PractitionerProfile::create([
+            'user_id' => $demoPractitioner->id,
+            'profession_type' => 'np',
+            'licensed_states' => ['FL', 'NY'],
+            'primary_specialty' => 'Family Practice',
+            'years_in_practice' => 5,
+            'current_employer' => 'Memorial Healthcare',
+            'malpractice_confirmed' => true,
+            'bio' => 'Experienced NP seeking collaborative practice agreement for independent practice in Florida.',
+            'is_active' => true,
+        ]);
+
         // =====================================================================
         // 2. ADDITIONAL USERS — diverse roles and statuses
         // =====================================================================
