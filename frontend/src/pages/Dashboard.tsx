@@ -11,6 +11,7 @@ import {
   useEvaluations, useCredentials, useSlots, useMySites,
   useMyPendingInvites, useAcceptInvite,
   useSiteJoinRequests, useCeCertificates,
+  usePendingApprovals, useUpdateUser,
 } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import {
@@ -952,14 +953,26 @@ function AdminDashboard() {
   const { data: appsData } = useApplications()
   const { data: sitesData } = useMySites()
   const { data: joinReqData } = useSiteJoinRequests({ status: 'pending' })
+  const { data: pendingData } = usePendingApprovals()
+  const updateUser = useUpdateUser()
 
   const slots = slotsData?.data || []
   const applications = appsData?.data || []
   const sites = sitesData?.sites || []
   const pendingJoinRequests = joinReqData?.join_requests || []
+  const pendingUsers = pendingData?.data || []
 
   const openSlots = slots.filter(s => s.status === 'open').length
   const pendingApps = applications.filter(a => a.status === 'pending').length
+
+  const handleApprove = async (userId: string) => {
+    try {
+      await updateUser.mutateAsync({ id: userId, data: { is_active: true } })
+      toast.success('User approved and activation email sent')
+    } catch {
+      toast.error('Failed to approve user')
+    }
+  }
 
   if (isLoading) return <PageSkeleton />
 
@@ -970,16 +983,66 @@ function AdminDashboard() {
         <p className="text-stone-500">Platform overview — manage users, sites, and monitor system health.</p>
       </div>
 
+      {/* Pending Approvals — prominent top section */}
+      {pendingUsers.length > 0 && (
+        <div className="border-2 border-red-300 bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-5">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-red-800 text-lg">
+                {pendingUsers.length} User{pendingUsers.length !== 1 ? 's' : ''} Awaiting Approval
+              </h3>
+              <p className="text-sm text-red-600">These users registered and need your approval to access the platform.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/users')} className="border-red-300 text-red-700 hover:bg-red-100 flex-shrink-0">
+              View All <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {pendingUsers.slice(0, 5).map(u => (
+              <div key={u.id} className="flex items-center gap-3 bg-white/80 rounded-xl px-4 py-3 border border-red-200/50">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  {u.first_name?.[0]}{u.last_name?.[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-stone-900 truncate">{u.first_name} {u.last_name}</p>
+                  <p className="text-xs text-stone-500 truncate">{u.email} · <span className="capitalize">{u.role?.replace('_', ' ')}</span> · {new Date(u.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {!u.email_verified && (
+                    <span className="text-[10px] font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Unverified</span>
+                  )}
+                  <Button size="sm" onClick={() => handleApprove(u.id)} disabled={updateUser.isPending} className="bg-green-600 hover:bg-green-700 text-white">
+                    <CheckCircle className="w-3.5 h-3.5" /> Approve
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => navigate(`/admin/users/${u.id}`)} className="border-stone-300">
+                    <Eye className="w-3.5 h-3.5" /> Review
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {pendingUsers.length > 5 && (
+              <p className="text-center text-sm text-red-600 font-medium pt-1">
+                + {pendingUsers.length - 5} more pending
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={<Users className="w-5 h-5" />} label="Total Users" value={stats?.total_users || 0} color="primary" />
+        <StatCard icon={<AlertTriangle className="w-5 h-5" />} label="Pending Approvals" value={stats?.pending_approvals || 0} color="amber" />
         <StatCard icon={<Building2 className="w-5 h-5" />} label="Active Sites" value={stats?.total_sites || sites.length} color="secondary" />
-        <StatCard icon={<BookOpen className="w-5 h-5" />} label="Universities" value={stats?.total_universities || 0} color="accent" />
         <StatCard icon={<CalendarDays className="w-5 h-5" />} label="Total Slots" value={stats?.total_slots || slots.length} color="green" />
       </div>
 
       {/* Action Required */}
       <ActionRequiredBanner items={[
+        { label: 'user(s) awaiting approval', count: pendingUsers.length, onClick: () => navigate('/admin/users'), buttonLabel: 'Review' },
         { label: 'application(s) pending review', count: pendingApps, onClick: () => navigate('/site-applications'), buttonLabel: 'Review' },
         { label: 'join request(s) pending', count: pendingJoinRequests.length, onClick: () => navigate('/preceptors'), buttonLabel: 'Review' },
       ]} />

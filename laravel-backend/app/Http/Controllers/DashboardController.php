@@ -121,6 +121,7 @@ class DashboardController extends Controller
     {
         return [
             'total_users' => User::count(),
+            'pending_approvals' => User::where('is_active', false)->count(),
             'total_students' => User::students()->count(),
             'total_preceptors' => User::preceptors()->count(),
             'total_sites' => RotationSite::count(),

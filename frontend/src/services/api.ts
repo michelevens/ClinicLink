@@ -545,6 +545,8 @@ export const adminApi = {
     api.post<{ code?: ApiLicenseCode; codes?: ApiLicenseCode[]; count?: number }>('/admin/university-codes', data),
   deactivateLicenseCode: (id: string) =>
     api.delete<{ message: string; code: ApiLicenseCode }>(`/admin/university-codes/${id}`),
+  pendingApprovals: () =>
+    api.get<{ data: ApiUser[]; count: number }>('/admin/pending-approvals'),
 }
 
 // --- Onboarding Templates ---
@@ -981,6 +983,7 @@ export interface ApiDashboardStats {
   total_universities?: number
   recent_applications?: number
   pending_join_requests?: number
+  pending_approvals?: number
 }
 
 export interface HourSummary {

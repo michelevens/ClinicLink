@@ -132,6 +132,15 @@ class AdminController extends Controller
         return response()->json(['user' => $user, 'message' => $message], 201);
     }
 
+    public function pendingApprovals(): JsonResponse
+    {
+        $users = User::where('is_active', false)
+            ->orderBy('created_at', 'desc')
+            ->get(['id', 'first_name', 'last_name', 'email', 'role', 'created_at', 'email_verified', 'system_id']);
+
+        return response()->json(['data' => $users, 'count' => $users->count()]);
+    }
+
     public function users(Request $request): JsonResponse
     {
         $query = User::query();

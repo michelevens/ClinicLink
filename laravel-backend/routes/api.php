@@ -493,6 +493,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('/pending-approvals', [AdminController::class, 'pendingApprovals']);
         Route::get('/users', [AdminController::class, 'users']);
         Route::post('/users', [AdminController::class, 'createUser']);
         Route::post('/users/bulk-invite', [AdminController::class, 'bulkInvite']);

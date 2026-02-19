@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Card } from '../components/ui/Card.tsx'
-import { Stethoscope, User, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Building2, Search } from 'lucide-react'
+import { Stethoscope, User, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Building2, Search, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
 import { ssoApi } from '../services/api.ts'
@@ -23,6 +23,7 @@ export function LoginPage() {
   // MFA verification state
   const [mfaCode, setMfaCode] = useState('')
   const [useBackupCode, setUseBackupCode] = useState(false)
+  const [pendingApproval, setPendingApproval] = useState(false)
 
   // Navigate on successful auth (including after MFA)
   useEffect(() => {
@@ -38,9 +39,13 @@ export function LoginPage() {
       // If MFA is required, login won't throw but mfaPending will become true
       // Navigation happens via useEffect when isAuthenticated becomes true
     } catch (err: unknown) {
-      const apiError = err as Error & { body?: { email_not_verified?: boolean; email?: string } }
+      const apiError = err as Error & { body?: { email_not_verified?: boolean; email?: string; pending_approval?: boolean } }
       if (apiError.body?.email_not_verified && apiError.body?.email) {
         navigate('/verify-email?email=' + encodeURIComponent(apiError.body.email))
+        return
+      }
+      if (apiError.body?.pending_approval) {
+        setPendingApproval(true)
         return
       }
       const message = err instanceof Error ? err.message : 'Login failed. Please check your credentials.'
@@ -157,6 +162,18 @@ export function LoginPage() {
           <h1 className="text-2xl font-bold text-stone-900">Welcome back</h1>
           <p className="text-stone-500 mt-1">Sign in to your account</p>
         </div>
+
+        {pendingApproval && (
+          <div className="mb-4 bg-amber-50 border border-amber-200 rounded-2xl p-5 text-center space-y-2">
+            <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+              <Clock className="w-6 h-6 text-amber-600" />
+            </div>
+            <h3 className="text-base font-bold text-stone-900">Account Pending Approval</h3>
+            <p className="text-sm text-stone-600">
+              Your registration has been received and is awaiting admin review. You'll receive an email once your account is activated.
+            </p>
+          </div>
+        )}
 
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">

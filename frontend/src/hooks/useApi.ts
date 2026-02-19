@@ -337,6 +337,13 @@ export function useAdminUser(id: string | null) {
   })
 }
 
+export function usePendingApprovals() {
+  return useQuery({
+    queryKey: ['admin-pending-approvals'],
+    queryFn: () => adminApi.pendingApprovals(),
+  })
+}
+
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({
@@ -344,6 +351,8 @@ export function useUpdateUser() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-users'] })
       qc.invalidateQueries({ queryKey: ['admin-user'] })
+      qc.invalidateQueries({ queryKey: ['admin-pending-approvals'] })
+      qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
     },
   })
 }

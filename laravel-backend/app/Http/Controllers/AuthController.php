@@ -50,7 +50,7 @@ class AuthController extends Controller
             'username' => $validated['username'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'is_active' => true,
+            'is_active' => false, // Requires admin approval before login
             'trial_ends_at' => $validated['role'] === 'student' ? now()->addMonths(3) : null,
         ]);
 
