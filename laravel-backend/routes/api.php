@@ -461,9 +461,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ─── Collaborate Module ───
     Route::prefix('collaborate')->group(function () {
         // Physician directory — browsable by practitioners, preceptors, admin
-        Route::middleware('role:practitioner,preceptor,admin')
-            ->get('/physician-profiles', [PhysicianProfileController::class, 'index']);
-        Route::get('/physician-profiles/{id}', [PhysicianProfileController::class, 'show']);
+        Route::middleware('role:practitioner,preceptor,admin')->group(function () {
+            Route::get('/physician-profiles', [PhysicianProfileController::class, 'index']);
+            Route::get('/physician-profiles/{id}', [PhysicianProfileController::class, 'show']);
+        });
 
         // Physician profile CRUD — preceptors only (NPI gate in controller)
         Route::middleware('role:preceptor')->group(function () {
@@ -479,11 +480,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/requests/{id}', [CollaborationRequestController::class, 'update']);
         });
 
-        // Matches — practitioners and preceptors
-        Route::middleware('role:practitioner,preceptor,admin')->group(function () {
-            Route::get('/matches', [CollaborationMatchController::class, 'index']);
-            Route::post('/matches/{id}/respond', [CollaborationMatchController::class, 'respond']);
-        });
+        // Match listing — practitioners and preceptors can view
+        Route::middleware('role:practitioner,preceptor,admin')
+            ->get('/matches', [CollaborationMatchController::class, 'index']);
+
+        // Match response — physicians (preceptors) and admin only
+        Route::middleware('role:preceptor,admin')
+            ->post('/matches/{id}/respond', [CollaborationMatchController::class, 'respond']);
     });
 
     // ─── Practitioner Profile ───

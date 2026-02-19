@@ -22,6 +22,7 @@ export default function CollaborationRequests() {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [stateRules, setStateRules] = useState<ApiStateRule[]>([])
+  const [stateRulesError, setStateRulesError] = useState(false)
 
   // Form state
   const [professionType, setProfessionType] = useState('np')
@@ -35,7 +36,7 @@ export default function CollaborationRequests() {
     loadRequests()
     stateRulesApi.getAll({ supervision_required: true }).then(res => {
       setStateRules(res.data || [])
-    }).catch(() => {})
+    }).catch(() => { setStateRulesError(true) })
   }, [])
 
   const loadRequests = () => {
@@ -143,18 +144,26 @@ export default function CollaborationRequests() {
 
               <div>
                 <label className="block text-sm font-semibold text-stone-700 mb-1">States (supervision required) *</label>
-                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                  {supervisionStates.map(s => (
-                    <button key={s} type="button" onClick={() => toggleState(s)}
-                      className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
-                        statesRequested.includes(s) ? 'bg-indigo-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                      }`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-                {statesRequested.length > 0 && (
-                  <p className="text-xs text-indigo-600 mt-1">{statesRequested.length} state(s) selected</p>
+                {stateRulesError ? (
+                  <p className="text-xs text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    Could not load state rules. Please close this form, refresh the page, and try again.
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                      {supervisionStates.map(s => (
+                        <button key={s} type="button" onClick={() => toggleState(s)}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
+                            statesRequested.includes(s) ? 'bg-indigo-500 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                          }`}>
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    {statesRequested.length > 0 && (
+                      <p className="text-xs text-indigo-600 mt-1">{statesRequested.length} state(s) selected</p>
+                    )}
+                  </>
                 )}
               </div>
 

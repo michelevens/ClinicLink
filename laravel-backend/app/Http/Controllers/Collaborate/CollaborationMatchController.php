@@ -47,7 +47,7 @@ class CollaborationMatchController extends Controller
             'status' => ['required', 'in:accepted,declined'],
         ]);
 
-        $match = CollaborationMatch::with('physicianProfile')->find($id);
+        $match = CollaborationMatch::with(['physicianProfile', 'request'])->find($id);
 
         if (!$match) {
             return response()->json(['message' => 'Match not found'], 404);
@@ -62,9 +62,16 @@ class CollaborationMatchController extends Controller
             return response()->json(['message' => 'Match already responded to'], 422);
         }
 
-        // Check capacity before accepting
-        if ($validated['status'] === 'accepted' && !$match->physicianProfile->hasCapacity()) {
-            return response()->json(['message' => 'Supervisee capacity reached'], 422);
+        if ($validated['status'] === 'accepted') {
+            // Block accept if another physician already accepted this request
+            if ($match->request && $match->request->status === 'matched') {
+                return response()->json(['message' => 'This request has already been matched with another physician'], 422);
+            }
+
+            // Check capacity before accepting
+            if (!$match->physicianProfile->hasCapacity()) {
+                return response()->json(['message' => 'Supervisee capacity reached'], 422);
+            }
         }
 
         $match->update([

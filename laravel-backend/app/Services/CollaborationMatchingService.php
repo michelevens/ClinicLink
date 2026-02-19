@@ -22,6 +22,7 @@ class CollaborationMatchingService
     {
         $profiles = PhysicianProfile::where('is_active', true)
             ->with('user')
+            ->withCount(['matches as accepted_count' => fn ($q) => $q->where('status', 'accepted')])
             ->get();
 
         $matches = [];
@@ -29,6 +30,7 @@ class CollaborationMatchingService
         foreach ($profiles as $profile) {
             $score = 0;
             $reasons = [];
+            $acceptedCount = (int) ($profile->accepted_count ?? 0);
 
             // State overlap (required gate — 40 pts)
             $stateOverlap = array_intersect(
@@ -59,15 +61,14 @@ class CollaborationMatchingService
                 $reasons[] = 'Physician offers hybrid (compatible)';
             }
 
-            // Capacity bonus (10 pts)
-            if ($profile->hasCapacity()) {
-                $remaining = $profile->max_supervisees - $profile->activeSuperviseeCount();
-                $capacityScore = min(10, $remaining * 2);
-                $score += $capacityScore;
-                $reasons[] = $remaining . ' supervisee slot(s) available';
-            } else {
+            // Capacity bonus (10 pts) — use eager-loaded count to avoid N+1
+            if ($acceptedCount >= $profile->max_supervisees) {
                 continue; // Skip profiles at capacity
             }
+
+            $remaining = $profile->max_supervisees - $acceptedCount;
+            $score += min(10, $remaining * 2);
+            $reasons[] = $remaining . ' supervisee slot(s) available';
 
             $matches[] = [
                 'profile' => $profile,
