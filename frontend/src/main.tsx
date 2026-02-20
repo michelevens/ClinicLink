@@ -8,10 +8,24 @@ import { DesignVersionProvider } from './contexts/DesignVersionContext.tsx'
 import { ThemeProvider } from './contexts/ThemeContext.tsx'
 import App from './App.tsx'
 import './index.css'
+import { registerSW } from 'virtual:pwa-register'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { staleTime: 5 * 60 * 1000, retry: 1 },
+  },
+})
+
+// Register PWA service worker for offline support and app-like experience
+const updateSW = registerSW({
+  onNeedRefresh() {
+    // Optional: Show a prompt to user when new content is available
+    if (confirm('New content available. Reload?')) {
+      updateSW(true)
+    }
+  },
+  onOfflineReady() {
+    console.log('ClinicLink is ready to work offline')
   },
 })
 
