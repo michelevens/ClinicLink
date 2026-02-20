@@ -11,7 +11,7 @@ import {
   useEvaluations, useCredentials, useSlots, useMySites,
   useMyPendingInvites, useAcceptInvite,
   useSiteJoinRequests, useCeCertificates,
-  usePendingApprovals, useUpdateUser,
+  usePendingApprovals, useUpdateUser, useSubscriptionStatus,
 } from '../hooks/useApi.ts'
 import { toast } from 'sonner'
 import {
@@ -20,6 +20,7 @@ import {
   GraduationCap, ClipboardCheck, BarChart3, BookOpen,
   Shield, Award, ArrowRight, MapPin, AlertTriangle,
   UserCheck, Activity, Eye, Settings, ChevronRight, Plus, Handshake,
+  Sparkles, Zap,
 } from 'lucide-react'
 import { PageSkeleton } from '../components/ui/Skeleton.tsx'
 
@@ -160,6 +161,7 @@ function StudentDashboard() {
   const { data: hoursData } = useHourLogs()
   const { data: evalsData } = useEvaluations()
   const { data: credsData } = useCredentials()
+  const { data: subscription } = useSubscriptionStatus()
 
   const applications = appsData?.data || []
   const hours = hoursData?.data || []
@@ -214,6 +216,44 @@ function StudentDashboard() {
         <h1 className="text-2xl font-bold text-stone-900">Welcome back, {user?.firstName || 'Student'}!</h1>
         <p className="text-stone-500">Track your clinical rotation progress and manage your placements.</p>
       </div>
+
+      {/* Upgrade CTA */}
+      {subscription?.needs_upgrade && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500 via-secondary-500 to-accent-500 p-6 shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm shrink-0">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Upgrade to Pro</h3>
+                <p className="text-sm text-white/90">
+                  {subscription.trial_active
+                    ? `Trial ends in ${subscription.trial_days_remaining} day${subscription.trial_days_remaining !== 1 ? 's' : ''} • Unlock unlimited rotations`
+                    : 'Unlock unlimited rotations and premium features'}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/pricing')}
+                className="flex-1 sm:flex-initial bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Use School Code
+              </Button>
+              <Button
+                onClick={() => navigate('/pricing')}
+                className="flex-1 sm:flex-initial bg-white text-primary-600 hover:bg-white/90"
+              >
+                Subscribe Now
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
