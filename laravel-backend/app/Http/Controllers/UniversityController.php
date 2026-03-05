@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\QueryHelper;
 use App\Models\AffiliationAgreement;
 use App\Models\Program;
 use App\Models\University;
@@ -90,11 +91,11 @@ class UniversityController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = '%' . QueryHelper::escapeLike($request->input('search')) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('city', 'ilike', "%{$search}%")
-                  ->orWhere('system_id', 'ilike', "%{$search}%");
+                $q->where('name', 'ilike', $search)
+                  ->orWhere('city', 'ilike', $search)
+                  ->orWhere('system_id', 'ilike', $search);
             });
         }
 

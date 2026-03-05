@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Helpers\QueryHelper;
 use App\Mail\SavedSearchAlertMail;
 use App\Models\RotationSlot;
 use App\Models\SavedSearch;
@@ -45,16 +46,16 @@ class SendSavedSearchAlerts extends Command
             $filters = $search->filters ?? [];
 
             if (!empty($filters['search'])) {
-                $s = $filters['search'];
+                $s = '%' . QueryHelper::escapeLike($filters['search']) . '%';
                 $query->where(function ($q) use ($s) {
-                    $q->where('title', 'ilike', "%{$s}%")
-                      ->orWhere('specialty', 'ilike', "%{$s}%")
-                      ->orWhereHas('site', fn($sq) => $sq->where('name', 'ilike', "%{$s}%")->orWhere('city', 'ilike', "%{$s}%"));
+                    $q->where('title', 'ilike', $s)
+                      ->orWhere('specialty', 'ilike', $s)
+                      ->orWhereHas('site', fn($sq) => $sq->where('name', 'ilike', $s)->orWhere('city', 'ilike', $s));
                 });
             }
 
             if (!empty($filters['specialty'])) {
-                $query->where('specialty', 'ilike', "%{$filters['specialty']}%");
+                $query->where('specialty', 'ilike', '%' . QueryHelper::escapeLike($filters['specialty']) . '%');
             }
 
             if (!empty($filters['cost_type'])) {

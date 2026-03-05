@@ -82,14 +82,23 @@ class StudentController extends Controller
         // Enrich with hour summaries; restrict sensitive fields based on role
         $canSeeSensitive = $user->isCoordinator() || $user->role === 'professor' || $user->isAdmin();
 
-        $result = $students->map(function ($student) use ($canSeeSensitive) {
+        // Pre-aggregate hour data to avoid N+1 queries
+        $studentIds = $students->pluck('id');
+        $approvedHoursMap = HourLog::whereIn('student_id', $studentIds)
+            ->where('status', 'approved')
+            ->groupBy('student_id')
+            ->selectRaw('student_id, SUM(hours_worked) as total')
+            ->pluck('total', 'student_id');
+        $pendingHoursMap = HourLog::whereIn('student_id', $studentIds)
+            ->where('status', 'pending')
+            ->groupBy('student_id')
+            ->selectRaw('student_id, SUM(hours_worked) as total')
+            ->pluck('total', 'student_id');
+
+        $result = $students->map(function ($student) use ($canSeeSensitive, $approvedHoursMap, $pendingHoursMap) {
             $profile = $student->studentProfile;
-            $approvedHours = HourLog::where('student_id', $student->id)
-                ->where('status', 'approved')
-                ->sum('hours_worked');
-            $pendingHours = HourLog::where('student_id', $student->id)
-                ->where('status', 'pending')
-                ->sum('hours_worked');
+            $approvedHours = (float) ($approvedHoursMap[$student->id] ?? 0);
+            $pendingHours = (float) ($pendingHoursMap[$student->id] ?? 0);
 
             $data = [
                 'id' => $student->id,
@@ -100,11 +109,11 @@ class StudentController extends Controller
                 'program' => $profile?->program?->name,
                 'program_id' => $profile?->program_id,
                 'degree_type' => $profile?->program?->degree_type,
-                'hours_completed' => (float) $approvedHours,
+                'hours_completed' => $approvedHours,
                 'prior_hours' => $profile?->prior_hours ?? 0,
-                'total_hours' => ($profile?->prior_hours ?? 0) + (float) $approvedHours,
+                'total_hours' => ($profile?->prior_hours ?? 0) + $approvedHours,
                 'hours_required' => $profile?->program?->required_hours ?? 0,
-                'pending_hours' => (float) $pendingHours,
+                'pending_hours' => $pendingHours,
             ];
 
             // Only coordinators, professors, and admins can see sensitive academic data

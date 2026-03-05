@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\QueryHelper;
 use App\Models\PreceptorProfile;
 use App\Models\PreceptorReview;
 use App\Models\User;
@@ -19,9 +20,10 @@ class PreceptorProfileController extends Controller
             ->where('profile_visibility', 'public');
 
         if ($search = $request->query('search')) {
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('first_name', 'ilike', "%{$search}%")
-                    ->orWhere('last_name', 'ilike', "%{$search}%");
+            $escaped = '%' . QueryHelper::escapeLike($search) . '%';
+            $query->whereHas('user', function ($q) use ($escaped) {
+                $q->where('first_name', 'ilike', $escaped)
+                    ->orWhere('last_name', 'ilike', $escaped);
             });
         }
 

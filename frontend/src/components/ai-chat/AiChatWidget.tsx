@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent, type MouseEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent, type MouseEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { MessageCircle, X, Send, ArrowLeft, Trash2, Plus, Clock, Bot, Loader2, HelpCircle, ChevronDown, Headphones } from 'lucide-react'
 import { useAiConversations, useAiMessages, useAiSendMessage, useAiDeleteConversation, useAiSuggestions, useSubmitSupportRequest } from '../../hooks/useApi.ts'
 import type { AiChatConversation, AiChatMessage } from '../../services/api.ts'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
+import DOMPurify from 'dompurify'
 
 type View = 'chat' | 'history' | 'help'
 
@@ -491,7 +492,7 @@ function MarkdownContent({ content, isUser }: { content: string; isUser: boolean
   }
 
   // Convert markdown to simple HTML
-  const html = content
+  const rawHtml = content
     // Bold
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     // Italic
@@ -505,6 +506,12 @@ function MarkdownContent({ content, isUser }: { content: string; isUser: boolean
     // Line breaks
     .replace(/\n\n/g, '<br/><br/>')
     .replace(/\n/g, '<br/>')
+
+  // Sanitize to prevent XSS
+  const html = DOMPurify.sanitize(rawHtml, {
+    ALLOWED_TAGS: ['strong', 'em', 'code', 'li', 'br'],
+    ALLOWED_ATTR: ['class'],
+  })
 
   return (
     <span

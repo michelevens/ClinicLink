@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\QueryHelper;
 use App\Models\RotationSite;
 use App\Models\RotationSlot;
 use App\Models\SiteInvite;
@@ -16,19 +17,19 @@ class RotationSlotController extends Controller
         $query = RotationSlot::with(['site', 'preceptor']);
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = '%' . QueryHelper::escapeLike($request->input('search')) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('title', 'ilike', "%{$search}%")
-                  ->orWhere('specialty', 'ilike', "%{$search}%")
+                $q->where('title', 'ilike', $search)
+                  ->orWhere('specialty', 'ilike', $search)
                   ->orWhereHas('site', function ($sq) use ($search) {
-                      $sq->where('name', 'ilike', "%{$search}%")
-                         ->orWhere('city', 'ilike', "%{$search}%");
+                      $sq->where('name', 'ilike', $search)
+                         ->orWhere('city', 'ilike', $search);
                   });
             });
         }
 
         if ($request->filled('specialty')) {
-            $query->where('specialty', 'ilike', "%{$request->input('specialty')}%");
+            $query->where('specialty', 'ilike', '%' . QueryHelper::escapeLike($request->input('specialty')) . '%');
         }
 
         if ($request->filled('status')) {

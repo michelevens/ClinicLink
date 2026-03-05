@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\QueryHelper;
 use App\Models\RotationSite;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,12 +20,12 @@ class RotationSiteController extends Controller
             ->active();
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = '%' . QueryHelper::escapeLike($request->input('search')) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('city', 'ilike', "%{$search}%")
-                  ->orWhere('state', 'ilike', "%{$search}%")
-                  ->orWhere('system_id', 'ilike', "%{$search}%");
+                $q->where('name', 'ilike', $search)
+                  ->orWhere('city', 'ilike', $search)
+                  ->orWhere('state', 'ilike', $search)
+                  ->orWhere('system_id', 'ilike', $search);
             });
         }
 
@@ -47,7 +48,6 @@ class RotationSiteController extends Controller
         $site->load([
             'manager',
             'slots.preceptor',
-            'slots.applications.student',
             'affiliationAgreements.university',
             'onboardingTemplates',
             'invites',

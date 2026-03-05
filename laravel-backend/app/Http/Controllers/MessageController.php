@@ -9,6 +9,7 @@ use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\RotationSlot;
 use App\Models\User;
+use App\Helpers\QueryHelper;
 use App\Notifications\NewMessageNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -222,10 +223,11 @@ class MessageController extends Controller
             ->where('is_active', true);
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'ilike', "%{$search}%")
-                    ->orWhere('last_name', 'ilike', "%{$search}%")
-                    ->orWhere('email', 'ilike', "%{$search}%");
+            $escaped = '%' . QueryHelper::escapeLike($search) . '%';
+            $query->where(function ($q) use ($escaped) {
+                $q->where('first_name', 'ilike', $escaped)
+                    ->orWhere('last_name', 'ilike', $escaped)
+                    ->orWhere('email', 'ilike', $escaped);
             });
         }
 

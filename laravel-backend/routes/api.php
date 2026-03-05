@@ -121,7 +121,7 @@ Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
 Route::get('/sites', [RotationSiteController::class, 'index']);
 Route::get('/sites/{site}', [RotationSiteController::class, 'show']);
 Route::get('/slots', [RotationSlotController::class, 'index']);
-Route::get('/slots/{slot}', [RotationSlotController::class, 'show']);
+Route::get('/slots/{slot}', [RotationSlotController::class, 'show'])->whereUuid('slot');
 Route::get('/universities', [UniversityController::class, 'index']);
 Route::get('/universities/{university}', [UniversityController::class, 'show']);
 Route::get('/universities/{university}/programs', [UniversityController::class, 'programs']);
@@ -190,7 +190,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:preceptor,site_manager,coordinator,admin')
         ->put('/hour-logs/{hourLog}/review', [HourLogController::class, 'review']);
     Route::middleware('role:student')->delete('/hour-logs/{hourLog}', [HourLogController::class, 'destroy']);
-    Route::middleware('role:student')->get('/hour-logs/summary', [HourLogController::class, 'summary']);
+    Route::middleware('role:student,preceptor,coordinator,admin')->get('/hour-logs/summary', [HourLogController::class, 'summary']);
 
     // Evaluations (preceptor/site_manager/admin create; controller scopes reads)
     Route::get('/evaluations', [EvaluationController::class, 'index']);

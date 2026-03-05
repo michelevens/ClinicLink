@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\QueryHelper;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -132,13 +133,13 @@ class AdminController extends Controller
         return response()->json(['user' => $user, 'message' => $message], 201);
     }
 
-    public function pendingApprovals(): JsonResponse
+    public function pendingApprovals(Request $request): JsonResponse
     {
         $users = User::where('is_active', false)
             ->orderBy('created_at', 'desc')
-            ->get(['id', 'first_name', 'last_name', 'email', 'role', 'created_at', 'email_verified', 'system_id']);
+            ->paginate($request->input('per_page', 50), ['id', 'first_name', 'last_name', 'email', 'role', 'created_at', 'email_verified', 'system_id']);
 
-        return response()->json(['data' => $users, 'count' => $users->count()]);
+        return response()->json($users);
     }
 
     public function users(Request $request): JsonResponse
@@ -146,13 +147,13 @@ class AdminController extends Controller
         $query = User::query();
 
         if ($request->filled('search')) {
-            $search = $request->input('search');
+            $search = '%' . QueryHelper::escapeLike($request->input('search')) . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'ilike', "%{$search}%")
-                  ->orWhere('last_name', 'ilike', "%{$search}%")
-                  ->orWhere('email', 'ilike', "%{$search}%")
-                  ->orWhere('username', 'ilike', "%{$search}%")
-                  ->orWhere('system_id', 'ilike', "%{$search}%");
+                $q->where('first_name', 'ilike', $search)
+                  ->orWhere('last_name', 'ilike', $search)
+                  ->orWhere('email', 'ilike', $search)
+                  ->orWhere('username', 'ilike', $search)
+                  ->orWhere('system_id', 'ilike', $search);
             });
         }
 
@@ -407,7 +408,6 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => $message,
-            'temporary_password' => $temporaryPassword,
             'email_sent' => $emailSent,
         ]);
     }
