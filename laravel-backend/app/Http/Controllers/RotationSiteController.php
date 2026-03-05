@@ -129,29 +129,24 @@ class RotationSiteController extends Controller
     {
         $user = $request->user();
 
+        $query = RotationSite::with('slots');
+
         if ($user->isAdmin()) {
-            // Admin: return all sites
-            $sites = RotationSite::with('slots')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // Admin: return all sites (paginated)
         } elseif ($user->isPreceptor()) {
             // Preceptors: return sites where they have assigned slots
             $siteIds = \App\Models\RotationSlot::where('preceptor_id', $user->id)
                 ->distinct()
                 ->pluck('site_id');
-
-            $sites = RotationSite::with('slots')
-                ->whereIn('id', $siteIds)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query->whereIn('id', $siteIds);
         } else {
             // Site managers: return sites they manage
-            $sites = RotationSite::with('slots')
-                ->where('manager_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $query->where('manager_id', $user->id);
         }
 
-        return response()->json(['sites' => $sites]);
+        $sites = $query->orderBy('created_at', 'desc')
+            ->paginate($request->input('per_page', 50));
+
+        return response()->json($sites);
     }
 }

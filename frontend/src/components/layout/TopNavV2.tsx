@@ -182,6 +182,7 @@ export function TopNavV2() {
               }`
             }
             title="Messages"
+            aria-label="Messages"
           >
             <MessageSquare className="w-4 h-4" />
             {unreadCount > 0 && (
@@ -199,6 +200,7 @@ export function TopNavV2() {
               }`
             }
             title="Calendar"
+            aria-label="Calendar"
           >
             <Calendar className="w-4 h-4" />
           </NavLink>
@@ -211,11 +213,12 @@ export function TopNavV2() {
               }`
             }
             title="Preceptor Directory"
+            aria-label="Preceptor Directory"
           >
             <UserSearch className="w-4 h-4" />
           </NavLink>
 
-          <button className="relative p-2 rounded-lg text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 transition-all">
+          <button className="relative p-2 rounded-lg text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 transition-all" aria-label="Notifications">
             <Bell className="w-4 h-4" />
             {pendingSigCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center">
@@ -242,6 +245,7 @@ export function TopNavV2() {
             onClick={logout}
             className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
             title="Logout"
+            aria-label="Logout"
           >
             <LogOut className="w-4 h-4" />
           </button>

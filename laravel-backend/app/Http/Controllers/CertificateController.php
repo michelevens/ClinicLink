@@ -110,7 +110,7 @@ class CertificateController extends Controller
             ->first();
 
         // Generate unique certificate number
-        $certNumber = 'CL-' . strtoupper(Str::random(4)) . '-' . date('Y') . '-' . str_pad(Certificate::count() + 1, 4, '0', STR_PAD_LEFT);
+        $certNumber = 'CL-' . strtoupper(Str::random(6)) . '-' . date('Y');
 
         $certificate = Certificate::create([
             'student_id' => $validated['student_id'],

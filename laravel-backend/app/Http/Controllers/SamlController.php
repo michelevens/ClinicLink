@@ -126,7 +126,7 @@ class SamlController extends Controller
 
             // Redirect to frontend with token
             $frontendUrl = config('app.frontend_url');
-            return redirect("{$frontendUrl}/sso/callback?token={$token}");
+            return redirect("{$frontendUrl}/sso/callback#token={$token}");
 
         } catch (\Throwable $e) {
             Log::error('SAML ACS error: ' . $e->getMessage(), [

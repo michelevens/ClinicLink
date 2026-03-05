@@ -65,6 +65,7 @@ export function SavedSearchesPanel({ onClose, onLoadSearch }: Props) {
                       onClick={() => toggleAlerts(search)}
                       className={`p-1.5 rounded-lg transition-colors ${search.alerts_enabled ? 'text-primary-600 bg-primary-50' : 'text-stone-400 hover:bg-stone-100'}`}
                       title={search.alerts_enabled ? 'Alerts on' : 'Alerts off'}
+                      aria-label={search.alerts_enabled ? 'Disable alerts' : 'Enable alerts'}
                     >
                       {search.alerts_enabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
                     </button>
@@ -72,6 +73,7 @@ export function SavedSearchesPanel({ onClose, onLoadSearch }: Props) {
                       onClick={() => deleteMutation.mutate(search.id)}
                       className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                       title="Delete"
+                      aria-label="Delete saved search"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

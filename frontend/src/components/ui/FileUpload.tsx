@@ -86,6 +86,7 @@ export function FileUpload({
               rel="noopener noreferrer"
               className="p-1.5 text-stone-400 hover:text-primary-500 transition-colors"
               title="Download"
+              aria-label="Download file"
             >
               <Download className="h-4 w-4" />
             </a>
@@ -95,6 +96,7 @@ export function FileUpload({
               onClick={onRemove}
               className="p-1.5 text-stone-400 hover:text-red-500 transition-colors"
               title="Remove file"
+              aria-label="Remove file"
             >
               <X className="h-4 w-4" />
             </button>

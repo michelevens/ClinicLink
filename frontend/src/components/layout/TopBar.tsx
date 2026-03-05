@@ -35,6 +35,7 @@ export function TopBar() {
           }`
         }
         title="Messages"
+        aria-label="Messages"
       >
         <MessageSquare className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -55,6 +56,7 @@ export function TopBar() {
           }`
         }
         title="Calendar"
+        aria-label="Calendar"
       >
         <Calendar className="w-5 h-5" />
       </NavLink>
@@ -70,6 +72,7 @@ export function TopBar() {
           }`
         }
         title="Preceptor Directory"
+        aria-label="Preceptor Directory"
       >
         <UserSearch className="w-5 h-5" />
       </NavLink>
@@ -88,6 +91,7 @@ export function TopBar() {
           }`
         }
         title="Settings"
+        aria-label="Settings"
       >
         <Settings className="w-5 h-5" />
       </NavLink>
@@ -111,6 +115,7 @@ export function TopBar() {
         onClick={logout}
         className="lg:hidden p-2 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
         title="Logout"
+        aria-label="Logout"
       >
         <LogOut className="w-4 h-4" />
       </button>

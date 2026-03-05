@@ -237,6 +237,7 @@ export function AiChatWidget() {
                     onClick={handleNewChat}
                     className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                     title="New chat"
+                    aria-label="New chat"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -244,6 +245,7 @@ export function AiChatWidget() {
                     onClick={() => setView('history')}
                     className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                     title="Chat history"
+                    aria-label="Chat history"
                   >
                     <Clock className="w-4 h-4" />
                   </button>
@@ -253,6 +255,7 @@ export function AiChatWidget() {
                 onClick={() => setIsOpen(false)}
                 className="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                 title="Close"
+                aria-label="Close chat"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -354,6 +357,7 @@ export function AiChatWidget() {
                         onClick={(e) => handleDeleteConversation(conv.id, e)}
                         className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 p-1 transition-all"
                         title="Delete"
+                        aria-label="Delete conversation"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

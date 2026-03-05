@@ -116,6 +116,7 @@ export function NotificationBell() {
                       }}
                       className="shrink-0 p-1 rounded text-stone-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
                       title="Mark as read"
+                      aria-label="Mark as read"
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>

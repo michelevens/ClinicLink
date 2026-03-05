@@ -11,7 +11,10 @@ export function SsoCallback() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = searchParams.get('token')
+    // Read token from URL fragment (not query param) to avoid exposure in logs/referrer
+    const hash = window.location.hash.substring(1)
+    const hashParams = new URLSearchParams(hash)
+    const token = hashParams.get('token') || searchParams.get('token')
     const errorMsg = searchParams.get('error')
 
     if (errorMsg) {
