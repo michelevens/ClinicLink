@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('analytics:cache')->dailyAt('01:00');
     })
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->statefulApi();
+
         $middleware->validateCsrfTokens(except: [
             'api/*',
         ]);

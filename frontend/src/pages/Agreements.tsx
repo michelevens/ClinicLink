@@ -388,9 +388,8 @@ export function Agreements() {
   }
 
   const handleDownload = (agreementId: string) => {
-    const token = localStorage.getItem('cliniclink_token')
     const url = agreementsApi.downloadUrl(agreementId)
-    window.open(`${url}?token=${token}`, '_blank')
+    window.open(url, '_blank')
   }
 
   const formatFileSize = (bytes: number) => {

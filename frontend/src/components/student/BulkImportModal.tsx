@@ -34,14 +34,13 @@ export function BulkImportModal({ open, onClose, programId, onSuccess }: BulkImp
       formData.append('file', file)
       if (programId) formData.append('program_id', programId)
 
-      const token = localStorage.getItem('cliniclink_token')
       const res = await fetch(`${API_URL}/students/bulk-import`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: formData,
+        credentials: 'include',
       })
 
       if (!res.ok) {

@@ -1,5 +1,13 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
+// Derive the base origin for the CSRF cookie endpoint (e.g. http://localhost:8000)
+const API_ORIGIN = API_URL.replace(/\/api$/, '')
+
+function getCsrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 class ApiClient {
   private baseUrl: string
 
@@ -7,31 +15,35 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
-  private getToken(): string | null {
-    return localStorage.getItem('cliniclink_token')
+  /** Fetch the CSRF cookie from Sanctum. Call before login/register. */
+  async csrfCookie(): Promise<void> {
+    await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
+      credentials: 'include',
+    })
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = this.getToken()
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     }
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+
+    const csrfToken = getCsrfToken()
+    if (csrfToken) {
+      headers['X-XSRF-TOKEN'] = csrfToken
     }
 
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers,
+      credentials: 'include',
     })
 
     if (res.status === 401) {
-      localStorage.removeItem('cliniclink_token')
       localStorage.removeItem('cliniclink_user')
       window.location.href = import.meta.env.BASE_URL + 'login'
       throw new Error('Unauthorized')
@@ -74,22 +86,23 @@ class ApiClient {
   }
 
   async upload<T>(endpoint: string, formData: FormData): Promise<T> {
-    const token = this.getToken()
     const headers: Record<string, string> = {
       Accept: 'application/json',
     }
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+
+    const csrfToken = getCsrfToken()
+    if (csrfToken) {
+      headers['X-XSRF-TOKEN'] = csrfToken
     }
 
     const res = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'POST',
       headers,
       body: formData,
+      credentials: 'include',
     })
 
     if (res.status === 401) {
-      localStorage.removeItem('cliniclink_token')
       localStorage.removeItem('cliniclink_user')
       window.location.href = import.meta.env.BASE_URL + 'login'
       throw new Error('Unauthorized')
@@ -355,10 +368,7 @@ export const studentApi = {
     formData.append('file', file)
     return api.upload<{ credential: ApiCredential; message: string }>(`/student/credentials/${id}/upload`, formData)
   },
-  downloadCredentialUrl: (id: string) => {
-    const token = localStorage.getItem('cliniclink_token')
-    return `${API_URL}/student/credentials/${id}/download?token=${token}`
-  },
+  downloadCredentialUrl: (id: string) => `${API_URL}/student/credentials/${id}/download`,
 }
 
 // --- My Students ---
@@ -437,10 +447,7 @@ export const certificatesApi = {
     api.get<CertificateEligibility>(`/certificates/eligibility/${slotId}/${studentId}`),
   revoke: (id: string, data: { reason: string }) =>
     api.put<{ certificate: ApiCertificate }>(`/certificates/${id}/revoke`, data),
-  getPdfUrl: (id: string) => {
-    const token = localStorage.getItem('cliniclink_token')
-    return `${API_URL}/certificates/${id}/pdf?token=${token}`
-  },
+  getPdfUrl: (id: string) => `${API_URL}/certificates/${id}/pdf`,
   publicVerify: (certNumber: string) =>
     api.get<CertificateVerification>(`/verify/${certNumber}`),
 }
@@ -1220,10 +1227,7 @@ export const ceCertificatesApi = {
     api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/revoke`, data),
   auditTrail: (id: string) =>
     api.get<{ audit_trail: ApiCeAuditEvent[] }>(`/ce-certificates/${id}/audit-trail`),
-  downloadUrl: (id: string) => {
-    const token = localStorage.getItem('cliniclink_token')
-    return `${API_URL}/ce-certificates/${id}/download?token=${token}`
-  },
+  downloadUrl: (id: string) => `${API_URL}/ce-certificates/${id}/download`,
   eligibility: (applicationId: string) =>
     api.get<CeEligibility>(`/ce-eligibility/${applicationId}`),
   publicVerify: (uuid: string) =>
@@ -1705,19 +1709,14 @@ export const accreditationReportsApi = {
     api.post<ApiAccreditationReport>('/accreditation-reports', data),
   preview: (id: string) =>
     api.get<{ report: ApiAccreditationReport; data: Record<string, unknown> }>(`/accreditation-reports/${id}/preview`),
-  downloadUrl: (id: string) => {
-    const token = localStorage.getItem('cliniclink_token')
-    return `${API_URL}/accreditation-reports/${id}/download?token=${token}`
-  },
+  downloadUrl: (id: string) => `${API_URL}/accreditation-reports/${id}/download`,
   delete: (id: string) => api.delete(`/accreditation-reports/${id}`),
 }
 
 // --- Exports ---
 export const exportsApi = {
   hourLogsCsvUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {
-    const token = localStorage.getItem('cliniclink_token')
     const qs = new URLSearchParams()
-    if (token) qs.set('token', token)
     if (params?.status) qs.set('status', params.status)
     if (params?.slot_id) qs.set('slot_id', params.slot_id)
     if (params?.date_from) qs.set('date_from', params.date_from)
@@ -1725,9 +1724,7 @@ export const exportsApi = {
     return `${API_URL}/exports/hour-logs/csv?${qs}`
   },
   hourLogsPdfUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {
-    const token = localStorage.getItem('cliniclink_token')
     const qs = new URLSearchParams()
-    if (token) qs.set('token', token)
     if (params?.status) qs.set('status', params.status)
     if (params?.slot_id) qs.set('slot_id', params.slot_id)
     if (params?.date_from) qs.set('date_from', params.date_from)
@@ -1735,30 +1732,22 @@ export const exportsApi = {
     return `${API_URL}/exports/hour-logs/pdf?${qs}`
   },
   evaluationsCsvUrl: (params?: { type?: string }) => {
-    const token = localStorage.getItem('cliniclink_token')
     const qs = new URLSearchParams()
-    if (token) qs.set('token', token)
     if (params?.type) qs.set('type', params.type)
     return `${API_URL}/exports/evaluations/csv?${qs}`
   },
   evaluationsPdfUrl: (params?: { type?: string }) => {
-    const token = localStorage.getItem('cliniclink_token')
     const qs = new URLSearchParams()
-    if (token) qs.set('token', token)
     if (params?.type) qs.set('type', params.type)
     return `${API_URL}/exports/evaluations/pdf?${qs}`
   },
   complianceCsvUrl: (params?: { site_id?: string }) => {
-    const token = localStorage.getItem('cliniclink_token')
     const qs = new URLSearchParams()
-    if (token) qs.set('token', token)
     if (params?.site_id) qs.set('site_id', params.site_id)
     return `${API_URL}/exports/compliance/csv?${qs}`
   },
   compliancePdfUrl: (params?: { site_id?: string }) => {
-    const token = localStorage.getItem('cliniclink_token')
     const qs = new URLSearchParams()
-    if (token) qs.set('token', token)
     if (params?.site_id) qs.set('site_id', params.site_id)
     return `${API_URL}/exports/compliance/pdf?${qs}`
   },
@@ -1898,6 +1887,7 @@ export interface ApiPhysicianProfile {
   stripe_connect_account_id?: string | null
   stripe_connect_status?: string | null
   stripe_connect_onboarded_at?: string | null
+  user?: ApiUser
   created_at?: string
   updated_at?: string
 }
@@ -1914,6 +1904,7 @@ export interface ApiCollaborationRequest {
   status: string
   matches_count?: number
   matches?: ApiCollaborationMatch[]
+  user?: ApiUser
   created_at: string
   updated_at: string
 }

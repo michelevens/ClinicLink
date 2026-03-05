@@ -7,14 +7,10 @@ import { toast } from 'sonner'
 export function SsoCallback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { loginWithToken } = useAuth()
+  const { loginFromSession } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Read token from URL fragment (not query param) to avoid exposure in logs/referrer
-    const hash = window.location.hash.substring(1)
-    const hashParams = new URLSearchParams(hash)
-    const token = hashParams.get('token') || searchParams.get('token')
     const errorMsg = searchParams.get('error')
 
     if (errorMsg) {
@@ -22,12 +18,8 @@ export function SsoCallback() {
       return
     }
 
-    if (!token) {
-      setError('No authentication token received.')
-      return
-    }
-
-    loginWithToken(token)
+    // Session cookie was set by the backend redirect — verify it
+    loginFromSession()
       .then(() => {
         toast.success('Signed in via SSO')
         navigate('/dashboard', { replace: true })

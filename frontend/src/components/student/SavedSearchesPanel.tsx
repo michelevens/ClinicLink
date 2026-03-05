@@ -1,6 +1,4 @@
-import { useState } from 'react'
 import { Search, Bell, BellOff, Trash2, Loader2, X } from 'lucide-react'
-import { Button } from '../ui/Button.tsx'
 import { useSavedSearches, useDeleteSavedSearch, useUpdateSavedSearch } from '../../hooks/useApi.ts'
 import type { ApiSavedSearch } from '../../services/api.ts'
 

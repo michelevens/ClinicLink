@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Notifications\NewUserRegisteredNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
@@ -216,6 +217,10 @@ class AuthController extends Controller
             ]);
         }
 
+        // Start session for cookie-based SPA auth
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         // Auto-accept any pending site invites matching this user's email
@@ -286,7 +291,16 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
-        $user->currentAccessToken()->delete();
+
+        // Delete API token if present
+        if ($user->currentAccessToken() && method_exists($user->currentAccessToken(), 'delete')) {
+            $user->currentAccessToken()->delete();
+        }
+
+        // Invalidate session for cookie-based auth
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         AuditLog::recordFromRequest('User', $user->id, 'logout', $request);
 

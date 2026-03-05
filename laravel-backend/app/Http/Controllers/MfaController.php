@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -230,6 +231,10 @@ class MfaController extends Controller
         // Clean up MFA challenge
         Cache::forget($cacheKey);
         Cache::forget($attemptsKey);
+
+        // Start session for cookie-based SPA auth
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
 
         // Issue real Sanctum token
         $token = $user->createToken('auth-token')->plainTextToken;

@@ -9,6 +9,7 @@ use App\Models\University;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -107,8 +108,9 @@ class SamlController extends Controller
             // Find or create user
             $user = $this->findOrCreateUser($nameId, $attributes, $university);
 
-            // Issue Sanctum token
-            $token = $user->createToken('sso-session', ['*'], now()->addHours(24))->plainTextToken;
+            // Start session for cookie-based SPA auth
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
 
             AuditLog::create([
                 'user_id' => $user->id,
@@ -124,9 +126,9 @@ class SamlController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            // Redirect to frontend with token
+            // Redirect to frontend — session cookie is set, frontend will call /auth/me
             $frontendUrl = config('app.frontend_url');
-            return redirect("{$frontendUrl}/sso/callback#token={$token}");
+            return redirect("{$frontendUrl}/sso/callback#sso=success");
 
         } catch (\Throwable $e) {
             Log::error('SAML ACS error: ' . $e->getMessage(), [

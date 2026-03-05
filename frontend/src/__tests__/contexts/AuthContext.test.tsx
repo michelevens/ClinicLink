@@ -6,6 +6,9 @@ import type { UserRole } from '../../types/index.ts'
 
 // Mock the API module
 vi.mock('../../services/api.ts', () => ({
+  api: {
+    csrfCookie: vi.fn().mockResolvedValue(undefined),
+  },
   authApi: {
     me: vi.fn().mockRejectedValue(new Error('Not authenticated')),
     login: vi.fn(),
@@ -63,7 +66,7 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('mfa').textContent).toBe('false')
   })
 
-  it('restores user from localStorage', () => {
+  it('restores user from localStorage cache', () => {
     const user = {
       id: 'test-1',
       email: 'test@test.com',
@@ -73,7 +76,6 @@ describe('AuthContext', () => {
       createdAt: new Date().toISOString(),
       onboardingCompleted: true,
     }
-    localStorage.setItem('cliniclink_token', 'test-token')
     localStorage.setItem('cliniclink_user', JSON.stringify(user))
 
     renderWithProviders()
@@ -82,7 +84,6 @@ describe('AuthContext', () => {
   })
 
   it('handles corrupted localStorage gracefully', () => {
-    localStorage.setItem('cliniclink_token', 'test-token')
     localStorage.setItem('cliniclink_user', 'not-json')
 
     renderWithProviders()
@@ -124,8 +125,8 @@ describe('AuthContext', () => {
       createdAt: new Date().toISOString(),
       onboardingCompleted: true,
     }
-    localStorage.setItem('cliniclink_token', 'demo-token-123')
     localStorage.setItem('cliniclink_user', JSON.stringify(user))
+    localStorage.setItem('cliniclink_demo', '1')
 
     renderWithProviders()
     expect(screen.getByTestId('auth').textContent).toBe('true')
@@ -136,8 +137,8 @@ describe('AuthContext', () => {
 
     expect(screen.getByTestId('auth').textContent).toBe('false')
     expect(screen.getByTestId('user').textContent).toBe('null')
-    expect(localStorage.getItem('cliniclink_token')).toBeNull()
     expect(localStorage.getItem('cliniclink_user')).toBeNull()
+    expect(localStorage.getItem('cliniclink_demo')).toBeNull()
   })
 
   it('throws error when useAuth used outside provider', () => {

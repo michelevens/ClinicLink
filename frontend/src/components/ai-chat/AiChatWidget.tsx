@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo, type KeyboardEvent, type MouseEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent, type MouseEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { MessageCircle, X, Send, ArrowLeft, Trash2, Plus, Clock, Bot, Loader2, HelpCircle, ChevronDown, Headphones } from 'lucide-react'
 import { useAiConversations, useAiMessages, useAiSendMessage, useAiDeleteConversation, useAiSuggestions, useSubmitSupportRequest } from '../../hooks/useApi.ts'
