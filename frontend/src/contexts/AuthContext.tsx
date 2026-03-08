@@ -89,6 +89,8 @@ const DEFAULT_STATE: AuthState = { user: null, isAuthenticated: false, isLoading
 function completeLogin(res: { user: ApiUser; token: string; accepted_invites?: { site_id: string; site_name: string }[] }, setState: (s: AuthState) => void) {
   const user = mapApiUser(res.user)
   localStorage.setItem('cliniclink_user', JSON.stringify(user))
+  // Store the Bearer token for cross-domain API auth
+  api.setToken(res.token)
   setState({ user, isAuthenticated: true, isLoading: false, mfaPending: false, mfaToken: null, isDemo: false })
 
   if (res.accepted_invites?.length) {
@@ -214,6 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const wasDemo = state.isDemo
     localStorage.removeItem('cliniclink_user')
     localStorage.removeItem('cliniclink_demo')
+    api.setToken(null)
     setState(DEFAULT_STATE)
     if (!wasDemo) {
       authApi.logout().catch(() => {})
@@ -241,10 +244,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       completeLogin(res as { user: ApiUser; token: string }, setState)
     } catch {
-      // Fallback to demo mode if API is unreachable
+      // Fallback to offline demo mode if API is unreachable
       const user = DEMO_USERS[role]
       localStorage.setItem('cliniclink_user', JSON.stringify(user))
       localStorage.setItem('cliniclink_demo', '1')
+      api.setToken(null)
       setState({ ...DEFAULT_STATE, user, isAuthenticated: true, isDemo: true })
     }
   }, [])

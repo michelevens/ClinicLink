@@ -15,6 +15,19 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
+  /** Store the Sanctum API token for Bearer auth (cross-domain). */
+  setToken(token: string | null) {
+    if (token) {
+      localStorage.setItem('cliniclink_token', token)
+    } else {
+      localStorage.removeItem('cliniclink_token')
+    }
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('cliniclink_token')
+  }
+
   /** Fetch the CSRF cookie from Sanctum. Call before login/register. */
   async csrfCookie(): Promise<void> {
     await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
@@ -32,6 +45,12 @@ class ApiClient {
       ...((options.headers as Record<string, string>) || {}),
     }
 
+    // Use Bearer token for cross-domain API calls
+    const token = this.getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const csrfToken = getCsrfToken()
     if (csrfToken) {
       headers['X-XSRF-TOKEN'] = csrfToken
@@ -45,6 +64,7 @@ class ApiClient {
 
     if (res.status === 401) {
       localStorage.removeItem('cliniclink_user')
+      localStorage.removeItem('cliniclink_token')
       window.location.href = import.meta.env.BASE_URL + 'login'
       throw new Error('Unauthorized')
     }
@@ -90,6 +110,11 @@ class ApiClient {
       Accept: 'application/json',
     }
 
+    const token = this.getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
     const csrfToken = getCsrfToken()
     if (csrfToken) {
       headers['X-XSRF-TOKEN'] = csrfToken
@@ -104,6 +129,7 @@ class ApiClient {
 
     if (res.status === 401) {
       localStorage.removeItem('cliniclink_user')
+      localStorage.removeItem('cliniclink_token')
       window.location.href = import.meta.env.BASE_URL + 'login'
       throw new Error('Unauthorized')
     }
