@@ -26,4 +26,8 @@ return [
         'max_tokens' => (int) env('OPENAI_MAX_TOKENS', 1024),
     ],
 
+    'sam_gov' => [
+        'api_key' => env('SAM_GOV_API_KEY'),
+    ],
+
 ];

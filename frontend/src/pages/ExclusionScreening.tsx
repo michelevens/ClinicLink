@@ -51,7 +51,7 @@ export default function ExclusionScreening() {
         <div>
           <h1 className="text-2xl font-bold text-stone-900 dark:text-stone-100">Exclusion Screening</h1>
           <p className="text-sm text-stone-500 dark:text-stone-400 mt-1">
-            Screen providers against the OIG LEIE exclusion database for compliance
+            Screen providers against OIG LEIE and SAM.gov exclusion databases
           </p>
         </div>
         <div className="flex gap-2">
@@ -110,11 +110,13 @@ export default function ExclusionScreening() {
           />
           <SummaryCard
             icon={<Database className="w-5 h-5 text-stone-500" />}
-            value={summary.database.record_count.toLocaleString()}
+            value={summary.database?.record_count?.toLocaleString() ?? '0'}
             label="LEIE Records"
-            sublabel={summary.database.last_import
-              ? `Updated ${new Date(summary.database.last_import).toLocaleDateString()}`
-              : 'Not yet imported'}
+            sublabel={summary.databases
+              ? `${summary.databases.filter((d: { configured: boolean }) => d.configured).length} source(s) active`
+              : summary.database?.last_import
+                ? `Updated ${new Date(summary.database.last_import).toLocaleDateString()}`
+                : 'Not yet imported'}
           />
         </div>
       ) : null}
@@ -160,7 +162,7 @@ export default function ExclusionScreening() {
             <Shield className="w-12 h-12 text-stone-300 dark:text-stone-600 mx-auto mb-3" />
             <p className="text-stone-500 dark:text-stone-400 font-medium">No screening results yet</p>
             <p className="text-sm text-stone-400 dark:text-stone-500 mt-1">
-              Import the OIG database and run a bulk screening to get started.
+              Import the OIG database and run a bulk screening to get started. SAM.gov checks run via live API.
             </p>
           </div>
         ) : (

@@ -2184,6 +2184,13 @@ export interface ScreeningSummary {
     record_count: number
     last_import: string | null
   }
+  databases?: {
+    source: string
+    label: string
+    record_count: number | null
+    last_import: string | null
+    configured: boolean
+  }[]
 }
 
 export const exclusionScreeningsApi = {
