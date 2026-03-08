@@ -204,7 +204,7 @@ export function DocumentVault() {
         </div>
       ) : documents.length === 0 ? (
         <EmptyState
-          icon={<FolderOpen className="w-12 h-12" />}
+          illustration="folder"
           title="No documents found"
           description={search ? 'Try adjusting your search or filters.' : 'Upload your first document to get started.'}
           action={!search ? <Button size="sm" onClick={() => setShowUpload(true)}><Upload className="w-4 h-4 mr-1" /> Upload Document</Button> : undefined}
@@ -243,7 +243,7 @@ export function DocumentVault() {
 
       {/* View Modal */}
       {viewDoc && (
-        <Modal title="Document Details" onClose={() => setViewDoc(null)}>
+        <Modal isOpen={!!viewDoc} title="Document Details" onClose={() => setViewDoc(null)}>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="text-3xl">{getFileIcon(viewDoc.mime_type)}</span>
@@ -282,7 +282,7 @@ export function DocumentVault() {
 
       {/* Delete Confirm */}
       {deleteConfirm && (
-        <Modal title="Delete Document" onClose={() => setDeleteConfirm(null)}>
+        <Modal isOpen={!!deleteConfirm} title="Delete Document" onClose={() => setDeleteConfirm(null)}>
           <p className="text-sm text-stone-600 mb-4">
             Are you sure you want to delete <strong>{deleteConfirm.title}</strong>? This action cannot be undone.
           </p>
@@ -390,7 +390,7 @@ function UploadModal({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <Modal title="Upload Document" onClose={onClose}>
+    <Modal isOpen={true} title="Upload Document" onClose={onClose}>
       <div className="space-y-4">
         {/* Drop Zone */}
         <div

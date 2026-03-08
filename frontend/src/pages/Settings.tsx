@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card } from '../components/ui/Card.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
@@ -15,12 +16,12 @@ import {
   User, Shield, Bell, GraduationCap, FileCheck,
   Mail, Phone, Save, Loader2, Trash2, Plus, Calendar,
   Upload, Download, Paperclip, ShieldCheck, ShieldOff, Copy, Check, Key,
-  CreditCard, ExternalLink, CheckCircle, AlertCircle, RefreshCw
+  CreditCard, ExternalLink, CheckCircle, AlertCircle, RefreshCw, Globe
 } from 'lucide-react'
 import { studentApi } from '../services/api.ts'
 import { useConnectStatus, useCreateConnectAccount, useRefreshConnectLink, usePaymentHistory, useSubscriptionStatus, useSubscriptionCheckout, useSubscriptionPortal } from '../hooks/useApi.ts'
 
-type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications' | 'payments' | 'subscription'
+type Tab = 'profile' | 'academic' | 'credentials' | 'security' | 'notifications' | 'payments' | 'subscription' | 'language'
 
 const TABS: { key: Tab; label: string; icon: typeof User; roles?: string[] }[] = [
   { key: 'profile', label: 'Profile', icon: User },
@@ -30,6 +31,7 @@ const TABS: { key: Tab; label: string; icon: typeof User; roles?: string[] }[] =
   { key: 'subscription', label: 'Subscription', icon: CreditCard, roles: ['student'] },
   { key: 'security', label: 'Security', icon: Shield },
   { key: 'notifications', label: 'Notifications', icon: Bell },
+  { key: 'language', label: 'Language', icon: Globe },
 ]
 
 const SPECIALTIES = [
@@ -92,6 +94,7 @@ export function Settings() {
           {activeTab === 'subscription' && <SubscriptionTab />}
           {activeTab === 'security' && <SecurityTab />}
           {activeTab === 'notifications' && <NotificationsTab />}
+          {activeTab === 'language' && <LanguageTab />}
         </div>
       </div>
     </div>
@@ -1340,6 +1343,58 @@ function NotificationsTab() {
           <Save className="w-4 h-4" /> Save Preferences
         </Button>
       </div>
+    </Card>
+  )
+}
+
+const LANGUAGES = [
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+] as const
+
+function LanguageTab() {
+  const { i18n } = useTranslation()
+  const currentLang = i18n.language?.split('-')[0] || 'en'
+
+  const handleChange = (lang: string) => {
+    i18n.changeLanguage(lang)
+    toast.success(lang === 'en' ? 'Language changed to English' : 'Idioma cambiado a Español')
+  }
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <Globe className="w-5 h-5 text-primary-500" />
+        <div>
+          <h2 className="text-lg font-semibold text-stone-900">Language</h2>
+          <p className="text-sm text-stone-500">Choose your preferred language</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {LANGUAGES.map(lang => (
+          <button
+            key={lang.code}
+            onClick={() => handleChange(lang.code)}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
+              currentLang === lang.code
+                ? 'border-primary-500 bg-primary-50 shadow-sm'
+                : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
+            }`}
+          >
+            <span className="text-2xl">{lang.flag}</span>
+            <div className="text-left">
+              <p className="font-medium text-stone-900">{lang.label}</p>
+              <p className="text-xs text-stone-500">{lang.code.toUpperCase()}</p>
+            </div>
+            {currentLang === lang.code && (
+              <CheckCircle className="w-5 h-5 text-primary-500 ml-auto" />
+            )}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-stone-400 mt-4">
+        More languages coming soon. Your preference is saved automatically.
+      </p>
     </Card>
   )
 }

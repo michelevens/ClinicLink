@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext.tsx'
 import { DesignVersionProvider } from './contexts/DesignVersionContext.tsx'
 import { ThemeProvider } from './contexts/ThemeContext.tsx'
 import App from './App.tsx'
+import './i18n/index.ts'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
 

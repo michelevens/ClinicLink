@@ -6,6 +6,7 @@ import {
   BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { useMyPendingSignatures } from '../../hooks/useApi.ts'
 import { DesignToggle } from '../ui/DesignToggle.tsx'
@@ -14,6 +15,7 @@ import type { UserRole } from '../../types/index.ts'
 
 interface NavItem {
   label: string
+  i18nKey?: string
   path: string
   icon: React.ReactNode
   roles: UserRole[]
@@ -21,37 +23,37 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'] },
-  { label: 'Search Rotations', path: '/rotations', icon: <Search className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
-  { label: 'My Applications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
-  { label: 'Hour Log', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
-  { label: 'Evaluations', path: '/evaluations', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
-  { label: 'Document Vault', path: '/documents', icon: <FolderOpen className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'], group: 'Credentials' },
-  { label: 'Certificates', path: '/certificates', icon: <Award className="w-5 h-5" />, roles: ['student', 'preceptor', 'coordinator', 'admin'], group: 'Credentials' },
-  { label: 'CE Credits', path: '/ce-credits', icon: <BadgeCheck className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'admin'], group: 'Credentials' },
-  { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'], group: 'Clinical' },
-  { label: 'Agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Academic' },
-  { label: 'Eval Templates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Credentials' },
-  { label: 'Compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'Credentials' },
-  { label: 'My Site', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
-  { label: 'Rotation Slots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
-  { label: 'Preceptors', path: '/preceptors', icon: <UserCheck className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
-  { label: 'Applications', path: '/site-applications', icon: <FileText className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
-  { label: 'My Students', path: '/students', icon: <Users className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'professor'], group: 'Academic' },
-  { label: 'My University', path: '/programs', icon: <BookOpen className="w-5 h-5" />, roles: ['coordinator'], group: 'Academic' },
-  { label: 'Placements', path: '/placements', icon: <GraduationCap className="w-5 h-5" />, roles: ['coordinator', 'professor'], group: 'Academic' },
-  { label: 'Sites Directory', path: '/sites', icon: <Stethoscope className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Sites' },
-  { label: 'Sites Map', path: '/sites-map', icon: <Map className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Sites' },
-  { label: 'Universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
-  { label: 'All Users', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
-  { label: 'License Codes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
-  { label: 'Analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Admin' },
-  { label: 'Reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Admin' },
-  { label: 'Collaborate', path: '/collaborate', icon: <Handshake className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
-  { label: 'Physician Directory', path: '/collaborate/directory', icon: <Search className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
-  { label: 'My Requests', path: '/collaborate/requests', icon: <FileText className="w-5 h-5" />, roles: ['practitioner'], group: 'Collaborate' },
-  { label: 'Physician Profile', path: '/collaborate/profile', icon: <Stethoscope className="w-5 h-5" />, roles: ['preceptor'], group: 'Collaborate' },
-  { label: 'Matches', path: '/collaborate/matches', icon: <Users className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
+  { label: 'Dashboard', i18nKey: 'nav.dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'] },
+  { label: 'Search Rotations', i18nKey: 'nav.searchRotations', path: '/rotations', icon: <Search className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
+  { label: 'My Applications', i18nKey: 'nav.myApplications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
+  { label: 'Hour Log', i18nKey: 'nav.hourLog', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
+  { label: 'Evaluations', i18nKey: 'nav.evaluations', path: '/evaluations', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
+  { label: 'Document Vault', i18nKey: 'nav.documentVault', path: '/documents', icon: <FolderOpen className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'], group: 'Credentials' },
+  { label: 'Certificates', i18nKey: 'nav.certificates', path: '/certificates', icon: <Award className="w-5 h-5" />, roles: ['student', 'preceptor', 'coordinator', 'admin'], group: 'Credentials' },
+  { label: 'CE Credits', i18nKey: 'nav.ceCredits', path: '/ce-credits', icon: <BadgeCheck className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'admin'], group: 'Credentials' },
+  { label: 'Onboarding', i18nKey: 'nav.onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'], group: 'Clinical' },
+  { label: 'Agreements', i18nKey: 'nav.agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Academic' },
+  { label: 'Eval Templates', i18nKey: 'nav.evalTemplates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Credentials' },
+  { label: 'Compliance', i18nKey: 'nav.compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'Credentials' },
+  { label: 'My Site', i18nKey: 'nav.mySite', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
+  { label: 'Rotation Slots', i18nKey: 'nav.rotationSlots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
+  { label: 'Preceptors', i18nKey: 'nav.preceptors', path: '/preceptors', icon: <UserCheck className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
+  { label: 'Applications', i18nKey: 'nav.applications', path: '/site-applications', icon: <FileText className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
+  { label: 'My Students', i18nKey: 'nav.myStudents', path: '/students', icon: <Users className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'professor'], group: 'Academic' },
+  { label: 'My University', i18nKey: 'nav.myUniversity', path: '/programs', icon: <BookOpen className="w-5 h-5" />, roles: ['coordinator'], group: 'Academic' },
+  { label: 'Placements', i18nKey: 'nav.placements', path: '/placements', icon: <GraduationCap className="w-5 h-5" />, roles: ['coordinator', 'professor'], group: 'Academic' },
+  { label: 'Sites Directory', i18nKey: 'nav.sitesDirectory', path: '/sites', icon: <Stethoscope className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Sites' },
+  { label: 'Sites Map', i18nKey: 'nav.sitesMap', path: '/sites-map', icon: <Map className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Sites' },
+  { label: 'Universities', i18nKey: 'nav.universities', path: '/universities', icon: <BookOpen className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
+  { label: 'All Users', i18nKey: 'nav.allUsers', path: '/admin/users', icon: <Users className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
+  { label: 'License Codes', i18nKey: 'nav.licenseCodes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
+  { label: 'Analytics', i18nKey: 'nav.analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Admin' },
+  { label: 'Reports', i18nKey: 'nav.reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Admin' },
+  { label: 'Collaborate', i18nKey: 'nav.collaborate', path: '/collaborate', icon: <Handshake className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
+  { label: 'Physician Directory', i18nKey: 'nav.physicianDirectory', path: '/collaborate/directory', icon: <Search className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
+  { label: 'My Requests', i18nKey: 'nav.myRequests', path: '/collaborate/requests', icon: <FileText className="w-5 h-5" />, roles: ['practitioner'], group: 'Collaborate' },
+  { label: 'Physician Profile', i18nKey: 'nav.physicianProfile', path: '/collaborate/profile', icon: <Stethoscope className="w-5 h-5" />, roles: ['preceptor'], group: 'Collaborate' },
+  { label: 'Matches', i18nKey: 'nav.matches', path: '/collaborate/matches', icon: <Users className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
 ]
 
 const GROUP_ORDER = ['Clinical', 'Credentials', 'Sites', 'Academic', 'Admin', 'Collaborate']
@@ -60,6 +62,7 @@ function SidebarSection({ label, items, location, pendingSigCount, collapsed, on
   label: string; items: NavItem[]; location: ReturnType<typeof useLocation>
   pendingSigCount: number; collapsed: boolean; onToggle: () => void
 }) {
+  const { t } = useTranslation()
   const hasActive = items.some(i => location.pathname === i.path)
   return (
     <div>
@@ -87,7 +90,7 @@ function SidebarSection({ label, items, location, pendingSigCount, collapsed, on
               }
             >
               {item.icon}
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1">{item.i18nKey ? t(item.i18nKey) : item.label}</span>
               {item.path === '/agreements' && pendingSigCount > 0 && (
                 <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center">
                   {pendingSigCount > 9 ? '9+' : pendingSigCount}
@@ -106,6 +109,7 @@ export function Sidebar() {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
   const { user, logout } = useAuth()
   const location = useLocation()
+  const { t } = useTranslation()
 
   const toggleSection = (group: string) => {
     setCollapsedSections(prev => ({ ...prev, [group]: !prev[group] }))
@@ -184,7 +188,7 @@ export function Sidebar() {
               }
             >
               {item.icon}
-              <span className="flex-1">{item.label}</span>
+              <span className="flex-1">{item.i18nKey ? t(item.i18nKey) : item.label}</span>
             </NavLink>
           ))}
         </div>
