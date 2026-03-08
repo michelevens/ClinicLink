@@ -9,9 +9,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_demo')->default(false)->after('is_active');
-        });
+        if (!Schema::hasColumn('users', 'is_demo')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->boolean('is_demo')->default(false)->after('is_active');
+            });
+        }
 
         // Mark all @cliniclink.health accounts as demo
         DB::table('users')
