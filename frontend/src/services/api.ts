@@ -555,6 +555,22 @@ export const adminApi = {
     api.delete<{ message: string; code: ApiLicenseCode }>(`/admin/university-codes/${id}`),
   pendingApprovals: () =>
     api.get<{ data: ApiUser[]; count: number }>('/admin/pending-approvals'),
+  // App Settings
+  getSettings: (group?: string) => {
+    const qs = group ? `?group=${group}` : ''
+    return api.get<{ settings: AppSettingItem[] }>(`/admin/settings${qs}`)
+  },
+  updateSettings: (settings: { key: string; value: string | boolean | null }[]) =>
+    api.put<{ message: string }>('/admin/settings', { settings }),
+}
+
+export interface AppSettingItem {
+  key: string
+  value: string | boolean | number | null
+  type: string
+  group: string
+  label: string | null
+  description: string | null
 }
 
 // --- Onboarding Templates ---

@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
-  BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen, ShieldAlert
+  BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen, ShieldAlert, Settings
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'License Codes', i18nKey: 'nav.licenseCodes', path: '/admin/license-codes', icon: <KeyRound className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
   { label: 'Analytics', i18nKey: 'nav.analytics', path: '/analytics', icon: <BarChart3 className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Admin' },
   { label: 'Reports', i18nKey: 'nav.reports', path: '/accreditation-reports', icon: <FileBarChart className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Admin' },
+  { label: 'Platform Settings', i18nKey: 'nav.platformSettings', path: '/admin/settings', icon: <Settings className="w-5 h-5" />, roles: ['admin'], group: 'Admin' },
   { label: 'Collaborate', i18nKey: 'nav.collaborate', path: '/collaborate', icon: <Handshake className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
   { label: 'Physician Directory', i18nKey: 'nav.physicianDirectory', path: '/collaborate/directory', icon: <Search className="w-5 h-5" />, roles: ['practitioner', 'preceptor', 'admin'], group: 'Collaborate' },
   { label: 'My Requests', i18nKey: 'nav.myRequests', path: '/collaborate/requests', icon: <FileText className="w-5 h-5" />, roles: ['practitioner'], group: 'Collaborate' },

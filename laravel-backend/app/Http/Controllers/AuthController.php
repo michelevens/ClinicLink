@@ -13,6 +13,7 @@ use App\Models\RotationSite;
 use App\Models\SiteInvite;
 use App\Models\SiteJoinRequest;
 use App\Models\StudentProfile;
+use App\Models\AppSetting;
 use App\Models\UniversityLicenseCode;
 use App\Models\User;
 use App\Notifications\NewUserRegisteredNotification;
@@ -126,13 +127,25 @@ class AuthController extends Controller
             Log::error('Failed to send registration email to ' . $user->email . ': ' . $e->getMessage());
         }
 
-        // Notify all admin users about the new registration (email + in-app)
+        // Notify admins about the new registration (email + in-app)
         try {
-            $admins = User::where('role', 'admin')->where('is_active', true)->get();
-            $reviewUrl = config('app.frontend_url') . '/admin/users/' . $user->id;
-            foreach ($admins as $admin) {
-                Mail::to($admin->email)->send(new NewUserRegistrationMail($user, $reviewUrl));
-                $admin->notify(new NewUserRegisteredNotification($user));
+            if (AppSetting::getValue('notify_admin_on_registration', true)) {
+                $reviewUrl = config('app.frontend_url') . '/admin/users/' . $user->id;
+                $configuredEmail = AppSetting::getValue('admin_notification_email');
+
+                // Send to configured email if set
+                if ($configuredEmail) {
+                    Mail::to($configuredEmail)->send(new NewUserRegistrationMail($user, $reviewUrl));
+                }
+
+                // Also send to all active (non-demo) admin accounts + in-app notifications
+                $admins = User::where('role', 'admin')->where('is_active', true)->where('is_demo', false)->get();
+                foreach ($admins as $admin) {
+                    // Skip if this admin's email is the same as the configured one (avoid duplicate)
+                    if ($configuredEmail && $admin->email === $configuredEmail) continue;
+                    Mail::to($admin->email)->send(new NewUserRegistrationMail($user, $reviewUrl));
+                    $admin->notify(new NewUserRegisteredNotification($user));
+                }
             }
         } catch (\Throwable $e) {
             Log::error('Failed to send admin notification for new user ' . $user->email . ': ' . $e->getMessage());

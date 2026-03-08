@@ -356,6 +356,23 @@ export function usePendingApprovals() {
   })
 }
 
+export function useAppSettings(group?: string) {
+  return useQuery({
+    queryKey: ['app-settings', group],
+    queryFn: () => adminApi.getSettings(group),
+  })
+}
+
+export function useUpdateAppSettings() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (settings: { key: string; value: string | boolean | null }[]) => adminApi.updateSettings(settings),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['app-settings'] })
+    },
+  })
+}
+
 export function useUpdateUser() {
   const qc = useQueryClient()
   return useMutation({

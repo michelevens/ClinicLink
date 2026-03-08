@@ -43,6 +43,7 @@ use App\Http\Controllers\StateRulesController;
 use App\Http\Controllers\PractitionerProfileController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExclusionScreeningController;
+use App\Http\Controllers\AppSettingsController;
 use App\Http\Controllers\Collaborate\PhysicianProfileController;
 use App\Http\Controllers\Collaborate\CollaborationRequestController;
 use App\Http\Controllers\Collaborate\CollaborationMatchController;
@@ -558,6 +559,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/seed-universities', [AdminController::class, 'seedUniversities']);
         Route::post('/test-email', [AdminController::class, 'testEmail']);
         Route::get('/audit-logs', [AdminController::class, 'auditLogs']);
+        Route::get('/settings', [AppSettingsController::class, 'index']);
+        Route::put('/settings', [AppSettingsController::class, 'update']);
 
         Route::post('/universities', [UniversityController::class, 'store']);
         Route::put('/universities/{university}', [UniversityController::class, 'update']);

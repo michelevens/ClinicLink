@@ -71,7 +71,8 @@
     "messages": "Mensajes",
     "calendar": "Calendario",
     "settings": "Configuración",
-    "exclusionScreening": "Verificación de Exclusión"
+    "exclusionScreening": "Verificación de Exclusión",
+    "platformSettings": "Configuración de Plataforma"
   },
   "auth": {
     "login": "Iniciar Sesión",

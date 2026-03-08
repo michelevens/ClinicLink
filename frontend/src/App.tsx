@@ -45,6 +45,7 @@ const Agreements = lazy(() => import('./pages/Agreements.tsx').then(m => ({ defa
 const EvaluationTemplates = lazy(() => import('./pages/EvaluationTemplates.tsx').then(m => ({ default: m.EvaluationTemplates })))
 const DocumentVault = lazy(() => import('./pages/DocumentVault.tsx').then(m => ({ default: m.DocumentVault })))
 const ExclusionScreening = lazy(() => import('./pages/ExclusionScreening.tsx'))
+const AdminSettings = lazy(() => import('./pages/AdminSettings.tsx'))
 const Messages = lazy(() => import('./pages/Messages.tsx').then(m => ({ default: m.Messages })))
 const Calendar = lazy(() => import('./pages/Calendar.tsx').then(m => ({ default: m.Calendar })))
 const ComplianceDashboard = lazy(() => import('./pages/ComplianceDashboard.tsx').then(m => ({ default: m.ComplianceDashboard })))
@@ -159,6 +160,7 @@ export default function App() {
         <Route path="/site-applications" element={<ProtectedRoute roles={['site_manager', 'admin']}><SiteApplications /></ProtectedRoute>} />
         <Route path="/documents" element={<ProtectedRoute><DocumentVault /></ProtectedRoute>} />
         <Route path="/exclusion-screening" element={<ProtectedRoute roles={['admin', 'site_manager', 'coordinator']}><ExclusionScreening /></ProtectedRoute>} />
+        <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminSettings /></ProtectedRoute>} />
         <Route path="/certificates" element={<ProtectedRoute roles={['student', 'preceptor', 'coordinator', 'admin']}><Certificates /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         <Route path="/site" element={<ProtectedRoute roles={['site_manager', 'preceptor']}><MySite /></ProtectedRoute>} />

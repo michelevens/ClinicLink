@@ -71,7 +71,8 @@
     "messages": "Messages",
     "calendar": "Calendar",
     "settings": "Settings",
-    "exclusionScreening": "Exclusion Screening"
+    "exclusionScreening": "Exclusion Screening",
+    "platformSettings": "Platform Settings"
   },
   "auth": {
     "login": "Log In",
