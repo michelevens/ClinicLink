@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
-  BarChart3, FileBarChart, KeyRound, Map, ChevronDown
+  BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext.tsx'
@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'My Applications', path: '/applications', icon: <FileText className="w-5 h-5" />, roles: ['student'], group: 'Clinical' },
   { label: 'Hour Log', path: '/hours', icon: <Clock className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
   { label: 'Evaluations', path: '/evaluations', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['student', 'preceptor'], group: 'Clinical' },
+  { label: 'Document Vault', path: '/documents', icon: <FolderOpen className="w-5 h-5" />, roles: ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'], group: 'Credentials' },
   { label: 'Certificates', path: '/certificates', icon: <Award className="w-5 h-5" />, roles: ['student', 'preceptor', 'coordinator', 'admin'], group: 'Credentials' },
   { label: 'CE Credits', path: '/ce-credits', icon: <BadgeCheck className="w-5 h-5" />, roles: ['preceptor', 'coordinator', 'admin'], group: 'Credentials' },
   { label: 'Onboarding', path: '/onboarding-checklists', icon: <ClipboardList className="w-5 h-5" />, roles: ['student', 'site_manager'], group: 'Clinical' },

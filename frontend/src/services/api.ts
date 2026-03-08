@@ -2080,3 +2080,53 @@ export const practitionerApi = {
   updateProfile: (data: Partial<ApiPractitionerProfile>) =>
     api.put<ApiPractitionerProfile>('/practitioner-profile', data),
 }
+
+// --- Document Vault ---
+export interface ApiDocument {
+  id: string
+  user_id: string
+  documentable_id: string | null
+  documentable_type: string | null
+  folder: 'credentials' | 'onboarding' | 'agreements' | 'general' | 'other'
+  title: string
+  description: string | null
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  expiration_date: string | null
+  status: 'active' | 'expired' | 'archived'
+  uploaded_by: string | null
+  visibility: 'private' | 'shared' | 'public'
+  shared_with: string[] | null
+  metadata: Record<string, unknown> | null
+  created_at: string
+  updated_at: string
+  user?: { id: string; first_name: string; last_name: string; email?: string }
+  uploaded_by_user?: { id: string; first_name: string; last_name: string }
+}
+
+export interface DocumentSummary {
+  folders: Record<string, number>
+  total: number
+  expiring_soon: number
+  expired: number
+}
+
+export const documentsApi = {
+  list: (params?: { folder?: string; status?: string; search?: string; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.folder) qs.set('folder', params.folder)
+    if (params?.status) qs.set('status', params.status)
+    if (params?.search) qs.set('search', params.search)
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ApiDocument>>(`/documents?${qs}`)
+  },
+  summary: () => api.get<DocumentSummary>('/documents/summary'),
+  get: (id: string) => api.get<{ document: ApiDocument }>(`/documents/${id}`),
+  upload: (data: FormData) => api.upload<{ document: ApiDocument; message: string }>('/documents', data),
+  update: (id: string, data: Partial<ApiDocument>) => api.put<{ document: ApiDocument }>(`/documents/${id}`, data),
+  delete: (id: string) => api.delete(`/documents/${id}`),
+  downloadUrl: (id: string) => `${API_URL}/documents/${id}/download`,
+  syncCredentials: () => api.post<{ message: string; synced: number }>('/documents/sync-credentials'),
+}

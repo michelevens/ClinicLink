@@ -6,7 +6,7 @@ import {
   cePolicyApi, ceCertificatesApi, applicationsExtApi, coordinatorApi, authApi, siteJoinRequestsApi,
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
-  signaturesApi, subscriptionApi, aiChatApi, studentInvitesApi, supportApi,
+  signaturesApi, subscriptionApi, aiChatApi, studentInvitesApi, supportApi, documentsApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1610,5 +1610,72 @@ export function useSubmitSupportRequest() {
   return useMutation({
     mutationFn: supportApi.submit,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['support-requests'] }),
+  })
+}
+
+// --- Document Vault ---
+export function useDocuments(params?: { folder?: string; status?: string; search?: string; page?: number }) {
+  return useQuery({
+    queryKey: ['documents', params],
+    queryFn: () => documentsApi.list(params),
+  })
+}
+
+export function useDocumentSummary() {
+  return useQuery({
+    queryKey: ['document-summary'],
+    queryFn: documentsApi.summary,
+  })
+}
+
+export function useDocument(id: string | null) {
+  return useQuery({
+    queryKey: ['document', id],
+    queryFn: () => documentsApi.get(id!),
+    enabled: !!id,
+  })
+}
+
+export function useUploadDocument() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (formData: FormData) => documentsApi.upload(formData),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['documents'] })
+      qc.invalidateQueries({ queryKey: ['document-summary'] })
+    },
+  })
+}
+
+export function useUpdateDocument() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) => documentsApi.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['documents'] })
+      qc.invalidateQueries({ queryKey: ['document-summary'] })
+    },
+  })
+}
+
+export function useDeleteDocument() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => documentsApi.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['documents'] })
+      qc.invalidateQueries({ queryKey: ['document-summary'] })
+    },
+  })
+}
+
+export function useSyncCredentials() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: documentsApi.syncCredentials,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['documents'] })
+      qc.invalidateQueries({ queryKey: ['document-summary'] })
+    },
   })
 }

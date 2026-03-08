@@ -41,6 +41,7 @@ use App\Http\Controllers\SamlController;
 use App\Http\Controllers\StudentInviteController;
 use App\Http\Controllers\StateRulesController;
 use App\Http\Controllers\PractitionerProfileController;
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Collaborate\PhysicianProfileController;
 use App\Http\Controllers\Collaborate\CollaborationRequestController;
 use App\Http\Controllers\Collaborate\CollaborationMatchController;
@@ -157,6 +158,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/preferences', [NotificationController::class, 'updatePreferences']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+
+    // Document Vault (all authenticated users)
+    Route::get('/documents', [DocumentController::class, 'index']);
+    Route::get('/documents/summary', [DocumentController::class, 'summary']);
+    Route::post('/documents', [DocumentController::class, 'store']);
+    Route::post('/documents/sync-credentials', [DocumentController::class, 'syncCredentials']);
+    Route::get('/documents/{document}', [DocumentController::class, 'show']);
+    Route::put('/documents/{document}', [DocumentController::class, 'update']);
+    Route::get('/documents/{document}/download', [DocumentController::class, 'download']);
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy']);
 
     // Sites (management — site_manager and admin)
     Route::middleware('role:site_manager,admin')->group(function () {
