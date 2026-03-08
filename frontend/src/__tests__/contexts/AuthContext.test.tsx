@@ -8,6 +8,8 @@ import type { UserRole } from '../../types/index.ts'
 vi.mock('../../services/api.ts', () => ({
   api: {
     csrfCookie: vi.fn().mockResolvedValue(undefined),
+    setToken: vi.fn(),
+    getToken: vi.fn().mockReturnValue(null),
   },
   authApi: {
     me: vi.fn().mockRejectedValue(new Error('Not authenticated')),
