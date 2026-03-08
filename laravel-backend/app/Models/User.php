@@ -22,6 +22,7 @@ class User extends Authenticatable
         'phone',
         'avatar_url',
         'is_active',
+        'is_demo',
         'onboarding_completed_at',
         'mfa_enabled',
         'mfa_secret',
@@ -80,6 +81,7 @@ class User extends Authenticatable
             'mfa_backup_codes' => 'encrypted:array',
             'notification_preferences' => 'array',
             'locked_until' => 'datetime',
+            'is_demo' => 'boolean',
             'stripe_onboarded' => 'boolean',
             'trial_ends_at' => 'datetime',
             'subscription_ends_at' => 'datetime',
@@ -259,6 +261,11 @@ class User extends Authenticatable
     public function isPractitioner(): bool
     {
         return $this->role === 'practitioner';
+    }
+
+    public function isDemo(): bool
+    {
+        return (bool) $this->is_demo;
     }
 
     public function isSsoUser(): bool

@@ -146,6 +146,9 @@ class AdminController extends Controller
     {
         $query = User::query();
 
+        // Demo isolation: demo admins see only demo users; real admins see only real users
+        $query->where('is_demo', $request->user()->is_demo ?? false);
+
         if ($request->filled('search')) {
             $search = '%' . QueryHelper::escapeLike($request->input('search')) . '%';
             $query->where(function ($q) use ($search) {

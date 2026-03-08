@@ -189,19 +189,22 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if (!$user->is_active) {
-            return response()->json([
-                'message' => 'Your account is pending approval. You will receive an email once your account has been activated.',
-                'pending_approval' => true,
-            ], 403);
-        }
+        // Demo accounts bypass activation and email verification gates
+        if (!$user->is_demo) {
+            if (!$user->is_active) {
+                return response()->json([
+                    'message' => 'Your account is pending approval. You will receive an email once your account has been activated.',
+                    'pending_approval' => true,
+                ], 403);
+            }
 
-        if (!$user->email_verified) {
-            return response()->json([
-                'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
-                'email_not_verified' => true,
-                'email' => $user->email,
-            ], 403);
+            if (!$user->email_verified) {
+                return response()->json([
+                    'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
+                    'email_not_verified' => true,
+                    'email' => $user->email,
+                ], 403);
+            }
         }
 
         // Successful password check — reset lockout counter

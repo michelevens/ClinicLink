@@ -11,6 +11,7 @@ export interface User {
   avatar?: string
   phone?: string
   createdAt: string
+  is_demo?: boolean
   onboardingCompleted: boolean
   universityId?: string
   programId?: string

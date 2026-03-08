@@ -661,6 +661,7 @@ export interface ApiUser {
   phone: string | null
   avatar_url: string | null
   is_active: boolean
+  is_demo: boolean
   mfa_enabled: boolean
   email_verified: boolean
   created_at: string
@@ -2112,6 +2113,52 @@ export interface DocumentSummary {
   total: number
   expiring_soon: number
   expired: number
+}
+
+// --- Exclusion Screenings (OIG LEIE, SAM.gov) ---
+export interface ExclusionScreening {
+  id: string
+  user_id: string
+  user?: { id: string; first_name: string; last_name: string; email: string; role: string } | null
+  screened_by?: { id: string; first_name: string; last_name: string } | null
+  source: string
+  source_label: string
+  match_type: string | null
+  result: 'clear' | 'match_found' | 'error'
+  result_label: string
+  match_details: Record<string, string | null> | null
+  notes: string | null
+  created_at: string
+}
+
+export interface ScreeningSummary {
+  total_screenings: number
+  unique_users_screened: number
+  active_matches: number
+  clear_users: number
+  unscreened_providers: number
+  database: {
+    source: string
+    record_count: number
+    last_import: string | null
+  }
+}
+
+export const exclusionScreeningsApi = {
+  summary: () => api.get<ScreeningSummary>('/exclusion-screenings/summary'),
+  list: (params?: { result?: string; source?: string; user_id?: string; latest_only?: boolean; page?: number }) => {
+    const qs = new URLSearchParams()
+    if (params?.result) qs.set('result', params.result)
+    if (params?.source) qs.set('source', params.source)
+    if (params?.user_id) qs.set('user_id', params.user_id)
+    if (params?.latest_only) qs.set('latest_only', '1')
+    if (params?.page) qs.set('page', String(params.page))
+    return api.get<PaginatedResponse<ExclusionScreening>>(`/exclusion-screenings?${qs}`)
+  },
+  history: (userId: string) => api.get<PaginatedResponse<ExclusionScreening>>(`/exclusion-screenings/${userId}`),
+  screen: (userId: string) => api.post<{ screening: ExclusionScreening; message: string }>(`/exclusion-screenings/${userId}/screen`),
+  bulkScreen: () => api.post<{ summary: { total_screened: number; clear: number; matches: number; errors: number }; message: string }>('/exclusion-screenings/bulk'),
+  importDatabase: () => api.post<{ message: string; record_count: number }>('/exclusion-screenings/import'),
 }
 
 export const documentsApi = {

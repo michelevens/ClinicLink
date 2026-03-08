@@ -70,7 +70,8 @@
     "matches": "Matches",
     "messages": "Messages",
     "calendar": "Calendar",
-    "settings": "Settings"
+    "settings": "Settings",
+    "exclusionScreening": "Exclusion Screening"
   },
   "auth": {
     "login": "Log In",

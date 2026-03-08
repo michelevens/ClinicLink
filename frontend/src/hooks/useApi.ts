@@ -7,6 +7,7 @@ import {
   messagesApi, calendarApi, bookmarksApi, savedSearchesApi, evaluationTemplatesApi, agreementTemplatesApi,
   preceptorReviewsApi, paymentsApi, preceptorProfilesApi, matchingApi, analyticsApi, accreditationReportsApi,
   signaturesApi, subscriptionApi, aiChatApi, studentInvitesApi, supportApi, documentsApi,
+  exclusionScreeningsApi,
 } from '../services/api.ts'
 
 // --- Dashboard ---
@@ -1687,6 +1688,52 @@ export function useSyncCredentials() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['documents'] })
       qc.invalidateQueries({ queryKey: ['document-summary'] })
+    },
+  })
+}
+
+// --- Exclusion Screenings ---
+export function useScreeningSummary() {
+  return useQuery({ queryKey: ['screening-summary'], queryFn: () => exclusionScreeningsApi.summary() })
+}
+
+export function useScreenings(params?: { result?: string; source?: string; latest_only?: boolean; page?: number }) {
+  return useQuery({ queryKey: ['screenings', params], queryFn: () => exclusionScreeningsApi.list(params) })
+}
+
+export function useScreeningHistory(userId: string) {
+  return useQuery({ queryKey: ['screening-history', userId], queryFn: () => exclusionScreeningsApi.history(userId), enabled: !!userId })
+}
+
+export function useScreenUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (userId: string) => exclusionScreeningsApi.screen(userId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['screenings'] })
+      qc.invalidateQueries({ queryKey: ['screening-summary'] })
+      qc.invalidateQueries({ queryKey: ['screening-history'] })
+    },
+  })
+}
+
+export function useBulkScreen() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: exclusionScreeningsApi.bulkScreen,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['screenings'] })
+      qc.invalidateQueries({ queryKey: ['screening-summary'] })
+    },
+  })
+}
+
+export function useImportExclusionDb() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: exclusionScreeningsApi.importDatabase,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['screening-summary'] })
     },
   })
 }

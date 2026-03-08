@@ -50,6 +50,7 @@ function mapApiUser(u: ApiUser): User {
     phone: u.phone || undefined,
     avatar: u.avatar_url || undefined,
     createdAt: u.created_at,
+    is_demo: u.is_demo || false,
     onboardingCompleted: u.onboarding_completed ?? false,
     universityId: u.student_profile?.university_id || undefined,
     programId: u.student_profile?.program_id || undefined,

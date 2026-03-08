@@ -5,13 +5,24 @@ import { MainLayoutV2 } from './MainLayoutV2.tsx'
 import { PageTransition } from './PageTransition.tsx'
 import { useDesignVersion } from '../../contexts/DesignVersionContext.tsx'
 import { AiChatWidget } from '../ai-chat/AiChatWidget.tsx'
+import { useAuth } from '../../contexts/AuthContext.tsx'
+
+function DemoBanner() {
+  return (
+    <div className="bg-amber-500 text-white text-center text-xs font-semibold py-1.5 px-4">
+      Demo Mode — This is a demo account with sample data. Actions here won't affect real users.
+    </div>
+  )
+}
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const { version } = useDesignVersion()
+  const { user } = useAuth()
 
   if (version === 'v2') {
     return (
       <>
+        {user?.is_demo && <DemoBanner />}
         <MainLayoutV2><PageTransition>{children}</PageTransition></MainLayoutV2>
         <AiChatWidget />
       </>
@@ -20,6 +31,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
+      {user?.is_demo && <DemoBanner />}
       <div className="min-h-screen bg-stone-50 dark:bg-stone-900">
         <Sidebar />
         <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">

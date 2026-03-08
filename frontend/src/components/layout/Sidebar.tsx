@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Search, FileText, Clock, ClipboardCheck, ClipboardList,
   Building2, Users, CalendarDays, BookOpen, Handshake, ShieldCheck,
   GraduationCap, Stethoscope, LogOut, Menu, X, Award, UserCheck, BadgeCheck,
-  BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen
+  BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen, ShieldAlert
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -35,6 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Agreements', i18nKey: 'nav.agreements', path: '/agreements', icon: <Handshake className="w-5 h-5" />, roles: ['coordinator', 'site_manager', 'admin'], group: 'Academic' },
   { label: 'Eval Templates', i18nKey: 'nav.evalTemplates', path: '/evaluation-templates', icon: <ClipboardCheck className="w-5 h-5" />, roles: ['coordinator', 'admin'], group: 'Credentials' },
   { label: 'Compliance', i18nKey: 'nav.compliance', path: '/compliance', icon: <ShieldCheck className="w-5 h-5" />, roles: ['student', 'site_manager', 'coordinator', 'professor', 'admin'], group: 'Credentials' },
+  { label: 'Exclusion Screening', i18nKey: 'nav.exclusionScreening', path: '/exclusion-screening', icon: <ShieldAlert className="w-5 h-5" />, roles: ['admin', 'site_manager', 'coordinator'], group: 'Credentials' },
   { label: 'My Site', i18nKey: 'nav.mySite', path: '/site', icon: <Building2 className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },
   { label: 'Rotation Slots', i18nKey: 'nav.rotationSlots', path: '/slots', icon: <CalendarDays className="w-5 h-5" />, roles: ['site_manager', 'admin'], group: 'Sites' },
   { label: 'Preceptors', i18nKey: 'nav.preceptors', path: '/preceptors', icon: <UserCheck className="w-5 h-5" />, roles: ['site_manager'], group: 'Sites' },

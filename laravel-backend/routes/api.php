@@ -42,6 +42,7 @@ use App\Http\Controllers\StudentInviteController;
 use App\Http\Controllers\StateRulesController;
 use App\Http\Controllers\PractitionerProfileController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\ExclusionScreeningController;
 use App\Http\Controllers\Collaborate\PhysicianProfileController;
 use App\Http\Controllers\Collaborate\CollaborationRequestController;
 use App\Http\Controllers\Collaborate\CollaborationMatchController;
@@ -303,6 +304,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ->get('/compliance/student/{application}', [ComplianceController::class, 'student']);
     Route::middleware('role:coordinator,professor,admin')
         ->get('/compliance/overview', [ComplianceController::class, 'overview']);
+
+    // Exclusion Screenings (OIG LEIE, SAM.gov)
+    Route::get('/exclusion-screenings/summary', [ExclusionScreeningController::class, 'summary']);
+    Route::get('/exclusion-screenings', [ExclusionScreeningController::class, 'index']);
+    Route::post('/exclusion-screenings/bulk', [ExclusionScreeningController::class, 'bulkScreen']);
+    Route::post('/exclusion-screenings/import', [ExclusionScreeningController::class, 'import']);
+    Route::post('/exclusion-screenings/{user}/screen', [ExclusionScreeningController::class, 'screen']);
+    Route::get('/exclusion-screenings/{user}', [ExclusionScreeningController::class, 'history']);
 
     // Site Invites (site_manager creates; any authenticated user can accept)
     Route::middleware('role:site_manager,admin')->group(function () {

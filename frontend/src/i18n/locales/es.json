@@ -70,7 +70,8 @@
     "matches": "Coincidencias",
     "messages": "Mensajes",
     "calendar": "Calendario",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "exclusionScreening": "Verificación de Exclusión"
   },
   "auth": {
     "login": "Iniciar Sesión",
