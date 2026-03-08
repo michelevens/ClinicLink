@@ -33,7 +33,7 @@ class AnalyticsService
 
         $totalHours = HourLog::where('status', 'approved')
             ->whereBetween('date', [$from, $to])
-            ->sum('hours');
+            ->sum('hours_worked');
 
         $slotCapacity = RotationSlot::where('status', 'open')->sum('capacity');
         $slotFilled = RotationSlot::where('status', 'open')->sum('filled');
@@ -94,7 +94,7 @@ class AnalyticsService
         $totalHours = HourLog::whereIn('student_id', $studentIds)
             ->where('status', 'approved')
             ->whereBetween('date', [$from, $to])
-            ->sum('hours');
+            ->sum('hours_worked');
 
         $avgHours = $totalStudents > 0 ? $totalHours / $totalStudents : 0;
 

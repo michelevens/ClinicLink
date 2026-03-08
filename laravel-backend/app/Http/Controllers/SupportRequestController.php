@@ -30,12 +30,15 @@ class SupportRequestController extends Controller
         ], 201);
     }
 
-    /** List current user's support requests */
+    /** List support requests — admin sees all, others see their own */
     public function index(Request $request): JsonResponse
     {
-        $requests = SupportRequest::where('user_id', $request->user()->id)
-            ->orderByDesc('created_at')
-            ->limit(20)
+        $query = $request->user()->isAdmin()
+            ? SupportRequest::query()
+            : SupportRequest::where('user_id', $request->user()->id);
+
+        $requests = $query->orderByDesc('created_at')
+            ->limit(50)
             ->get();
 
         return response()->json(['support_requests' => $requests]);

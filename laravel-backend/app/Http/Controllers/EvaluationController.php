@@ -79,6 +79,16 @@ class EvaluationController extends Controller
             'is_submitted' => ['sometimes', 'boolean'],
         ]);
 
+        // Verify the preceptor owns this slot (unless admin)
+        if ($user->isPreceptor()) {
+            $ownsSlot = \App\Models\RotationSlot::where('id', $validated['slot_id'])
+                ->where('preceptor_id', $user->id)
+                ->exists();
+            if (!$ownsSlot) {
+                return response()->json(['message' => 'You are not the preceptor for this rotation slot.'], 403);
+            }
+        }
+
         // Verify the student has an accepted application for this slot
         $hasAcceptedApp = Application::where('student_id', $validated['student_id'])
             ->where('slot_id', $validated['slot_id'])

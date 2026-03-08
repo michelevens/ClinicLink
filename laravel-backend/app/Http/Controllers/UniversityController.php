@@ -384,7 +384,7 @@ class UniversityController extends Controller
     public function myUniversityLicenseCodes(Request $request): JsonResponse
     {
         $user = $request->user();
-        $universityId = $user->university_id;
+        $universityId = $user->studentProfile?->university_id;
 
         if (!$universityId) {
             return response()->json(['message' => 'You are not associated with a university.'], 422);

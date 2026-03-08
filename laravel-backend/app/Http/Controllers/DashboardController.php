@@ -24,6 +24,7 @@ class DashboardController extends Controller
             'preceptor' => $this->preceptorStats($user),
             'site_manager' => $this->siteManagerStats($user),
             'coordinator' => $this->coordinatorStats($user),
+            'professor' => $this->coordinatorStats($user),
             'practitioner' => $this->practitionerStats($user),
             'admin' => $this->adminStats(),
             default => [],

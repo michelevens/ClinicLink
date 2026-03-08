@@ -113,7 +113,7 @@ class PreceptorProfile extends Model
             ->whereHas('slot', function ($q) use ($user) {
                 $q->where('preceptor_id', $user->id);
             })
-            ->sum('hours');
+            ->sum('hours_worked');
 
         $this->update([
             'total_students_mentored' => $mentored,

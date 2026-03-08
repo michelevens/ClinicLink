@@ -158,6 +158,10 @@ class HourLogController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
+        if ($hourLog->status !== 'pending') {
+            return response()->json(['message' => 'This hour log has already been reviewed.'], 409);
+        }
+
         $validated = $request->validate([
             'status' => ['required', 'in:approved,rejected'],
             'rejection_reason' => ['required_if:status,rejected', 'nullable', 'string', 'max:1000'],

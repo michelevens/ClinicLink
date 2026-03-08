@@ -217,9 +217,11 @@ class AuthController extends Controller
             ]);
         }
 
-        // Start session for cookie-based SPA auth
-        Auth::guard('web')->login($user);
-        $request->session()->regenerate();
+        // Start session for cookie-based SPA auth (only when session is available)
+        if ($request->hasSession()) {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+        }
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
@@ -297,10 +299,12 @@ class AuthController extends Controller
             $user->currentAccessToken()->delete();
         }
 
-        // Invalidate session for cookie-based auth
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // Invalidate session for cookie-based auth (only when session is available)
+        if ($request->hasSession()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         AuditLog::recordFromRequest('User', $user->id, 'logout', $request);
 

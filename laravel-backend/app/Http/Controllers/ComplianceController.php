@@ -50,7 +50,9 @@ class ComplianceController extends Controller
 
         $canAccess = $application->student_id === $user->id
             || $user->isAdmin()
-            || ($user->isSiteManager() && $application->slot->site->manager_id === $user->id);
+            || ($user->isSiteManager() && $application->slot->site->manager_id === $user->id)
+            || $user->isCoordinator()
+            || $user->isProfessor();
 
         if (!$canAccess) {
             return response()->json(['message' => 'Unauthorized.'], 403);

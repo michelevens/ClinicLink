@@ -17,14 +17,14 @@ import { Modal } from '../components/ui/Modal.tsx'
 import type { ApiUser } from '../services/api.ts'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
 
-const ROLES = ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'admin'] as const
+const ROLES = ['student', 'preceptor', 'site_manager', 'coordinator', 'professor', 'practitioner', 'admin'] as const
 const ROLE_LABELS: Record<string, string> = {
   student: 'Student', preceptor: 'Preceptor', site_manager: 'Site Manager',
-  coordinator: 'Coordinator', professor: 'Professor', admin: 'Admin',
+  coordinator: 'Coordinator', professor: 'Professor', practitioner: 'Practitioner', admin: 'Admin',
 }
 const ROLE_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'secondary' | 'default'> = {
   student: 'primary', preceptor: 'secondary', site_manager: 'warning',
-  coordinator: 'success', professor: 'default', admin: 'danger',
+  coordinator: 'success', professor: 'default', practitioner: 'default', admin: 'danger',
 }
 
 export function AdminUsers() {
@@ -53,19 +53,31 @@ export function AdminUsers() {
 
   const handleToggleActive = async (user: ApiUser, e: React.MouseEvent) => {
     e.stopPropagation()
-    await updateUser.mutateAsync({ id: user.id, data: { is_active: !user.is_active } })
+    try {
+      await updateUser.mutateAsync({ id: user.id, data: { is_active: !user.is_active } })
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update user status.')
+    }
   }
 
   const handleChangeRole = async () => {
     if (!editRole || !newRole) return
-    await updateUser.mutateAsync({ id: editRole.id, data: { role: newRole } })
-    setEditRole(null)
+    try {
+      await updateUser.mutateAsync({ id: editRole.id, data: { role: newRole } })
+      setEditRole(null)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to change role.')
+    }
   }
 
   const handleDelete = async () => {
     if (!deleteConfirm) return
-    await deleteUser.mutateAsync(deleteConfirm.id)
-    setDeleteConfirm(null)
+    try {
+      await deleteUser.mutateAsync(deleteConfirm.id)
+      setDeleteConfirm(null)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete user.')
+    }
   }
 
   return (

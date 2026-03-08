@@ -185,12 +185,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Hour Logs (student creates; preceptor/site_manager/coordinator/admin review)
     Route::get('/hour-logs', [HourLogController::class, 'index']);
+    Route::middleware('role:student,preceptor,coordinator,admin')->get('/hour-logs/summary', [HourLogController::class, 'summary']);
     Route::middleware('role:student')->post('/hour-logs', [HourLogController::class, 'store']);
     Route::middleware('role:student')->put('/hour-logs/{hourLog}', [HourLogController::class, 'update']);
     Route::middleware('role:preceptor,site_manager,coordinator,admin')
         ->put('/hour-logs/{hourLog}/review', [HourLogController::class, 'review']);
     Route::middleware('role:student')->delete('/hour-logs/{hourLog}', [HourLogController::class, 'destroy']);
-    Route::middleware('role:student,preceptor,coordinator,admin')->get('/hour-logs/summary', [HourLogController::class, 'summary']);
 
     // Evaluations (preceptor/site_manager/admin create; controller scopes reads)
     Route::get('/evaluations', [EvaluationController::class, 'index']);

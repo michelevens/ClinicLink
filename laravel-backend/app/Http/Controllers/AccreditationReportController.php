@@ -217,7 +217,7 @@ class AccreditationReportController extends Controller
         $totalHours = HourLog::whereIn('student_id', $studentIds)
             ->where('status', 'approved')
             ->whereBetween('date', [$from, $to])
-            ->sum('hours');
+            ->sum('hours_worked');
 
         $siteCount = Application::whereIn('student_id', $studentIds)
             ->whereIn('status', ['accepted', 'completed'])
@@ -275,7 +275,7 @@ class AccreditationReportController extends Controller
         $totalHours = HourLog::whereIn('slot_id', $slotIds)
             ->where('status', 'approved')
             ->whereBetween('date', [$from, $to])
-            ->sum('hours');
+            ->sum('hours_worked');
 
         $capacity = $slots->sum('capacity');
         $filled = $slots->sum('filled');
@@ -300,7 +300,7 @@ class AccreditationReportController extends Controller
             $hours = HourLog::where('student_id', $student->id)
                 ->where('status', 'approved')
                 ->whereBetween('date', [$from, $to])
-                ->sum('hours');
+                ->sum('hours_worked');
 
             $placements = Application::where('student_id', $student->id)
                 ->whereIn('status', ['accepted', 'completed'])
@@ -329,7 +329,7 @@ class AccreditationReportController extends Controller
             ->get();
 
         $bySite = $logs->groupBy(fn($log) => $log->slot?->site?->name ?? 'Unknown')
-            ->map(fn($group) => round($group->sum('hours'), 1))
+            ->map(fn($group) => round($group->sum('hours_worked'), 1))
             ->sortDesc()
             ->toArray();
 
@@ -338,7 +338,7 @@ class AccreditationReportController extends Controller
                 $student = $group->first()->student;
                 return [
                     'name' => $student ? $student->full_name : 'Unknown',
-                    'hours' => round($group->sum('hours'), 1),
+                    'hours' => round($group->sum('hours_worked'), 1),
                     'entries' => $group->count(),
                 ];
             })
@@ -347,7 +347,7 @@ class AccreditationReportController extends Controller
             ->toArray();
 
         return [
-            'total_hours' => round($logs->sum('hours'), 1),
+            'total_hours' => round($logs->sum('hours_worked'), 1),
             'total_entries' => $logs->count(),
             'by_site' => $bySite,
             'by_student' => $byStudent,

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { BarChart3, TrendingUp, Users, Clock, DollarSign, Target } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext.tsx'
-import { useAnalyticsSummary, usePlatformAnalytics, useUniversityAnalytics, useSiteAnalytics, useSpecialtyDemand, useMySites } from '../hooks/useApi.ts'
+import { useAnalyticsSummary, usePlatformAnalytics, useUniversityAnalytics, useSiteAnalytics, useSpecialtyDemand, useMySites, useUniversities } from '../hooks/useApi.ts'
 import { MetricCard, PlacementTrendChart, SpecialtyDemandChart, PlacementFunnelChart, GeoDemandTable } from '../components/analytics/AnalyticsCharts.tsx'
 import { EmptyState } from '../components/ui/EmptyState.tsx'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
@@ -28,18 +28,21 @@ export function Analytics() {
   const { data: summary, isLoading: summaryLoading } = useAnalyticsSummary()
   const { data: specialtyData } = useSpecialtyDemand()
   const { data: mySites } = useMySites()
+  const { data: universitiesData } = useUniversities()
 
   const isAdmin = user?.role === 'admin'
   const isCoordinator = user?.role === 'coordinator'
   const isSiteManager = user?.role === 'site_manager'
 
-  const universityId = (user as { student_profile?: { university_id?: string } })?.student_profile?.university_id || null
+  const userUniversityId = (user as { student_profile?: { university_id?: string } })?.student_profile?.university_id || null
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null)
+  const universityId = isAdmin ? selectedUniversityId : userUniversityId
   const firstSiteId = mySites?.sites?.[0]?.id || null
 
   const analyticsParams = { period: period === '12m' ? 'monthly' : 'daily', from: dates.from, to: dates.to }
   const { data: platformData } = usePlatformAnalytics(isAdmin && tab === 'platform' ? analyticsParams : undefined)
   const { data: universityData } = useUniversityAnalytics(
-    (isCoordinator || (isAdmin && tab === 'university')) ? (universityId || 'none') : null,
+    (isCoordinator || (isAdmin && tab === 'university')) ? universityId : null,
     analyticsParams
   )
   const { data: siteData } = useSiteAnalytics(
@@ -77,13 +80,27 @@ export function Analytics() {
 
       {/* Admin Tabs */}
       {isAdmin && (
-        <div className="flex gap-1 bg-stone-100 rounded-xl p-1 w-fit">
-          {(['platform', 'university', 'site'] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}>
-              {t}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-1 bg-stone-100 rounded-xl p-1 w-fit">
+            {(['platform', 'university', 'site'] as const).map(t => (
+              <button key={t} onClick={() => setTab(t)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700'}`}>
+                {t}
+              </button>
+            ))}
+          </div>
+          {tab === 'university' && universitiesData?.data && (
+            <select
+              value={selectedUniversityId || ''}
+              onChange={e => setSelectedUniversityId(e.target.value || null)}
+              className="text-sm border border-stone-200 rounded-lg px-3 py-2 bg-white"
+            >
+              <option value="">Select a university...</option>
+              {universitiesData.data.map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+          )}
         </div>
       )}
 

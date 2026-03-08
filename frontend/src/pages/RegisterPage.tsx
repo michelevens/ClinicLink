@@ -181,7 +181,7 @@ export function RegisterPage() {
       return
     }
     try {
-      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined, siteId: form.siteId || undefined, licenseCode: form.licenseCode || undefined })
+      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined, siteId: form.siteId || undefined, licenseCode: form.licenseCode || undefined, npiNumber: form.npiNumber || undefined })
       navigate('/verify-email?email=' + encodeURIComponent(form.email))
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
@@ -211,7 +211,7 @@ export function RegisterPage() {
               <Input label="First Name" placeholder="Sarah" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} icon={<User className="w-4 h-4" />} required />
               <Input label="Last Name" placeholder="Chen" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} required />
             </div>
-            <Input label="Username" placeholder="sarahchen" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })} icon={<AtSign className="w-4 h-4" />} required />
+            <Input label="Username (Optional)" placeholder="sarahchen" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '') })} icon={<AtSign className="w-4 h-4" />} />
             <Input label="Email" type="email" placeholder="you@university.edu" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} icon={<Mail className="w-4 h-4" />} required />
 
             {/* Password with strength meter */}

@@ -53,8 +53,8 @@ export function Applications() {
       setShowWithdrawConfirm(false)
       setShowDetail(false)
       setSelectedApp(null)
-    } catch {
-      toast.error('Failed to withdraw application')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to withdraw application')
     }
   }
 

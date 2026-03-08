@@ -20,7 +20,7 @@ class StudentInviteController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $universityId = $user->university_id;
+        $universityId = $user->studentProfile?->university_id;
 
         if (!$universityId) {
             return response()->json(['invites' => []]);
@@ -61,7 +61,7 @@ class StudentInviteController extends Controller
     public function store(Request $request): JsonResponse
     {
         $user = $request->user();
-        $universityId = $user->university_id;
+        $universityId = $user->studentProfile?->university_id;
 
         if (!$universityId) {
             return response()->json(['message' => 'You are not associated with a university.'], 422);
@@ -126,7 +126,7 @@ class StudentInviteController extends Controller
     public function bulkStore(Request $request): JsonResponse
     {
         $user = $request->user();
-        $universityId = $user->university_id;
+        $universityId = $user->studentProfile?->university_id;
 
         if (!$universityId) {
             return response()->json(['message' => 'You are not associated with a university.'], 422);
@@ -282,10 +282,6 @@ class StudentInviteController extends Controller
             return response()->json(['message' => 'This invite was sent to a different email address.'], 403);
         }
 
-        // Associate student with university
-        $user->university_id = $invite->university_id;
-        $user->save();
-
         // Create or update student profile
         $profile = StudentProfile::firstOrCreate(
             ['user_id' => $user->id],
@@ -326,7 +322,7 @@ class StudentInviteController extends Controller
     {
         $user = $request->user();
 
-        if ($invite->university_id !== $user->university_id) {
+        if ($invite->university_id !== $user->studentProfile?->university_id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
@@ -363,7 +359,7 @@ class StudentInviteController extends Controller
     {
         $user = $request->user();
 
-        if ($invite->university_id !== $user->university_id && !$user->isAdmin()) {
+        if ($invite->university_id !== $user->studentProfile?->university_id && !$user->isAdmin()) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
