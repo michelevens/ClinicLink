@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Building2, MapPin, Phone, Globe, Star, Search, Stethoscope, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, LayoutGrid, List, UserPlus, Clock, CheckCircle } from 'lucide-react'
-import { useSites, useCreateSite, useUpdateSite, useMyJoinRequests, useCreateJoinRequest } from '../hooks/useApi.ts'
+import { useSites, useCreateSite, useUpdateSite, useMyJoinRequests, useCreateJoinRequest, useVerifySite } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { Card } from '../components/ui/Card.tsx'
 import { CardSkeleton, TableRowSkeleton } from '../components/ui/Skeleton.tsx'
@@ -41,6 +41,8 @@ export function SitesDirectory() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [form, setForm] = useState(emptySiteForm)
   const [specialtyInput, setSpecialtyInput] = useState('')
+
+  const verifySite = useVerifySite()
 
   // Preceptor join request state
   const [joinSiteId, setJoinSiteId] = useState<string | null>(null)
@@ -497,6 +499,23 @@ export function SitesDirectory() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
+              {isAdmin && (
+                <Button
+                  variant={viewSite.is_verified ? 'outline' : 'primary'}
+                  size="sm"
+                  isLoading={verifySite.isPending}
+                  onClick={async () => {
+                    try {
+                      await verifySite.mutateAsync(viewSite.id)
+                      toast.success(viewSite.is_verified ? 'Site unverified' : 'Site verified')
+                      setViewSite({ ...viewSite, is_verified: !viewSite.is_verified })
+                    } catch { toast.error('Failed to update verification') }
+                  }}
+                >
+                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                  {viewSite.is_verified ? 'Unverify' : 'Verify Site'}
+                </Button>
+              )}
               {canEditSite(viewSite) && (
                 <>
                   <Button variant="outline" onClick={() => { setViewSite(null); openEdit(viewSite) }}>

@@ -125,6 +125,23 @@ class RotationSiteController extends Controller
         return response()->json(['message' => 'Site deleted successfully.']);
     }
 
+    /**
+     * Admin: toggle site verification status.
+     */
+    public function verify(Request $request, RotationSite $site): JsonResponse
+    {
+        $site->update([
+            'is_verified' => !$site->is_verified,
+        ]);
+
+        $status = $site->is_verified ? 'verified' : 'unverified';
+
+        return response()->json([
+            'message' => "Site {$status} successfully.",
+            'site' => $site,
+        ]);
+    }
+
     public function mySites(Request $request): JsonResponse
     {
         $user = $request->user();

@@ -184,6 +184,7 @@ export const sitesApi = {
   update: (id: string, data: Partial<ApiSite>) => api.put<{ site: ApiSite }>(`/sites/${id}`, data),
   delete: (id: string) => api.delete(`/sites/${id}`),
   mine: () => api.get<{ sites: ApiSite[] }>('/my-sites'),
+  verify: (id: string) => api.put<{ site: ApiSite; message: string }>(`/sites/${id}/verify`),
 }
 
 // --- Rotation Slots ---

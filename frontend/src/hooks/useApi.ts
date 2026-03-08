@@ -109,6 +109,17 @@ export function useUpdateSite() {
   })
 }
 
+export function useVerifySite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => sitesApi.verify(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sites'] })
+      qc.invalidateQueries({ queryKey: ['my-sites'] })
+    },
+  })
+}
+
 // --- Applications ---
 export function useApplications() {
   return useQuery({

@@ -175,6 +175,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/sites/{site}', [RotationSiteController::class, 'update']);
         Route::delete('/sites/{site}', [RotationSiteController::class, 'destroy']);
     });
+    Route::middleware('role:admin')->put('/sites/{site}/verify', [RotationSiteController::class, 'verify']);
     Route::get('/my-sites', [RotationSiteController::class, 'mySites']);
 
     // Slots (management — site_manager and admin can create/edit/delete)

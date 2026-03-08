@@ -358,7 +358,10 @@ export function RotationSearch() {
                           <h3 className="font-semibold text-stone-900">{slot.title}</h3>
                           <ChevronRight className="w-4 h-4 text-stone-400 hidden sm:block" />
                         </div>
-                        <p className="text-sm text-stone-500">{slot.site?.name}</p>
+                        <p className="text-sm text-stone-500 flex items-center gap-1">
+                          {slot.site?.name}
+                          {slot.site?.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
+                        </p>
                       </div>
                     </div>
                     <p className="text-sm text-stone-600 mb-3 line-clamp-2">{slot.description}</p>
@@ -445,7 +448,10 @@ export function RotationSearch() {
                   </div>
 
                   <h3 className="font-semibold text-stone-900 mb-1 line-clamp-1">{slot.title}</h3>
-                  <p className="text-sm text-stone-500 mb-2">{slot.site?.name}</p>
+                  <p className="text-sm text-stone-500 mb-2 flex items-center gap-1">
+                    {slot.site?.name}
+                    {slot.site?.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
+                  </p>
                   <p className="text-xs text-stone-500 line-clamp-2 mb-3">{slot.description}</p>
 
                   <div className="flex flex-wrap gap-1.5 mb-4">
