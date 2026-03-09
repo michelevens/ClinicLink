@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal.tsx'
 import { toast } from 'sonner'
 import type { ApiSite } from '../services/api.ts'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
+import { AddressAutocomplete, type AddressFields } from '../components/ui/AddressAutocomplete.tsx'
 
 export function MySite() {
   usePageTitle('My Sites')
@@ -223,23 +224,12 @@ export function MySite() {
               <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Site Name *</label>
               <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="e.g. Mercy General Hospital" />
             </div>
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Address *</label>
-              <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">City *</label>
-              <input value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" />
-            </div>
-            <div className="flex gap-3">
-              <div className="flex-1 space-y-1.5">
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">State *</label>
-                <input value={form.state} onChange={e => setForm({ ...form, state: e.target.value.toUpperCase().slice(0, 2) })} maxLength={2} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="FL" />
-              </div>
-              <div className="flex-1 space-y-1.5">
-                <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">ZIP *</label>
-                <input value={form.zip} onChange={e => setForm({ ...form, zip: e.target.value })} className="w-full rounded-xl border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 dark:text-stone-100 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none" placeholder="33101" />
-              </div>
+            <div className="sm:col-span-2">
+              <AddressAutocomplete
+                value={{ address: form.address, city: form.city, state: form.state, zip: form.zip }}
+                onChange={(addr: AddressFields) => setForm({ ...form, ...addr })}
+                required
+              />
             </div>
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-stone-700 dark:text-stone-300">Phone *</label>

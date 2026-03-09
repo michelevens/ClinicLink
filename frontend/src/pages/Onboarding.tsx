@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { universitiesApi, sitesApi, studentApi, type ApiUniversity, type ApiProgram, type ApiSite, type NpiResult } from '../services/api.ts'
 import { NpiLookup } from '../components/ui/NpiLookup.tsx'
+import { AddressAutocomplete, type AddressFields } from '../components/ui/AddressAutocomplete.tsx'
 import { toast } from 'sonner'
 import {
   Stethoscope, User, GraduationCap, Heart, ShieldCheck,
@@ -957,18 +958,15 @@ export function Onboarding() {
                   onChange={e => setFacilityName(e.target.value)}
                   icon={<Building2 className="w-4 h-4" />}
                 />
-                <Input
-                  label="Address"
-                  placeholder="2175 Rosaline Ave"
-                  value={facilityAddress}
-                  onChange={e => setFacilityAddress(e.target.value)}
-                  icon={<MapPin className="w-4 h-4" />}
+                <AddressAutocomplete
+                  value={{ address: facilityAddress, city: facilityCity, state: facilityState, zip: facilityZip }}
+                  onChange={(addr: AddressFields) => {
+                    setFacilityAddress(addr.address)
+                    setFacilityCity(addr.city)
+                    setFacilityState(addr.state)
+                    setFacilityZip(addr.zip)
+                  }}
                 />
-                <div className="grid grid-cols-3 gap-3">
-                  <Input label="City" placeholder="Miami" value={facilityCity} onChange={e => setFacilityCity(e.target.value)} />
-                  <Input label="State" placeholder="FL" maxLength={2} value={facilityState} onChange={e => setFacilityState(e.target.value)} />
-                  <Input label="ZIP" placeholder="33136" value={facilityZip} onChange={e => setFacilityZip(e.target.value)} />
-                </div>
                 <Input
                   label="Facility Phone"
                   type="tel"

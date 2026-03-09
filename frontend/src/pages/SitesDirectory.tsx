@@ -12,6 +12,7 @@ import { Input } from '../components/ui/Input.tsx'
 import { toast } from 'sonner'
 import { sitesApi, siteInvitesApi, type ApiSite } from '../services/api.ts'
 import { usePageTitle } from '../hooks/usePageTitle.ts'
+import { AddressAutocomplete, type AddressFields } from '../components/ui/AddressAutocomplete.tsx'
 
 const emptySiteForm = {
   name: '', address: '', city: '', state: '', zip: '', phone: '',
@@ -175,12 +176,11 @@ export function SitesDirectory() {
   const formFields = (
     <div className="space-y-4">
       <Input label="Name" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Site name" />
-      <Input label="Address" required value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Street address" />
-      <div className="grid grid-cols-3 gap-3">
-        <Input label="City" required value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="City" />
-        <Input label="State" required value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value.toUpperCase().slice(0, 2) }))} placeholder="FL" />
-        <Input label="ZIP" required value={form.zip} onChange={e => setForm(f => ({ ...f, zip: e.target.value }))} placeholder="33101" />
-      </div>
+      <AddressAutocomplete
+        value={{ address: form.address, city: form.city, state: form.state, zip: form.zip }}
+        onChange={(addr: AddressFields) => setForm(f => ({ ...f, ...addr }))}
+        required
+      />
       <div className="grid grid-cols-2 gap-3">
         <Input label="Phone" required value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="(555) 555-5555" />
         <Input label="EHR System" value={form.ehr_system} onChange={e => setForm(f => ({ ...f, ehr_system: e.target.value }))} placeholder="Epic, Cerner..." />
