@@ -4,7 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './src/theme/ThemeProvider'
 import { AuthProvider } from './src/contexts/AuthContext'
 import { useTheme } from './src/theme'
+import { useNotifications } from './src/hooks/useNotifications'
 import { RootNavigator } from './src/navigation/RootNavigator'
+import { ErrorBoundary } from './src/components/ErrorBoundary'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,6 +19,7 @@ const queryClient = new QueryClient({
 
 function AppInner() {
   const { theme } = useTheme()
+  useNotifications()
 
   const navigationTheme = {
     ...(theme.dark ? DarkTheme : DefaultTheme),
@@ -40,12 +43,14 @@ function AppInner() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AppInner />
-        </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <AppInner />
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   )
 }

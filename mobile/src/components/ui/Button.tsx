@@ -8,6 +8,7 @@ import {
 } from 'react-native'
 import { useTheme } from '../../theme'
 import { colors, radius, spacing, fontSize, fontWeight } from '../../theme'
+import { haptic } from '../../lib/haptics'
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 type Size = 'sm' | 'md' | 'lg'
@@ -78,7 +79,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={() => { haptic.light(); onPress() }}
       disabled={isDisabled}
       activeOpacity={0.7}
       style={[buttonStyle, style]}

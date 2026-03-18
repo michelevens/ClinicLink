@@ -15,6 +15,36 @@ export function setOnUnauthorized(callback: UnauthorizedCallback) {
   onUnauthorized = callback
 }
 
+// ─── Case transforms (camelCase ↔ snake_case) ────────────────────
+function toSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+}
+
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+}
+
+function transformKeys(obj: unknown, transform: (key: string) => string): unknown {
+  if (Array.isArray(obj)) return obj.map((item) => transformKeys(item, transform))
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>).map(([key, value]) => [
+        transform(key),
+        transformKeys(value, transform),
+      ])
+    )
+  }
+  return obj
+}
+
+export function toSnake(obj: unknown): unknown {
+  return transformKeys(obj, toSnakeCase)
+}
+
+export function toCamel(obj: unknown): unknown {
+  return transformKeys(obj, toCamelCase)
+}
+
 class ApiClient {
   private baseUrl: string
   private tokenCache: string | null = null
@@ -105,7 +135,8 @@ class ApiClient {
     }
 
     if (res.status === 204) return {} as T
-    return res.json()
+    const json = await res.json()
+    return toCamel(json) as T
   }
 
   get<T>(endpoint: string) {
@@ -115,14 +146,14 @@ class ApiClient {
   post<T>(endpoint: string, data?: unknown) {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
+      body: data ? JSON.stringify(toSnake(data)) : undefined,
     })
   }
 
   put<T>(endpoint: string, data?: unknown) {
     return this.request<T>(endpoint, {
       method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
+      body: data ? JSON.stringify(toSnake(data)) : undefined,
     })
   }
 
@@ -165,7 +196,8 @@ class ApiClient {
     }
 
     if (res.status === 204) return {} as T
-    return res.json()
+    const json = await res.json()
+    return toCamel(json) as T
   }
 
   async getDownloadUrl(path: string): Promise<string> {

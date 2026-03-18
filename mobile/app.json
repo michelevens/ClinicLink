@@ -1,33 +1,47 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "ClinicLink",
+    "slug": "cliniclink",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "scheme": "cliniclink",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#7c3aed"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.acsyom.cliniclink",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ClinicLink uses your location to verify clinical rotation check-ins."
+      }
     },
     "android": {
+      "package": "com.acsyom.cliniclink",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#7c3aed"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": ["NOTIFICATIONS"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7c3aed"
+        }
+      ]
     ]
   }
 }

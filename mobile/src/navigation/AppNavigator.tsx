@@ -1,8 +1,10 @@
+import { Pressable } from 'react-native'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../theme'
+import { haptic } from '../lib/haptics'
 import type { UserRole } from '../types'
 
 // Shared screens
@@ -298,6 +300,16 @@ export function AppNavigator() {
           fontSize: 11,
           fontWeight: '600',
         },
+        tabBarButton: ({ onPress, children, style, accessibilityRole, accessibilityState }) => (
+          <Pressable
+            onPress={(e) => { haptic.selection(); onPress?.(e) }}
+            style={style as any}
+            accessibilityRole={accessibilityRole}
+            accessibilityState={accessibilityState}
+          >
+            {children}
+          </Pressable>
+        ),
       }}
     >
       {tabs.map((tab) => (
