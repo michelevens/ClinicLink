@@ -6,6 +6,7 @@ import {
   BarChart3, FileBarChart, KeyRound, Map, ChevronDown, FolderOpen, ShieldAlert, Settings
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../contexts/AuthContext.tsx'
 import { useMyPendingSignatures } from '../../hooks/useApi.ts'
@@ -106,8 +107,10 @@ function SidebarSection({ label, items, location, pendingSigCount, collapsed, on
   )
 }
 
-export function Sidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false)
+export function Sidebar({ mobileOpen: externalOpen, onMobileOpenChange }: { mobileOpen?: boolean; onMobileOpenChange?: (open: boolean) => void } = {}) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const mobileOpen = externalOpen ?? internalOpen
+  const setMobileOpen = (open: boolean) => { setInternalOpen(open); onMobileOpenChange?.(open) }
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({})
   const { user, logout } = useAuth()
   const location = useLocation()
@@ -245,22 +248,30 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Mobile drawer */}
-      <aside
-        className={`lg:hidden fixed left-0 top-0 h-screen w-72 bg-white dark:bg-stone-900 flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        {sidebarContent}
-      </aside>
+      {/* Mobile overlay + drawer — animated */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              className="lg:hidden fixed left-0 top-0 h-screen w-72 bg-white dark:bg-stone-900 flex flex-col z-50"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            >
+              {sidebarContent}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-stone-900 border-r border-stone-200 dark:border-stone-700 flex-col z-40">
