@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\Channels\ExpoPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -18,7 +19,7 @@ class NewMessageNotification extends Notification
 
     public function via(): array
     {
-        return ['database'];
+        return ['database', ExpoPushChannel::class];
     }
 
     public function toArray(): array
@@ -28,6 +29,19 @@ class NewMessageNotification extends Notification
             'message' => \Illuminate\Support\Str::limit($this->message->body, 80),
             'conversation_id' => $this->message->conversation_id,
             'link' => "/messages/{$this->message->conversation_id}",
+        ];
+    }
+
+    public function toPush(object $notifiable): array
+    {
+        return [
+            'title' => "New message from {$this->sender->full_name}",
+            'body' => \Illuminate\Support\Str::limit($this->message->body, 80),
+            'data' => [
+                'type' => 'message',
+                'conversationId' => $this->message->conversation_id,
+                'screen' => 'MessageThread',
+            ],
         ];
     }
 }

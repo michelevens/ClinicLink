@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\HourLog;
+use App\Notifications\Channels\ExpoPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -14,7 +15,7 @@ class HourLogReviewedNotification extends Notification
 
     public function via(): array
     {
-        return ['database'];
+        return ['database', ExpoPushChannel::class];
     }
 
     public function toArray(): array
@@ -27,6 +28,20 @@ class HourLogReviewedNotification extends Notification
             'hour_log_id' => $this->hourLog->id,
             'status' => $this->status,
             'link' => '/hours',
+        ];
+    }
+
+    public function toPush(object $notifiable): array
+    {
+        $data = $this->toArray();
+        return [
+            'title' => $data['title'],
+            'body' => $data['message'],
+            'data' => [
+                'type' => 'hour_log',
+                'hourLogId' => $this->hourLog->id,
+                'screen' => 'HourLog',
+            ],
         ];
     }
 }

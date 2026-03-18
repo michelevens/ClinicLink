@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Application;
+use App\Notifications\Channels\ExpoPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
@@ -14,7 +15,7 @@ class ApplicationReviewedNotification extends Notification
 
     public function via(): array
     {
-        return ['database'];
+        return ['database', ExpoPushChannel::class];
     }
 
     public function toArray(): array
@@ -32,6 +33,20 @@ class ApplicationReviewedNotification extends Notification
             'application_id' => $this->application->id,
             'status' => $this->status,
             'link' => '/applications',
+        ];
+    }
+
+    public function toPush(object $notifiable): array
+    {
+        $data = $this->toArray();
+        return [
+            'title' => $data['title'],
+            'body' => $data['message'],
+            'data' => [
+                'type' => 'application',
+                'applicationId' => $this->application->id,
+                'screen' => 'Applications',
+            ],
         ];
     }
 }

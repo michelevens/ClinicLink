@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
+import { useState, useEffect, useRef } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Animated } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../theme'
-import { spacing, fontSize, fontWeight, radius, colors } from '../../theme'
+import { spacing, fontSize, fontWeight, radius, colors, shadows } from '../../theme'
 import { Screen, Button, Input } from '../../components/ui'
+import { haptic } from '../../lib/haptics'
 
 export function LoginScreen({ navigation }: { navigation: any }) {
   const { login, isLoading, mfaPending } = useAuth()
@@ -14,19 +15,40 @@ export function LoginScreen({ navigation }: { navigation: any }) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
+  // Entrance animations
+  const logoScale = useRef(new Animated.Value(0.3)).current
+  const logoOpacity = useRef(new Animated.Value(0)).current
+  const formTranslateY = useRef(new Animated.Value(40)).current
+  const formOpacity = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(logoScale, { toValue: 1, tension: 60, friction: 8, useNativeDriver: true }),
+      Animated.timing(logoOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+    ]).start()
+
+    Animated.parallel([
+      Animated.timing(formTranslateY, { toValue: 0, duration: 500, delay: 200, useNativeDriver: true }),
+      Animated.timing(formOpacity, { toValue: 1, duration: 500, delay: 200, useNativeDriver: true }),
+    ]).start()
+  }, [])
+
   const handleLogin = async () => {
     setError('')
     if (!loginId.trim() || !password) {
+      haptic.warning()
       setError('Please enter your email and password.')
       return
     }
     try {
+      haptic.light()
       await login(loginId.trim(), password)
-      // If MFA is required, navigate to MFA screen
+      haptic.success()
       if (mfaPending) {
         navigation.navigate('MfaVerify')
       }
     } catch (err: any) {
+      haptic.error()
       setError(err.message || 'Login failed. Please check your credentials.')
     }
   }
@@ -38,19 +60,19 @@ export function LoginScreen({ navigation }: { navigation: any }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.content}>
-          {/* Logo / Brand */}
-          <View style={styles.brand}>
-            <View style={[styles.logoContainer, { backgroundColor: colors.primary[100] }]}>
+          {/* Logo / Brand — animated entrance */}
+          <Animated.View style={[styles.brand, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
+            <View style={[styles.logoContainer, { backgroundColor: colors.primary[100] }, shadows.glowPrimary]}>
               <Ionicons name="medical" size={40} color={colors.primary[600]} />
             </View>
             <Text style={[styles.title, { color: theme.colors.text }]}>ClinicLink</Text>
             <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
               Clinical Rotation Marketplace
             </Text>
-          </View>
+          </Animated.View>
 
-          {/* Form */}
-          <View style={styles.form}>
+          {/* Form — animated slide up */}
+          <Animated.View style={[styles.form, { opacity: formOpacity, transform: [{ translateY: formTranslateY }] }]}>
             {error ? (
               <View style={[styles.errorBanner, { backgroundColor: theme.colors.dangerLight }]}>
                 <Ionicons name="alert-circle" size={18} color={theme.colors.danger} />
@@ -78,7 +100,7 @@ export function LoginScreen({ navigation }: { navigation: any }) {
               autoComplete="password"
               icon={<Ionicons name="lock-closed-outline" size={20} color={theme.colors.textTertiary} />}
               rightIcon={
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity onPress={() => { haptic.selection(); setShowPassword(!showPassword) }}>
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={20}
@@ -105,10 +127,10 @@ export function LoginScreen({ navigation }: { navigation: any }) {
             >
               Sign In
             </Button>
-          </View>
+          </Animated.View>
 
           {/* Register link */}
-          <View style={styles.footer}>
+          <Animated.View style={[styles.footer, { opacity: formOpacity }]}>
             <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
               Don't have an account?{' '}
             </Text>
@@ -117,7 +139,7 @@ export function LoginScreen({ navigation }: { navigation: any }) {
                 Create Account
               </Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
 
           {/* Company */}
           <View style={styles.companyFooter}>
@@ -125,7 +147,7 @@ export function LoginScreen({ navigation }: { navigation: any }) {
               A product of Acsyom Analytics
             </Text>
             <Text style={[styles.companyText, { color: theme.colors.textTertiary }]}>
-              Clermont, FL &bull; 407-462-7233
+              Clermont, FL
             </Text>
           </View>
         </View>
@@ -147,9 +169,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing['2xl'],
   },
   logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: 88,
+    height: 88,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,

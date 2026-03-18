@@ -209,6 +209,16 @@ class User extends Authenticatable
         return $this->hasMany(CollaborationRequest::class);
     }
 
+    public function pushTokens()
+    {
+        return $this->hasMany(PushDeviceToken::class);
+    }
+
+    public function activePushTokens()
+    {
+        return $this->hasMany(PushDeviceToken::class)->where('is_active', true);
+    }
+
     // Scopes
 
     public function scopeRole($query, string $role)

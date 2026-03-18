@@ -48,6 +48,7 @@ use App\Http\Controllers\Collaborate\PhysicianProfileController;
 use App\Http\Controllers\Collaborate\CollaborationRequestController;
 use App\Http\Controllers\Collaborate\CollaborationMatchController;
 use App\Http\Controllers\Collaborate\SupervisionAgreementController;
+use App\Http\Controllers\PushTokenController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -149,6 +150,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/mfa/confirm', [MfaController::class, 'confirm']);
     Route::post('/auth/mfa/disable', [MfaController::class, 'disable']);
     Route::post('/auth/mfa/backup-codes', [MfaController::class, 'backupCodes']);
+
+    // Push notification tokens (all authenticated users)
+    Route::post('/auth/push-token', [PushTokenController::class, 'store']);
+    Route::delete('/auth/push-token', [PushTokenController::class, 'destroy']);
 
     // Dashboard (all authenticated users — controller scopes by role)
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
