@@ -60,6 +60,9 @@ use Illuminate\Support\Facades\Route;
 // Health check (outside rate limiter for uptime monitoring)
 Route::get('/health', fn () => response()->json(['status' => 'ok', 'timestamp' => now()->toIso8601String()]));
 
+// Push token test — public route to verify deployment
+Route::post('/push-token-test', fn () => response()->json(['ok' => true, 'deployed_at' => '2026-03-18T18:00']));
+
 Route::middleware('throttle:api')->group(function () {
 
 /*
