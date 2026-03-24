@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { certificatesApi } from '../services/api.ts'
-import { Award, CheckCircle, XCircle, AlertTriangle, Calendar, Clock, Star, MapPin, User, Stethoscope } from 'lucide-react'
+import { AlertTriangle, Stethoscope, CheckCircle, XCircle } from 'lucide-react'
 
 export function VerifyCertificate() {
   const { certificateNumber } = useParams<{ certificateNumber: string }>()
@@ -15,10 +15,10 @@ export function VerifyCertificate() {
   const cert = data
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-white to-stone-100">
+    <div className="min-h-screen bg-gradient-to-br from-stone-100 via-stone-50 to-stone-100">
       {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div className="bg-white border-b border-stone-200 print:hidden">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
               <Stethoscope className="w-5 h-5 text-white" />
@@ -31,7 +31,7 @@ export function VerifyCertificate() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {isLoading ? (
           <div className="flex flex-col items-center py-16">
             <div className="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mb-4" />
@@ -45,153 +45,182 @@ export function VerifyCertificate() {
             <h1 className="text-2xl font-bold text-stone-900 mb-2">Certificate Not Found</h1>
             <p className="text-stone-500 mb-6">
               No certificate was found with number <span className="font-mono font-semibold">{certificateNumber}</span>.
-              Please check the certificate number and try again.
             </p>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-sm font-medium hover:bg-primary-600 transition-colors"
-            >
+            <Link to="/" className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-sm font-medium hover:bg-primary-600 transition-colors">
               Go to ClinicLink
             </Link>
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Status Banner */}
-            <div className={`rounded-2xl p-6 text-center ${
+            {/* Verification Status Banner */}
+            <div className={`rounded-2xl p-4 flex items-center justify-center gap-3 ${
               cert.valid
-                ? 'bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200'
-                : 'bg-gradient-to-br from-red-50 to-orange-50 border border-red-200'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200'
+                : 'bg-gradient-to-r from-red-50 to-orange-50 border border-red-200'
             }`}>
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                cert.valid ? 'bg-green-100' : 'bg-red-100'
-              }`}>
-                {cert.valid ? (
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                ) : (
-                  <XCircle className="w-8 h-8 text-red-600" />
-                )}
-              </div>
-              <h1 className={`text-2xl font-bold mb-1 ${cert.valid ? 'text-green-800' : 'text-red-800'}`}>
-                {cert.valid ? 'Valid Certificate' : 'Certificate Revoked'}
-              </h1>
-              <p className={`text-sm ${cert.valid ? 'text-green-600' : 'text-red-600'}`}>
-                {cert.valid
-                  ? 'This certificate has been verified as authentic and active.'
-                  : `This certificate was revoked on ${cert.revoked_date ? new Date(cert.revoked_date).toLocaleDateString() : 'N/A'}.`
-                }
-              </p>
-            </div>
-
-            {/* Certificate Details */}
-            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-stone-100 text-center">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white flex items-center justify-center mx-auto mb-3">
-                  <Award className="w-6 h-6" />
-                </div>
-                <h2 className="text-lg font-bold text-stone-900">{cert.title}</h2>
-                <p className="text-sm font-mono text-stone-500 mt-1">{cert.certificate_number}</p>
-              </div>
-
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-500 flex items-center justify-center shrink-0">
-                    <User className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-stone-400 uppercase tracking-wider">Student</p>
-                    <p className="text-sm font-semibold text-stone-900">{cert.student_name}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-secondary-50 text-secondary-500 flex items-center justify-center shrink-0">
-                    <Stethoscope className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-stone-400 uppercase tracking-wider">Specialty</p>
-                    <p className="text-sm font-semibold text-stone-900">{cert.specialty}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
-                    <MapPin className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-stone-400 uppercase tracking-wider">Clinical Site</p>
-                    <p className="text-sm font-semibold text-stone-900">{cert.site_name}</p>
-                  </div>
-                </div>
-
-                {cert.preceptor_name && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-green-50 text-green-500 flex items-center justify-center shrink-0">
-                      <User className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 uppercase tracking-wider">Preceptor</p>
-                      <p className="text-sm font-semibold text-stone-900">{cert.preceptor_name}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
-                    <Clock className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-stone-400 uppercase tracking-wider">Total Hours</p>
-                    <p className="text-sm font-semibold text-stone-900">{cert.total_hours} hours</p>
-                  </div>
-                </div>
-
-                {cert.overall_score && (
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
-                      <Star className="w-4.5 h-4.5" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-stone-400 uppercase tracking-wider">Evaluation Score</p>
-                      <p className="text-sm font-semibold text-stone-900">{cert.overall_score} / 5.0</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0">
-                    <Calendar className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-stone-400 uppercase tracking-wider">Issued Date</p>
-                    <p className="text-sm font-semibold text-stone-900">{new Date(cert.issued_date).toLocaleDateString()}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-stone-100 text-stone-500 flex items-center justify-center shrink-0">
-                    <User className="w-4.5 h-4.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-stone-400 uppercase tracking-wider">Issued By</p>
-                    <p className="text-sm font-semibold text-stone-900">{cert.issued_by}</p>
-                  </div>
-                </div>
-              </div>
-
-              {!cert.valid && cert.revocation_reason && (
-                <div className="mx-6 mb-6 p-4 bg-red-50 rounded-xl border border-red-200">
-                  <div className="flex items-center gap-2 text-red-700 mb-1">
-                    <AlertTriangle className="w-4 h-4" />
-                    <p className="text-sm font-semibold">Revocation Reason</p>
-                  </div>
-                  <p className="text-sm text-red-600">{cert.revocation_reason}</p>
-                </div>
+              {cert.valid ? (
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              ) : (
+                <XCircle className="w-6 h-6 text-red-600" />
               )}
+              <div>
+                <p className={`font-bold ${cert.valid ? 'text-green-800' : 'text-red-800'}`}>
+                  {cert.valid ? 'Verified — This certificate is authentic and active' : 'Certificate Revoked'}
+                </p>
+                {!cert.valid && cert.revoked_date && (
+                  <p className="text-sm text-red-600">Revoked on {new Date(cert.revoked_date).toLocaleDateString()}{cert.revocation_reason ? ` — ${cert.revocation_reason}` : ''}</p>
+                )}
+              </div>
             </div>
 
-            <p className="text-center text-xs text-stone-400">
-              Verified by ClinicLink &bull; {new Date().toLocaleDateString()}
-            </p>
+            {/* Visual Certificate */}
+            <div className="relative bg-[#FAFAF8] rounded-2xl shadow-xl overflow-hidden" style={{ aspectRatio: '11/8.5' }}>
+              {/* Subtle diagonal pattern */}
+              <div className="absolute inset-0 opacity-30" style={{
+                backgroundImage: 'repeating-linear-gradient(135deg, rgba(0,0,0,0.03), rgba(0,0,0,0.03) 2px, transparent 2px, transparent 16px)'
+              }} />
+
+              {/* Gold outer border */}
+              <div className="absolute inset-[4%] border-[3px] border-[#CFAF6E] rounded-2xl" />
+
+              {/* Navy inner border */}
+              <div className="absolute inset-[5.2%] border-[1.5px] border-[#0B3C5D] rounded-xl" />
+
+              {/* Corner ornaments */}
+              <div className="absolute top-[6.5%] left-[6.5%] w-10 h-10 border-t-2 border-l-2 border-[#E5C98B] rounded-tl-3xl" />
+              <div className="absolute top-[6.5%] right-[6.5%] w-10 h-10 border-t-2 border-r-2 border-[#E5C98B] rounded-tr-3xl" />
+              <div className="absolute bottom-[6.5%] left-[6.5%] w-10 h-10 border-b-2 border-l-2 border-[#E5C98B] rounded-bl-3xl" />
+              <div className="absolute bottom-[6.5%] right-[6.5%] w-10 h-10 border-b-2 border-r-2 border-[#E5C98B] rounded-br-3xl" />
+
+              {/* Verified Seal — left side */}
+              <div className="absolute left-[8%] top-[52%] w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-[#CFAF6E] bg-[#CFAF6E]/10 flex items-center justify-center z-10">
+                <div className="w-16 h-16 md:w-[72px] md:h-[72px] rounded-full border border-[#E5C98B] flex flex-col items-center justify-center">
+                  <span className="text-[10px] md:text-xs font-extrabold tracking-[2px] text-[#0B3C5D]">VERIFIED</span>
+                  <span className="text-[7px] md:text-[8px] tracking-[3px] text-stone-500 mt-0.5">CLINICLINK</span>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="absolute inset-[8%] flex flex-col items-center justify-center text-center z-5">
+                {/* Brand */}
+                <p className="text-sm md:text-base font-bold text-[#0B3C5D] tracking-wider">ClinicLink</p>
+
+                {/* Title */}
+                <h1 className="font-serif text-3xl md:text-5xl tracking-[4px] md:tracking-[6px] text-[#0B3C5D] mt-1">CERTIFICATE</h1>
+                <p className="text-[10px] md:text-xs uppercase tracking-[3px] md:tracking-[4px] text-stone-500 mt-0.5">of Clinical Rotation Completion</p>
+
+                {/* Divider */}
+                <div className="w-[60%] h-px bg-stone-200 my-3 md:my-4" />
+
+                {/* Presented to */}
+                <p className="text-[9px] md:text-[11px] uppercase tracking-[3px] text-stone-500">This is to certify that</p>
+
+                {/* Student Name */}
+                <p className="font-serif text-2xl md:text-4xl italic text-[#0B3C5D] mt-1">{cert.student_name}</p>
+
+                {/* Description */}
+                <p className="text-[10px] md:text-xs text-stone-700 leading-relaxed max-w-[85%] mt-2 md:mt-3">
+                  has successfully completed the <strong>{cert.specialty}</strong> clinical rotation
+                  at <strong>{cert.site_name}</strong>, fulfilling all requirements for the rotation titled
+                  &ldquo;{cert.title}&rdquo; — Completion Certificate.
+                </p>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-3 md:mt-5 w-[90%]">
+                  <div>
+                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Specialty</p>
+                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.specialty}</p>
+                  </div>
+                  <div>
+                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Clinical Site</p>
+                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.site_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Total Hours</p>
+                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.total_hours} hours</p>
+                  </div>
+                  <div>
+                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Evaluation</p>
+                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.overall_score ? `${cert.overall_score} / 5.0` : 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Second details row */}
+                <div className="grid grid-cols-3 gap-4 md:gap-8 mt-2 md:mt-4 w-[85%]">
+                  {cert.preceptor_name && (
+                    <div>
+                      <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Preceptor</p>
+                      <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.preceptor_name}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Issued By</p>
+                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.issued_by}</p>
+                  </div>
+                  <div>
+                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Issue Date</p>
+                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{new Date(cert.issued_date).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                {/* Compliance text */}
+                <p className="text-[8px] md:text-[9.5px] text-stone-400 mt-3 md:mt-5 max-w-[80%]">
+                  Supervision was provided in accordance with applicable program and state requirements.
+                  This certificate documents supervised clinical hours and does not itself confer continuing education credit.
+                </p>
+
+                {/* Signatures */}
+                <div className="grid grid-cols-3 gap-4 md:gap-8 mt-3 md:mt-5 w-[85%]">
+                  {cert.preceptor_name && (
+                    <div className="text-center">
+                      <div className="border-t border-stone-300 pt-1.5 mx-2">
+                        <p className="text-[10px] md:text-xs font-bold text-stone-800">{cert.preceptor_name}</p>
+                        <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-500 mt-0.5">Preceptor</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <div className="border-t border-stone-300 pt-1.5 mx-2">
+                      <p className="text-[10px] md:text-xs font-bold text-stone-800">{cert.issued_by}</p>
+                      <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-500 mt-0.5">Issued By</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="border-t border-stone-300 pt-1.5 mx-2">
+                      <p className="text-[10px] md:text-xs font-bold text-stone-800">ClinicLink</p>
+                      <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-500 mt-0.5">Platform</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="absolute bottom-[5%] left-[8%] right-[8%] text-center z-10">
+                <p className="text-[8px] md:text-[9px] text-stone-500">
+                  Certificate ID: <span className="font-semibold">{cert.certificate_number}</span>
+                  &nbsp;&bull;&nbsp;
+                  Issued: {new Date(cert.issued_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  &nbsp;&bull;&nbsp;
+                  Verified: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-center gap-4 print:hidden">
+              <button
+                onClick={() => window.print()}
+                className="px-5 py-2.5 bg-[#0B3C5D] text-white rounded-xl text-sm font-medium hover:bg-[#0B3C5D]/90 transition-colors"
+              >
+                Print Certificate
+              </button>
+              <Link
+                to="/"
+                className="px-5 py-2.5 border border-stone-300 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-50 transition-colors"
+              >
+                Go to ClinicLink
+              </Link>
+            </div>
           </div>
         )}
       </div>
