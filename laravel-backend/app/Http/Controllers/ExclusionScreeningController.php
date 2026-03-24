@@ -148,13 +148,13 @@ class ExclusionScreeningController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        // Only latest per user
+        // Only latest per user (use created_at, not MAX(id) — UUIDs are not sequential)
         if ($request->boolean('latest_only')) {
-            $query->whereIn('id', function ($sub) {
-                $sub->selectRaw('MAX(id)')
-                    ->from('exclusion_screenings')
-                    ->groupBy('user_id', 'source');
-            });
+            $latestIds = \Illuminate\Support\Facades\DB::table('exclusion_screenings as es1')
+                ->select('es1.id')
+                ->whereRaw('es1.created_at = (SELECT MAX(es2.created_at) FROM exclusion_screenings es2 WHERE es2.user_id = es1.user_id AND es2.source = es1.source)')
+                ->pluck('id');
+            $query->whereIn('id', $latestIds);
         }
 
         $screenings = $query->orderByDesc('created_at')->paginate(25);
@@ -177,11 +177,14 @@ class ExclusionScreeningController extends Controller
         }
 
         $totalScreenings = ExclusionScreening::count();
-        $latestScreenings = ExclusionScreening::whereIn('id', function ($sub) {
-            $sub->selectRaw('MAX(id)')
-                ->from('exclusion_screenings')
-                ->groupBy('user_id', 'source');
-        });
+
+        // Get latest screening per user+source using created_at (not MAX(id) which fails on UUIDs)
+        $latestIds = \Illuminate\Support\Facades\DB::table('exclusion_screenings as es1')
+            ->select('es1.id')
+            ->whereRaw('es1.created_at = (SELECT MAX(es2.created_at) FROM exclusion_screenings es2 WHERE es2.user_id = es1.user_id AND es2.source = es1.source)')
+            ->pluck('id');
+
+        $latestScreenings = ExclusionScreening::whereIn('id', $latestIds);
 
         $uniqueUsersScreened = (clone $latestScreenings)->distinct('user_id')->count('user_id');
         $activeMatches = (clone $latestScreenings)->where('result', 'match_found')->count();
