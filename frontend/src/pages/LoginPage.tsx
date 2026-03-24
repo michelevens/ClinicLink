@@ -15,7 +15,7 @@ export function LoginPage() {
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const { login, verifyMfa, cancelMfa, mfaPending, isLoading, isAuthenticated } = useAuth()
+  const { login, demoLogin, verifyMfa, cancelMfa, mfaPending, isLoading, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirect = searchParams.get('redirect')
@@ -229,9 +229,35 @@ export function LoginPage() {
 
         <SsoSection />
 
-        <p className="text-center text-xs text-stone-400 mt-6">
-          Demo: student@cliniclink.health / ClinicLink2026! (or any demo role email)
-        </p>
+        {/* Demo Account Quick Access */}
+        <div className="mt-6">
+          <div className="relative flex items-center mb-4">
+            <div className="flex-1 border-t border-stone-200" />
+            <span className="px-3 text-xs text-stone-400 uppercase tracking-wider">Try a Demo</span>
+            <div className="flex-1 border-t border-stone-200" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { role: 'student' as const, label: 'Student', icon: '🎓', color: 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100' },
+              { role: 'preceptor' as const, label: 'Preceptor', icon: '🩺', color: 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100' },
+              { role: 'site_manager' as const, label: 'Site Manager', icon: '🏥', color: 'bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100' },
+              { role: 'coordinator' as const, label: 'Coordinator', icon: '📋', color: 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100' },
+              { role: 'practitioner' as const, label: 'Practitioner', icon: '💊', color: 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100' },
+              { role: 'admin' as const, label: 'Admin', icon: '⚙️', color: 'bg-stone-50 border-stone-300 text-stone-700 hover:bg-stone-100' },
+            ]).map(demo => (
+              <button
+                key={demo.role}
+                type="button"
+                onClick={() => demoLogin(demo.role)}
+                disabled={isLoading}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all ${demo.color}`}
+              >
+                <span>{demo.icon}</span>
+                {demo.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

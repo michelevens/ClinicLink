@@ -91,6 +91,29 @@ export function LandingPage() {
                 Browse Open Rotations
               </button>
             </div>
+
+            {/* Demo Quick Access */}
+            <div className="mt-8">
+              <p className="text-white/60 text-xs uppercase tracking-widest mb-3">Try a demo account</p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {([
+                  { role: 'student' as UserRole, label: 'Student', icon: '🎓' },
+                  { role: 'preceptor' as UserRole, label: 'Preceptor', icon: '🩺' },
+                  { role: 'site_manager' as UserRole, label: 'Site Manager', icon: '🏥' },
+                  { role: 'coordinator' as UserRole, label: 'Coordinator', icon: '📋' },
+                  { role: 'practitioner' as UserRole, label: 'Practitioner', icon: '💊' },
+                  { role: 'admin' as UserRole, label: 'Admin', icon: '⚙️' },
+                ]).map(demo => (
+                  <button
+                    key={demo.role}
+                    onClick={() => handleDemo(demo.role)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-medium backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5"
+                  >
+                    <span>{demo.icon}</span> {demo.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
