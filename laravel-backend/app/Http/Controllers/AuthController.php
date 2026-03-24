@@ -116,15 +116,17 @@ class AuthController extends Controller
         // Send email verification link
         try {
             $this->sendVerificationEmail($user);
+            Log::channel('stderr')->info('Verification email sent to ' . $user->email);
         } catch (\Throwable $e) {
-            Log::error('Failed to send verification email to ' . $user->email . ': ' . $e->getMessage());
+            Log::channel('stderr')->error('Failed to send verification email to ' . $user->email . ': ' . $e->getMessage());
         }
 
         // Send registration received email (account pending approval)
         try {
             Mail::to($user->email)->send(new RegistrationReceivedMail($user));
+            Log::channel('stderr')->info('Registration received email sent to ' . $user->email);
         } catch (\Throwable $e) {
-            Log::error('Failed to send registration email to ' . $user->email . ': ' . $e->getMessage());
+            Log::channel('stderr')->error('Failed to send registration email to ' . $user->email . ': ' . $e->getMessage());
         }
 
         // Notify admins about the new registration (email + in-app)
@@ -148,7 +150,7 @@ class AuthController extends Controller
                 }
             }
         } catch (\Throwable $e) {
-            Log::error('Failed to send admin notification for new user ' . $user->email . ': ' . $e->getMessage());
+            Log::channel('stderr')->error('Failed to send admin notification for new user ' . $user->email . ': ' . $e->getMessage());
         }
 
         AuditLog::recordFromRequest('User', $user->id, 'registered', $request, metadata: [
@@ -190,8 +192,12 @@ class AuthController extends Controller
         }
 
         if (!$user || !Hash::check($validated['password'], $user->password)) {
-            if ($user) {
+            // Only increment failed login counter for active, verified accounts
+            // This prevents locking out users who haven't been approved yet
+            if ($user && $user->is_active && $user->email_verified) {
                 $user->incrementFailedLogins();
+            }
+            if ($user) {
                 AuditLog::record('User', $user->id, 'login_failed', null, 'public', metadata: [
                     'login' => $loginField,
                     'reason' => 'invalid_credentials',
@@ -204,18 +210,20 @@ class AuthController extends Controller
 
         // Demo accounts bypass activation and email verification gates
         if (!$user->is_demo) {
-            if (!$user->is_active) {
-                return response()->json([
-                    'message' => 'Your account is pending approval. You will receive an email once your account has been activated.',
-                    'pending_approval' => true,
-                ], 403);
-            }
-
+            // Check email verification first — this is the most actionable gate
+            // (user can fix it themselves by clicking the verification link)
             if (!$user->email_verified) {
                 return response()->json([
                     'message' => 'Please verify your email address before logging in. Check your inbox for the verification link.',
                     'email_not_verified' => true,
                     'email' => $user->email,
+                ], 403);
+            }
+
+            if (!$user->is_active) {
+                return response()->json([
+                    'message' => 'Your account is pending approval. You will receive an email once your account has been activated.',
+                    'pending_approval' => true,
                 ], 403);
             }
         }
@@ -478,7 +486,12 @@ class AuthController extends Controller
 
         AuditLog::record('User', $user->id, 'email_verified', $user->id, $user->role);
 
-        return response()->json(['message' => 'Email verified successfully. You can now log in.']);
+        // If account is already active, they can log in now; otherwise still pending approval
+        if ($user->is_active) {
+            return response()->json(['message' => 'Email verified successfully. You can now log in.']);
+        }
+
+        return response()->json(['message' => 'Email verified successfully. Your account is pending admin approval — you will receive an email once activated.']);
     }
 
     public function resendVerification(Request $request): JsonResponse

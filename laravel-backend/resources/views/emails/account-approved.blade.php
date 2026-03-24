@@ -60,7 +60,20 @@
                                             </tr>
                                         </table>
 
+                                        @if($user->email_verified)
                                         <p style="margin:0 0 28px;color:#475569;font-size:15px;line-height:1.6;text-align:center;">You can now log in and start using the platform.</p>
+                                        @else
+                                        <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-radius:14px;margin-bottom:24px;">
+                                            <tr>
+                                                <td style="padding:20px;">
+                                                    <p style="margin:0 0 6px;color:#92400e;font-size:14px;font-weight:700;">&#9993; Email Verification Required</p>
+                                                    <p style="margin:0;color:#78716c;font-size:14px;line-height:1.6;">
+                                                        Your account has been approved, but you still need to verify your email address before you can log in. Please check your inbox for the verification link we sent when you registered.
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        @endif
 
                                         <!-- CTA -->
                                         <table cellpadding="0" cellspacing="0" style="margin:0 auto;">

@@ -4,7 +4,7 @@
         "builder": "NIXPACKS"
     },
     "deploy": {
-        "startCommand": "php artisan optimize:clear && for i in $(seq 1 10); do php artisan migrate --force && break || echo \"Migration attempt $i failed, retrying in 5s...\" && sleep 5; done && php artisan serve --host=0.0.0.0 --port=$PORT",
+        "startCommand": "mkdir -p storage/app/private storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views && php artisan optimize:clear && for i in $(seq 1 10); do php artisan migrate --force && break || echo \"Migration attempt $i failed, retrying in 5s...\" && sleep 5; done && php artisan storage:link 2>/dev/null; php artisan serve --host=0.0.0.0 --port=$PORT",
         "restartPolicyType": "ON_FAILURE",
         "restartPolicyMaxRetries": 10
     }

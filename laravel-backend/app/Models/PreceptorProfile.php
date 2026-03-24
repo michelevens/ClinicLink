@@ -86,8 +86,8 @@ class PreceptorProfile extends Model
             $total = $reviewed->count();
             if ($total >= 10) {
                 $quickCount = $reviewed->filter(function ($log) {
-                    return $log->reviewed_at && $log->created_at &&
-                        $log->reviewed_at->diffInHours($log->created_at) <= 48;
+                    return $log->approved_at && $log->created_at &&
+                        $log->approved_at->diffInHours($log->created_at) <= 48;
                 })->count();
                 if ($quickCount / $total >= 0.9) {
                     $badges[] = 'quick_responder';
