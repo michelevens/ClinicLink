@@ -74,135 +74,117 @@ export function VerifyCertificate() {
             </div>
 
             {/* Visual Certificate */}
-            <div className="relative bg-[#FAFAF8] rounded-2xl shadow-xl overflow-hidden" style={{ aspectRatio: '11/8.5' }}>
+            <div className="relative bg-[#FAFAF8] rounded-2xl shadow-xl overflow-hidden">
               {/* Subtle diagonal pattern */}
-              <div className="absolute inset-0 opacity-30" style={{
+              <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
                 backgroundImage: 'repeating-linear-gradient(135deg, rgba(0,0,0,0.03), rgba(0,0,0,0.03) 2px, transparent 2px, transparent 16px)'
               }} />
 
               {/* Gold outer border */}
-              <div className="absolute inset-[4%] border-[3px] border-[#CFAF6E] rounded-2xl" />
+              <div className="absolute inset-4 md:inset-6 border-[3px] border-[#CFAF6E] rounded-2xl pointer-events-none" />
 
               {/* Navy inner border */}
-              <div className="absolute inset-[5.2%] border-[1.5px] border-[#0B3C5D] rounded-xl" />
+              <div className="absolute inset-6 md:inset-8 border-[1.5px] border-[#0B3C5D] rounded-xl pointer-events-none" />
 
               {/* Corner ornaments */}
-              <div className="absolute top-[6.5%] left-[6.5%] w-10 h-10 border-t-2 border-l-2 border-[#E5C98B] rounded-tl-3xl" />
-              <div className="absolute top-[6.5%] right-[6.5%] w-10 h-10 border-t-2 border-r-2 border-[#E5C98B] rounded-tr-3xl" />
-              <div className="absolute bottom-[6.5%] left-[6.5%] w-10 h-10 border-b-2 border-l-2 border-[#E5C98B] rounded-bl-3xl" />
-              <div className="absolute bottom-[6.5%] right-[6.5%] w-10 h-10 border-b-2 border-r-2 border-[#E5C98B] rounded-br-3xl" />
+              <div className="absolute top-8 left-8 md:top-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-t-2 border-l-2 border-[#E5C98B] rounded-tl-3xl pointer-events-none" />
+              <div className="absolute top-8 right-8 md:top-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-t-2 border-r-2 border-[#E5C98B] rounded-tr-3xl pointer-events-none" />
+              <div className="absolute bottom-8 left-8 md:bottom-10 md:left-10 w-8 h-8 md:w-10 md:h-10 border-b-2 border-l-2 border-[#E5C98B] rounded-bl-3xl pointer-events-none" />
+              <div className="absolute bottom-8 right-8 md:bottom-10 md:right-10 w-8 h-8 md:w-10 md:h-10 border-b-2 border-r-2 border-[#E5C98B] rounded-br-3xl pointer-events-none" />
 
-              {/* Verified Seal — left side */}
-              <div className="absolute left-[8%] top-[52%] w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-[#CFAF6E] bg-[#CFAF6E]/10 flex items-center justify-center z-10">
-                <div className="w-16 h-16 md:w-[72px] md:h-[72px] rounded-full border border-[#E5C98B] flex flex-col items-center justify-center">
-                  <span className="text-[10px] md:text-xs font-extrabold tracking-[2px] text-[#0B3C5D]">VERIFIED</span>
-                  <span className="text-[7px] md:text-[8px] tracking-[3px] text-stone-500 mt-0.5">CLINICLINK</span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="absolute inset-[8%] flex flex-col items-center justify-center text-center z-5">
+              {/* Content — normal flow, not absolute */}
+              <div className="relative z-10 px-10 py-10 md:px-16 md:py-12 flex flex-col items-center text-center">
                 {/* Brand */}
                 <p className="text-sm md:text-base font-bold text-[#0B3C5D] tracking-wider">ClinicLink</p>
 
                 {/* Title */}
-                <h1 className="font-serif text-3xl md:text-5xl tracking-[4px] md:tracking-[6px] text-[#0B3C5D] mt-1">CERTIFICATE</h1>
-                <p className="text-[10px] md:text-xs uppercase tracking-[3px] md:tracking-[4px] text-stone-500 mt-0.5">of Clinical Rotation Completion</p>
+                <h1 className="font-serif text-3xl md:text-5xl tracking-[4px] md:tracking-[6px] text-[#0B3C5D] mt-2">CERTIFICATE</h1>
+                <p className="text-[10px] md:text-xs uppercase tracking-[3px] md:tracking-[4px] text-stone-500 mt-1">of Clinical Rotation Completion</p>
 
                 {/* Divider */}
-                <div className="w-[60%] h-px bg-stone-200 my-3 md:my-4" />
+                <div className="w-48 md:w-72 h-px bg-stone-300/50 my-4 md:my-5" />
 
                 {/* Presented to */}
-                <p className="text-[9px] md:text-[11px] uppercase tracking-[3px] text-stone-500">This is to certify that</p>
+                <p className="text-[10px] md:text-[11px] uppercase tracking-[3px] text-stone-500">This is to certify that</p>
 
                 {/* Student Name */}
-                <p className="font-serif text-2xl md:text-4xl italic text-[#0B3C5D] mt-1">{cert.student_name}</p>
+                <p className="font-serif text-2xl md:text-4xl italic text-[#0B3C5D] mt-2">{cert.student_name}</p>
 
                 {/* Description */}
-                <p className="text-[10px] md:text-xs text-stone-700 leading-relaxed max-w-[85%] mt-2 md:mt-3">
-                  has successfully completed the <strong>{cert.specialty}</strong> clinical rotation
-                  at <strong>{cert.site_name}</strong>, fulfilling all requirements for the rotation titled
-                  &ldquo;{cert.title}&rdquo; — Completion Certificate.
+                <p className="text-[11px] md:text-sm text-stone-600 leading-relaxed max-w-lg mt-3 md:mt-4">
+                  has successfully completed the <strong className="text-stone-800">{cert.specialty}</strong> clinical rotation
+                  at <strong className="text-stone-800">{cert.site_name}</strong>, fulfilling all requirements for the rotation titled
+                  &ldquo;{cert.title}&rdquo;.
                 </p>
 
                 {/* Details Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mt-3 md:mt-5 w-[90%]">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-6 md:mt-8 w-full max-w-xl">
                   <div>
-                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Specialty</p>
-                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.specialty}</p>
+                    <p className="text-[8px] md:text-[9px] uppercase tracking-[2px] text-stone-400">Specialty</p>
+                    <p className="text-xs md:text-sm font-bold text-stone-800 mt-1">{cert.specialty}</p>
                   </div>
                   <div>
-                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Clinical Site</p>
-                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.site_name}</p>
+                    <p className="text-[8px] md:text-[9px] uppercase tracking-[2px] text-stone-400">Clinical Site</p>
+                    <p className="text-xs md:text-sm font-bold text-stone-800 mt-1">{cert.site_name}</p>
                   </div>
                   <div>
-                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Total Hours</p>
-                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.total_hours} hours</p>
+                    <p className="text-[8px] md:text-[9px] uppercase tracking-[2px] text-stone-400">Total Hours</p>
+                    <p className="text-xs md:text-sm font-bold text-stone-800 mt-1">{cert.total_hours} hours</p>
                   </div>
                   <div>
-                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Evaluation</p>
-                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.overall_score ? `${cert.overall_score} / 5.0` : 'N/A'}</p>
+                    <p className="text-[8px] md:text-[9px] uppercase tracking-[2px] text-stone-400">Evaluation</p>
+                    <p className="text-xs md:text-sm font-bold text-stone-800 mt-1">{cert.overall_score ? `${cert.overall_score} / 5.0` : 'N/A'}</p>
                   </div>
                 </div>
 
-                {/* Second details row */}
-                <div className="grid grid-cols-3 gap-4 md:gap-8 mt-2 md:mt-4 w-[85%]">
-                  {cert.preceptor_name && (
-                    <div>
-                      <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Preceptor</p>
-                      <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.preceptor_name}</p>
+                {/* Verified Seal + Compliance */}
+                <div className="flex items-center justify-center gap-4 mt-6 md:mt-8">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-[#CFAF6E] bg-[#CFAF6E]/10 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 md:w-16 md:h-16 rounded-full border border-[#E5C98B] flex flex-col items-center justify-center">
+                      <span className="text-[9px] md:text-[11px] font-extrabold tracking-[2px] text-[#0B3C5D]">VERIFIED</span>
+                      <span className="text-[6px] md:text-[7px] tracking-[3px] text-stone-500 mt-0.5">CLINICLINK</span>
                     </div>
-                  )}
-                  <div>
-                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Issued By</p>
-                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{cert.issued_by}</p>
                   </div>
-                  <div>
-                    <p className="text-[7px] md:text-[9px] uppercase tracking-[2px] text-stone-500">Issue Date</p>
-                    <p className="text-[11px] md:text-sm font-bold text-stone-800 mt-0.5">{new Date(cert.issued_date).toLocaleDateString()}</p>
-                  </div>
+                  <p className="text-[9px] md:text-[10px] text-stone-400 text-left max-w-xs leading-relaxed">
+                    Supervision was provided in accordance with applicable program and state requirements.
+                    This certificate documents supervised clinical hours.
+                  </p>
                 </div>
-
-                {/* Compliance text */}
-                <p className="text-[8px] md:text-[9.5px] text-stone-400 mt-3 md:mt-5 max-w-[80%]">
-                  Supervision was provided in accordance with applicable program and state requirements.
-                  This certificate documents supervised clinical hours and does not itself confer continuing education credit.
-                </p>
 
                 {/* Signatures */}
-                <div className="grid grid-cols-3 gap-4 md:gap-8 mt-3 md:mt-5 w-[85%]">
+                <div className="grid grid-cols-3 gap-6 md:gap-10 mt-6 md:mt-8 w-full max-w-lg">
                   {cert.preceptor_name && (
                     <div className="text-center">
-                      <div className="border-t border-stone-300 pt-1.5 mx-2">
+                      <div className="border-t border-stone-300 pt-2 mx-1">
                         <p className="text-[10px] md:text-xs font-bold text-stone-800">{cert.preceptor_name}</p>
-                        <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-500 mt-0.5">Preceptor</p>
+                        <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-400 mt-0.5">Preceptor</p>
                       </div>
                     </div>
                   )}
                   <div className="text-center">
-                    <div className="border-t border-stone-300 pt-1.5 mx-2">
+                    <div className="border-t border-stone-300 pt-2 mx-1">
                       <p className="text-[10px] md:text-xs font-bold text-stone-800">{cert.issued_by}</p>
-                      <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-500 mt-0.5">Issued By</p>
+                      <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-400 mt-0.5">Issued By</p>
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="border-t border-stone-300 pt-1.5 mx-2">
+                    <div className="border-t border-stone-300 pt-2 mx-1">
                       <p className="text-[10px] md:text-xs font-bold text-stone-800">ClinicLink</p>
-                      <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-500 mt-0.5">Platform</p>
+                      <p className="text-[7px] md:text-[9px] uppercase tracking-[1.5px] text-stone-400 mt-0.5">Platform</p>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Footer */}
-              <div className="absolute bottom-[5%] left-[8%] right-[8%] text-center z-10">
-                <p className="text-[8px] md:text-[9px] text-stone-500">
-                  Certificate ID: <span className="font-semibold">{cert.certificate_number}</span>
-                  &nbsp;&bull;&nbsp;
-                  Issued: {new Date(cert.issued_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  &nbsp;&bull;&nbsp;
-                  Verified: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </p>
+                {/* Footer */}
+                <div className="mt-6 md:mt-8 pt-4 border-t border-stone-200/50 w-full">
+                  <p className="text-[8px] md:text-[9px] text-stone-400">
+                    Certificate ID: <span className="font-semibold">{cert.certificate_number}</span>
+                    &nbsp;&bull;&nbsp;
+                    Issued: {new Date(cert.issued_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    &nbsp;&bull;&nbsp;
+                    Verified: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
               </div>
             </div>
 
