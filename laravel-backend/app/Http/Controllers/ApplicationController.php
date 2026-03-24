@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AffiliationRequestMail;
 use App\Mail\ApplicationStatusMail;
+use App\Models\AffiliationAgreement;
 use App\Models\Application;
 use App\Models\OnboardingTask;
 use App\Models\RotationSlot;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Notifications\AffiliationRequestNotification;
 use App\Notifications\ApplicationReviewedNotification;
 use App\Notifications\CeCertificateIssuedNotification;
 use App\Notifications\NewApplicationNotification;
@@ -103,11 +106,45 @@ class ApplicationController extends Controller
             return response()->json(['message' => 'You have already applied to this slot.'], 422);
         }
 
+        // Check if student's university has an active affiliation with the site
+        $studentUniId = $user->studentProfile?->university_id;
+        $siteId = $slot->site_id;
+        $affiliationRequired = false;
+        $affiliationAgreement = null;
+
+        if ($studentUniId && $siteId) {
+            $hasAffiliation = AffiliationAgreement::where('university_id', $studentUniId)
+                ->where('site_id', $siteId)
+                ->where('status', 'active')
+                ->exists();
+
+            if (!$hasAffiliation) {
+                $affiliationRequired = true;
+
+                // Create or find a pending affiliation agreement
+                $affiliationAgreement = AffiliationAgreement::firstOrCreate(
+                    [
+                        'university_id' => $studentUniId,
+                        'site_id' => $siteId,
+                        'status' => 'pending_review',
+                    ],
+                    [
+                        'created_by' => $user->id,
+                        'notes' => 'Initiated by student application',
+                    ]
+                );
+
+                // Notify coordinators and site manager
+                $this->sendAffiliationNotifications($affiliationAgreement, $user);
+            }
+        }
+
         $application = Application::create([
             'student_id' => $user->id,
             'slot_id' => $validated['slot_id'],
             'cover_letter' => $validated['cover_letter'] ?? null,
             'submitted_at' => now(),
+            'affiliation_status' => $affiliationRequired ? 'pending' : null,
         ]);
 
         $application->load(['student', 'slot.site']);
@@ -132,7 +169,103 @@ class ApplicationController extends Controller
             Log::warning('Failed to send application notification to coordinators: ' . $e->getMessage());
         }
 
-        return response()->json($application, 201);
+        $response = $application->toArray();
+        if ($affiliationRequired) {
+            $response['affiliation_required'] = true;
+            $response['affiliation_message'] = 'Your school is not yet affiliated with this clinical site. We have notified your university coordinator and the site manager to initiate an affiliation agreement.';
+        }
+
+        return response()->json($response, 201);
+    }
+
+    /**
+     * Student explicitly requests an affiliation between their school and a site.
+     */
+    public function requestAffiliation(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user->isStudent()) {
+            return response()->json(['message' => 'Only students can request affiliations.'], 403);
+        }
+
+        $validated = $request->validate([
+            'site_id' => ['required', 'uuid', 'exists:rotation_sites,id'],
+        ]);
+
+        $studentUniId = $user->studentProfile?->university_id;
+        if (!$studentUniId) {
+            return response()->json(['message' => 'You must be affiliated with a university to request a site affiliation. Please update your profile.'], 422);
+        }
+
+        // Check if active affiliation already exists
+        $existing = AffiliationAgreement::where('university_id', $studentUniId)
+            ->where('site_id', $validated['site_id'])
+            ->first();
+
+        if ($existing && $existing->status === 'active') {
+            return response()->json(['message' => 'Your school is already affiliated with this site.', 'already_affiliated' => true]);
+        }
+
+        if ($existing && in_array($existing->status, ['pending_review', 'draft'])) {
+            return response()->json(['message' => 'An affiliation request is already pending for this site.', 'already_requested' => true, 'agreement' => $existing]);
+        }
+
+        $agreement = AffiliationAgreement::create([
+            'university_id' => $studentUniId,
+            'site_id' => $validated['site_id'],
+            'status' => 'pending_review',
+            'created_by' => $user->id,
+            'notes' => 'Requested by student: ' . $user->first_name . ' ' . $user->last_name,
+        ]);
+
+        $agreement->load(['university', 'site']);
+
+        $this->sendAffiliationNotifications($agreement, $user);
+
+        return response()->json([
+            'message' => 'Affiliation request sent! Your university coordinator and the site manager have been notified.',
+            'agreement' => $agreement,
+        ], 201);
+    }
+
+    /**
+     * Send notifications to coordinators and site manager about a new affiliation request.
+     */
+    private function sendAffiliationNotifications(AffiliationAgreement $agreement, User $student): void
+    {
+        $agreement->loadMissing(['university', 'site.manager']);
+
+        $frontendUrl = config('app.frontend_url', 'https://cliniclink.health');
+
+        try {
+            // Notify university coordinators
+            $coordinators = User::whereIn('role', ['coordinator', 'professor'])
+                ->whereHas('studentProfile', fn ($q) => $q->where('university_id', $agreement->university_id))
+                ->where('is_active', true)
+                ->where('is_demo', false)
+                ->get();
+
+            foreach ($coordinators as $coordinator) {
+                $coordinator->notify(new AffiliationRequestNotification($agreement, $student, 'coordinator'));
+                $reviewUrl = $frontendUrl . '/sites-directory';
+                Mail::to($coordinator->email)->send(new AffiliationRequestMail($agreement, $student, 'coordinator', $reviewUrl));
+            }
+        } catch (\Throwable $e) {
+            Log::channel('stderr')->error('Failed to notify coordinators about affiliation request: ' . $e->getMessage());
+        }
+
+        try {
+            // Notify site manager
+            $manager = $agreement->site?->manager;
+            if ($manager) {
+                $manager->notify(new AffiliationRequestNotification($agreement, $student, 'site_manager'));
+                $reviewUrl = $frontendUrl . '/my-site';
+                Mail::to($manager->email)->send(new AffiliationRequestMail($agreement, $student, 'site_manager', $reviewUrl));
+            }
+        } catch (\Throwable $e) {
+            Log::channel('stderr')->error('Failed to notify site manager about affiliation request: ' . $e->getMessage());
+        }
     }
 
     public function review(Request $request, Application $application): JsonResponse

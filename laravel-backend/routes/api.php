@@ -199,6 +199,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/applications', [ApplicationController::class, 'index']);
     Route::get('/applications/{application}', [ApplicationController::class, 'show']);
     Route::middleware('role:student')->post('/applications', [ApplicationController::class, 'store']);
+    Route::middleware('role:student')->post('/affiliation-requests', [ApplicationController::class, 'requestAffiliation']);
     Route::put('/applications/{application}/review', [ApplicationController::class, 'review']);
     Route::middleware('role:student')->put('/applications/{application}/withdraw', [ApplicationController::class, 'withdraw']);
     Route::put('/applications/{application}/complete', [ApplicationController::class, 'complete']);

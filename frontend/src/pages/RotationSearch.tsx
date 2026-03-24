@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/Badge.tsx'
 import { Button } from '../components/ui/Button.tsx'
 import { Input } from '../components/ui/Input.tsx'
 import { Modal } from '../components/ui/Modal.tsx'
-import { useSlots, useCreateApplication, useToggleBookmark, useBookmarkedSlots, useCreateSavedSearch, useSubscriptionCheckout } from '../hooks/useApi.ts'
+import { useSlots, useCreateApplication, useToggleBookmark, useBookmarkedSlots, useCreateSavedSearch, useSubscriptionCheckout, useRequestAffiliation } from '../hooks/useApi.ts'
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
 import type { ApiSlot } from '../services/api.ts'
@@ -104,6 +104,7 @@ export function RotationSearch() {
   }, [uniSearchText])
 
   const isStudent = user?.role === 'student'
+  const requestAffiliation = useRequestAffiliation()
   const toggleBookmark = useToggleBookmark()
   const subscriptionCheckout = useSubscriptionCheckout()
   const { data: bookmarkedData } = useBookmarkedSlots(undefined, isAuthenticated)
@@ -166,8 +167,12 @@ export function RotationSearch() {
   const handleApply = async () => {
     if (!selectedSlot) return
     try {
-      await applyMutation.mutateAsync({ slot_id: selectedSlot.id, cover_letter: coverLetter || undefined })
-      toast.success('Application submitted successfully! You\'ll hear back within 5-7 business days.')
+      const result = await applyMutation.mutateAsync({ slot_id: selectedSlot.id, cover_letter: coverLetter || undefined })
+      if (result.affiliation_required) {
+        toast.success('Application submitted! Your school is not yet affiliated with this site — we\'ve notified both parties to establish an agreement.', { duration: 8000 })
+      } else {
+        toast.success('Application submitted successfully! You\'ll hear back within 5-7 business days.')
+      }
       setShowApplyModal(false)
       setCoverLetter('')
       setSelectedSlot(null)
@@ -182,6 +187,13 @@ export function RotationSearch() {
       const message = err instanceof Error ? err.message : 'Failed to submit application'
       toast.error(message)
     }
+  }
+
+  const handleRequestAffiliation = (siteId: string) => {
+    requestAffiliation.mutate({ site_id: siteId }, {
+      onSuccess: (res) => toast.success(res.message, { duration: 6000 }),
+      onError: (err: Error) => toast.error(err.message),
+    })
   }
 
   const handleUpgrade = () => {
@@ -450,6 +462,11 @@ export function RotationSearch() {
                       <Badge variant="default">{weeks} weeks</Badge>
                       {daysUntil > 0 && daysUntil <= 30 && (
                         <Badge variant="warning">Starts in {daysUntil} days</Badge>
+                      )}
+                      {isAuthenticated && isStudent && 'is_affiliated' in slot && (
+                        (slot as ApiSlot & { is_affiliated?: boolean }).is_affiliated
+                          ? <Badge variant="success">Affiliated</Badge>
+                          : <Badge variant="warning">Not Affiliated</Badge>
                       )}
                     </div>
                     <div className="flex flex-wrap gap-4 text-xs text-stone-500">
@@ -802,6 +819,28 @@ export function RotationSearch() {
                       <span className="font-semibold text-stone-900">{selectedSlot.site.rating}</span>
                       <span className="text-sm text-stone-500">({selectedSlot.site.review_count} reviews)</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Affiliation Notice */}
+            {isAuthenticated && isStudent && 'is_affiliated' in selectedSlot && !(selectedSlot as ApiSlot & { is_affiliated?: boolean }).is_affiliated && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <GraduationCap className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-amber-800">Your school is not yet affiliated with this site</p>
+                    <p className="text-xs text-amber-700 mt-1">An affiliation agreement between your university and this clinical site is needed for placement. You can still apply — we'll notify both parties to establish the partnership.</p>
+                    <button
+                      type="button"
+                      onClick={() => handleRequestAffiliation(selectedSlot.site?.id || '')}
+                      disabled={requestAffiliation.isPending}
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700 transition-colors disabled:opacity-50"
+                    >
+                      {requestAffiliation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                      Request Affiliation
+                    </button>
                   </div>
                 </div>
               </div>

@@ -140,6 +140,12 @@ export function useCreateApplication() {
   })
 }
 
+export function useRequestAffiliation() {
+  return useMutation({
+    mutationFn: applicationsApi.requestAffiliation,
+  })
+}
+
 export function useReviewApplication() {
   const qc = useQueryClient()
   return useMutation({

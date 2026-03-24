@@ -56,6 +56,25 @@ class RotationSlotController extends Controller
         $slots = $query->orderBy('start_date', 'asc')
             ->paginate($request->input('per_page', 20));
 
+        // Add is_affiliated flag for authenticated students
+        $user = $request->user();
+        if ($user && $user->isStudent()) {
+            $studentUniId = $user->studentProfile?->university_id;
+            if ($studentUniId) {
+                // Get all site IDs that have active affiliation with student's university
+                $affiliatedSiteIds = \App\Models\AffiliationAgreement::where('university_id', $studentUniId)
+                    ->where('status', 'active')
+                    ->pluck('site_id')
+                    ->toArray();
+
+                // Add is_affiliated flag to each slot
+                $slots->getCollection()->transform(function ($slot) use ($affiliatedSiteIds) {
+                    $slot->is_affiliated = in_array($slot->site_id, $affiliatedSiteIds);
+                    return $slot;
+                });
+            }
+        }
+
         return response()->json($slots);
     }
 

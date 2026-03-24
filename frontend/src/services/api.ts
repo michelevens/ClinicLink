@@ -350,11 +350,13 @@ export const applicationsApi = {
   list: () => api.get<PaginatedResponse<ApiApplication>>('/applications'),
   get: (id: string) => api.get<{ application: ApiApplication }>(`/applications/${id}`),
   create: (data: { slot_id: string; cover_letter?: string }) =>
-    api.post<{ application: ApiApplication }>('/applications', data),
+    api.post<ApiApplication & { affiliation_required?: boolean; affiliation_message?: string }>('/applications', data),
   review: (id: string, data: { status: 'accepted' | 'declined' | 'waitlisted'; notes?: string }) =>
     api.put<{ application: ApiApplication }>(`/applications/${id}/review`, data),
   withdraw: (id: string) =>
     api.put<{ application: ApiApplication }>(`/applications/${id}/withdraw`),
+  requestAffiliation: (data: { site_id: string }) =>
+    api.post<{ message: string; agreement?: unknown; already_affiliated?: boolean; already_requested?: boolean }>('/affiliation-requests', data),
 }
 
 // --- Hour Logs ---

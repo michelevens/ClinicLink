@@ -21,6 +21,7 @@ class Application extends Model
         'notes',
         'payment_status',
         'payment_id',
+        'affiliation_status',
     ];
 
     protected function casts(): array
