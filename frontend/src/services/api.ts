@@ -398,7 +398,10 @@ export const studentApi = {
     formData.append('file', file)
     return api.upload<{ credential: ApiCredential; message: string }>(`/student/credentials/${id}/upload`, formData)
   },
-  downloadCredentialUrl: (id: string) => `${API_URL}/student/credentials/${id}/download`,
+  downloadCredentialUrl: (id: string) => {
+    const token = api.getToken()
+    return `${API_URL}/student/credentials/${id}/download${token ? `?token=${token}` : ''}`
+  },
 }
 
 // --- My Students ---
@@ -477,7 +480,10 @@ export const certificatesApi = {
     api.get<CertificateEligibility>(`/certificates/eligibility/${slotId}/${studentId}`),
   revoke: (id: string, data: { reason: string }) =>
     api.put<{ certificate: ApiCertificate }>(`/certificates/${id}/revoke`, data),
-  getPdfUrl: (id: string) => `${API_URL}/certificates/${id}/pdf`,
+  getPdfUrl: (id: string) => {
+    const token = api.getToken()
+    return `${API_URL}/certificates/${id}/pdf${token ? `?token=${token}` : ''}`
+  },
   publicVerify: (certNumber: string) =>
     api.get<CertificateVerification>(`/verify/${certNumber}`),
 }
@@ -1274,7 +1280,10 @@ export const ceCertificatesApi = {
     api.put<{ ce_certificate: ApiCeCertificate }>(`/ce-certificates/${id}/revoke`, data),
   auditTrail: (id: string) =>
     api.get<{ audit_trail: ApiCeAuditEvent[] }>(`/ce-certificates/${id}/audit-trail`),
-  downloadUrl: (id: string) => `${API_URL}/ce-certificates/${id}/download`,
+  downloadUrl: (id: string) => {
+    const token = api.getToken()
+    return `${API_URL}/ce-certificates/${id}/download${token ? `?token=${token}` : ''}`
+  },
   eligibility: (applicationId: string) =>
     api.get<CeEligibility>(`/ce-eligibility/${applicationId}`),
   publicVerify: (uuid: string) =>
@@ -1756,11 +1765,20 @@ export const accreditationReportsApi = {
     api.post<ApiAccreditationReport>('/accreditation-reports', data),
   preview: (id: string) =>
     api.get<{ report: ApiAccreditationReport; data: Record<string, unknown> }>(`/accreditation-reports/${id}/preview`),
-  downloadUrl: (id: string) => `${API_URL}/accreditation-reports/${id}/download`,
+  downloadUrl: (id: string) => {
+    const token = api.getToken()
+    return `${API_URL}/accreditation-reports/${id}/download${token ? `?token=${token}` : ''}`
+  },
   delete: (id: string) => api.delete(`/accreditation-reports/${id}`),
 }
 
 // --- Exports ---
+function appendAuthToken(qs: URLSearchParams): URLSearchParams {
+  const token = api.getToken()
+  if (token) qs.set('token', token)
+  return qs
+}
+
 export const exportsApi = {
   hourLogsCsvUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {
     const qs = new URLSearchParams()
@@ -1768,7 +1786,7 @@ export const exportsApi = {
     if (params?.slot_id) qs.set('slot_id', params.slot_id)
     if (params?.date_from) qs.set('date_from', params.date_from)
     if (params?.date_to) qs.set('date_to', params.date_to)
-    return `${API_URL}/exports/hour-logs/csv?${qs}`
+    return `${API_URL}/exports/hour-logs/csv?${appendAuthToken(qs)}`
   },
   hourLogsPdfUrl: (params?: { status?: string; slot_id?: string; date_from?: string; date_to?: string }) => {
     const qs = new URLSearchParams()
@@ -1776,27 +1794,27 @@ export const exportsApi = {
     if (params?.slot_id) qs.set('slot_id', params.slot_id)
     if (params?.date_from) qs.set('date_from', params.date_from)
     if (params?.date_to) qs.set('date_to', params.date_to)
-    return `${API_URL}/exports/hour-logs/pdf?${qs}`
+    return `${API_URL}/exports/hour-logs/pdf?${appendAuthToken(qs)}`
   },
   evaluationsCsvUrl: (params?: { type?: string }) => {
     const qs = new URLSearchParams()
     if (params?.type) qs.set('type', params.type)
-    return `${API_URL}/exports/evaluations/csv?${qs}`
+    return `${API_URL}/exports/evaluations/csv?${appendAuthToken(qs)}`
   },
   evaluationsPdfUrl: (params?: { type?: string }) => {
     const qs = new URLSearchParams()
     if (params?.type) qs.set('type', params.type)
-    return `${API_URL}/exports/evaluations/pdf?${qs}`
+    return `${API_URL}/exports/evaluations/pdf?${appendAuthToken(qs)}`
   },
   complianceCsvUrl: (params?: { site_id?: string }) => {
     const qs = new URLSearchParams()
     if (params?.site_id) qs.set('site_id', params.site_id)
-    return `${API_URL}/exports/compliance/csv?${qs}`
+    return `${API_URL}/exports/compliance/csv?${appendAuthToken(qs)}`
   },
   compliancePdfUrl: (params?: { site_id?: string }) => {
     const qs = new URLSearchParams()
     if (params?.site_id) qs.set('site_id', params.site_id)
-    return `${API_URL}/exports/compliance/pdf?${qs}`
+    return `${API_URL}/exports/compliance/pdf?${appendAuthToken(qs)}`
   },
 }
 
