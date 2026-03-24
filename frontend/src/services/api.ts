@@ -215,13 +215,14 @@ export const sitesApi = {
 
 // --- Rotation Slots ---
 export const slotsApi = {
-  list: (params?: { search?: string; specialty?: string; status?: string; cost_type?: string; site_id?: string; page?: number }) => {
+  list: (params?: { search?: string; specialty?: string; status?: string; cost_type?: string; site_id?: string; university_id?: string; page?: number }) => {
     const qs = new URLSearchParams()
     if (params?.search) qs.set('search', params.search)
     if (params?.specialty) qs.set('specialty', params.specialty)
     if (params?.status) qs.set('status', params.status)
     if (params?.cost_type) qs.set('cost_type', params.cost_type)
     if (params?.site_id) qs.set('site_id', params.site_id)
+    if (params?.university_id) qs.set('university_id', params.university_id)
     if (params?.page) qs.set('page', String(params.page))
     return api.get<PaginatedResponse<ApiSlot>>(`/slots?${qs}`)
   },

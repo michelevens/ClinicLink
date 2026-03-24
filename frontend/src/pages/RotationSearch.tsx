@@ -10,13 +10,14 @@ import { useSlots, useCreateApplication, useToggleBookmark, useBookmarkedSlots, 
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { toast } from 'sonner'
 import type { ApiSlot } from '../services/api.ts'
+import { universitiesApi } from '../services/api.ts'
 import { SavedSearchesPanel } from '../components/student/SavedSearchesPanel.tsx'
 import {
   Search, MapPin, Calendar, Star, Heart,
   Building2, Clock, Users, Send, Loader2, Map as MapIcon,
   Globe, Phone, Stethoscope, DollarSign,
   ChevronRight, Shield, BookOpen, CheckCircle2,
-  ArrowLeft, ExternalLink, LogIn, Bookmark, Save
+  ArrowLeft, ExternalLink, LogIn, Bookmark, Save, GraduationCap
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
@@ -84,6 +85,24 @@ export function RotationSearch() {
   const [showSavedSearches, setShowSavedSearches] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
+  // Institution affiliation filter
+  const [universityFilter, setUniversityFilter] = useState('')
+  const [uniSearchText, setUniSearchText] = useState('')
+  const [uniResults, setUniResults] = useState<{ id: string; name: string }[]>([])
+  const [showUniDropdown, setShowUniDropdown] = useState(false)
+  const [selectedUniName, setSelectedUniName] = useState('')
+
+  useEffect(() => {
+    if (!uniSearchText.trim() || uniSearchText.length < 2) { setUniResults([]); return }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await universitiesApi.list({ search: uniSearchText })
+        setUniResults((res.data || []).map(u => ({ id: u.id, name: u.name })))
+      } catch { setUniResults([]) }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [uniSearchText])
+
   const isStudent = user?.role === 'student'
   const toggleBookmark = useToggleBookmark()
   const subscriptionCheckout = useSubscriptionCheckout()
@@ -96,6 +115,7 @@ export function RotationSearch() {
     specialty: selectedSpecialty || undefined,
     status: statusFilter !== 'all' ? statusFilter : undefined,
     cost_type: costFilter !== 'all' ? costFilter : undefined,
+    university_id: universityFilter || undefined,
   })
   const applyMutation = useCreateApplication()
 
@@ -126,11 +146,12 @@ export function RotationSearch() {
     )
   }
 
-  const loadSavedFilters = (filters: { search?: string; specialty?: string; status?: string; cost_type?: string }) => {
+  const loadSavedFilters = (filters: { search?: string; specialty?: string; status?: string; cost_type?: string; university_id?: string }) => {
     setSearchQuery(filters.search || '')
     setSelectedSpecialty(filters.specialty || '')
     setCostFilter(filters.cost_type || 'all')
     setStatusFilter(filters.status || 'all')
+    setUniversityFilter(filters.university_id || '')
     setActiveTab('all')
   }
 
@@ -244,6 +265,59 @@ export function RotationSearch() {
               <option value="open">Open</option>
               <option value="filled">Filled</option>
             </select>
+
+            {/* Institution Affiliation Filter */}
+            <div className="relative col-span-2 sm:col-span-1">
+              {universityFilter ? (
+                <div className="flex items-center gap-2 rounded-xl border border-primary-300 bg-primary-50 px-3 py-2 text-sm">
+                  <GraduationCap className="w-4 h-4 text-primary-600 shrink-0" />
+                  <span className="truncate text-primary-700 font-medium">{selectedUniName}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setUniversityFilter(''); setSelectedUniName(''); setUniSearchText('') }}
+                    className="ml-auto text-stone-400 hover:text-red-500"
+                  >
+                    <span className="text-lg leading-none">&times;</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                      <GraduationCap className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={uniSearchText}
+                      onChange={e => { setUniSearchText(e.target.value); setShowUniDropdown(true) }}
+                      onFocus={() => uniResults.length > 0 && setShowUniDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowUniDropdown(false), 200)}
+                      placeholder="Institution Affiliation..."
+                      className="w-full sm:w-52 rounded-xl border border-stone-300 bg-white pl-9 pr-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
+                    />
+                  </div>
+                  {showUniDropdown && uniResults.length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {uniResults.map(u => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          onMouseDown={() => {
+                            setUniversityFilter(u.id)
+                            setSelectedUniName(u.name)
+                            setUniSearchText('')
+                            setShowUniDropdown(false)
+                          }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0 text-sm"
+                        >
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-between mt-3">

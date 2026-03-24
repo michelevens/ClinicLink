@@ -44,6 +44,15 @@ class RotationSlotController extends Controller
             $query->where('site_id', $request->input('site_id'));
         }
 
+        // Filter by affiliated university — show only slots at sites with an active affiliation agreement
+        if ($request->filled('university_id')) {
+            $universityId = $request->input('university_id');
+            $query->whereHas('site.affiliationAgreements', function ($q) use ($universityId) {
+                $q->where('university_id', $universityId)
+                  ->where('status', 'active');
+            });
+        }
+
         $slots = $query->orderBy('start_date', 'asc')
             ->paginate($request->input('per_page', 20));
 

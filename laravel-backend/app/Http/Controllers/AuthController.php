@@ -43,6 +43,8 @@ class AuthController extends Controller
             'program_id' => ['sometimes', 'nullable', 'exists:programs,id'],
             'site_id' => ['sometimes', 'nullable', 'exists:rotation_sites,id'],
             'license_code' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'affiliated_university_id' => ['sometimes', 'nullable', 'exists:universities,id'],
+            'affiliated_site_id' => ['sometimes', 'nullable', 'exists:rotation_sites,id'],
         ]);
 
         $user = User::create([
@@ -111,6 +113,30 @@ class AuthController extends Controller
                 'primary_specialty' => '',
                 'is_active' => true,
             ]);
+        }
+
+        // Create pending affiliation agreement if site_manager indicates university affiliation
+        if ($validated['role'] === 'site_manager' && !empty($validated['affiliated_university_id'])) {
+            // Site will be linked during onboarding when site_manager creates their site
+            // Store the intended affiliation for later
+            $user->update(['pending_affiliation_university_id' => $validated['affiliated_university_id']]);
+        }
+
+        // Create pending affiliation agreement if coordinator/professor indicates site affiliation
+        if (in_array($validated['role'], ['coordinator', 'professor']) && !empty($validated['affiliated_site_id']) && !empty($validated['university_id'])) {
+            $existing = \App\Models\AffiliationAgreement::where('university_id', $validated['university_id'])
+                ->where('site_id', $validated['affiliated_site_id'])
+                ->first();
+
+            if (!$existing) {
+                \App\Models\AffiliationAgreement::create([
+                    'university_id' => $validated['university_id'],
+                    'site_id' => $validated['affiliated_site_id'],
+                    'status' => 'pending_review',
+                    'created_by' => $user->id,
+                    'notes' => 'Affiliation indicated during registration',
+                ]);
+            }
         }
 
         // Send email verification link

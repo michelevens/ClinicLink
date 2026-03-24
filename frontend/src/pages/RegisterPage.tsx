@@ -65,7 +65,7 @@ export function RegisterPage() {
   const prefillCode = searchParams.get('code') || ''
 
   const navigate = useNavigate()
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '', npiNumber: '', siteId: '', licenseCode: prefillCode })
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: prefillEmail, username: '', password: '', role: prefillRole, universityId: '', programId: '', npiNumber: '', siteId: '', licenseCode: prefillCode, affiliatedUniversityId: '', affiliatedSiteId: '' })
   const [showPassword, setShowPassword] = useState(false)
   const { register, isLoading } = useAuth()
 
@@ -86,6 +86,24 @@ export function RegisterPage() {
   const [showSiteDropdown, setShowSiteDropdown] = useState(false)
   const siteRef = useRef<HTMLDivElement>(null)
   const siteSearchTimer = useRef<ReturnType<typeof setTimeout>>(null)
+
+  // Affiliated site search (for coordinators/professors)
+  const [affSiteSearch, setAffSiteSearch] = useState('')
+  const [affSiteResults, setAffSiteResults] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([])
+  const [affSiteLoading, setAffSiteLoading] = useState(false)
+  const [selectedAffSite, setSelectedAffSite] = useState<{ id: string; name: string } | null>(null)
+  const [showAffSiteDropdown, setShowAffSiteDropdown] = useState(false)
+  const affSiteRef = useRef<HTMLDivElement>(null)
+  const affSiteSearchTimer = useRef<ReturnType<typeof setTimeout>>(null)
+
+  // Affiliated university search (for site_managers)
+  const [affUniSearch, setAffUniSearch] = useState('')
+  const [affUniResults, setAffUniResults] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([])
+  const [affUniLoading, setAffUniLoading] = useState(false)
+  const [selectedAffUni, setSelectedAffUni] = useState<{ id: string; name: string } | null>(null)
+  const [showAffUniDropdown, setShowAffUniDropdown] = useState(false)
+  const affUniRef = useRef<HTMLDivElement>(null)
+  const affUniSearchTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
   // Program selection (loads when university is selected for students)
   const [programs, setPrograms] = useState<ApiProgram[]>([])
@@ -147,11 +165,39 @@ export function RegisterPage() {
     }, 300)
   }, [siteSearch])
 
+  // Affiliated site search (for coordinators/professors)
+  useEffect(() => {
+    if (!affSiteSearch.trim() || affSiteSearch.length < 2) { setAffSiteResults([]); return }
+    setAffSiteLoading(true)
+    if (affSiteSearchTimer.current) clearTimeout(affSiteSearchTimer.current)
+    affSiteSearchTimer.current = setTimeout(async () => {
+      try {
+        const res = await sitesApi.list({ search: affSiteSearch })
+        setAffSiteResults((res.data || []).map(s => ({ id: s.id, name: s.name, city: s.city, state: s.state })))
+      } catch { setAffSiteResults([]) } finally { setAffSiteLoading(false) }
+    }, 300)
+  }, [affSiteSearch])
+
+  // Affiliated university search (for site_managers)
+  useEffect(() => {
+    if (!affUniSearch.trim() || affUniSearch.length < 2) { setAffUniResults([]); return }
+    setAffUniLoading(true)
+    if (affUniSearchTimer.current) clearTimeout(affUniSearchTimer.current)
+    affUniSearchTimer.current = setTimeout(async () => {
+      try {
+        const res = await universitiesApi.list({ search: affUniSearch })
+        setAffUniResults((res.data || []).map(u => ({ id: u.id, name: u.name, city: u.city, state: u.state })))
+      } catch { setAffUniResults([]) } finally { setAffUniLoading(false) }
+    }, 300)
+  }, [affUniSearch])
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (uniRef.current && !uniRef.current.contains(e.target as Node)) setShowUniDropdown(false)
       if (siteRef.current && !siteRef.current.contains(e.target as Node)) setShowSiteDropdown(false)
+      if (affSiteRef.current && !affSiteRef.current.contains(e.target as Node)) setShowAffSiteDropdown(false)
+      if (affUniRef.current && !affUniRef.current.contains(e.target as Node)) setShowAffUniDropdown(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
@@ -181,7 +227,7 @@ export function RegisterPage() {
       return
     }
     try {
-      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined, siteId: form.siteId || undefined, licenseCode: form.licenseCode || undefined, npiNumber: form.npiNumber || undefined })
+      await register({ ...form, universityId: form.universityId || undefined, programId: form.programId || undefined, siteId: form.siteId || undefined, licenseCode: form.licenseCode || undefined, npiNumber: form.npiNumber || undefined, affiliatedUniversityId: form.affiliatedUniversityId || undefined, affiliatedSiteId: form.affiliatedSiteId || undefined })
       navigate('/verify-email?email=' + encodeURIComponent(form.email))
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
@@ -551,6 +597,92 @@ export function RegisterPage() {
                   />
                 </div>
                 <p className="text-xs text-stone-400">If your university provided a license code, enter it here to get Pro access automatically.</p>
+              </div>
+            )}
+
+            {/* Affiliation: Site Manager → University */}
+            {form.role === 'site_manager' && (
+              <div className="space-y-1.5" ref={affUniRef}>
+                <label className="block text-sm font-medium text-stone-700">Affiliated University (Optional)</label>
+                <p className="text-xs text-stone-500 mb-2">Is your clinical site already affiliated with a university or school?</p>
+                {selectedAffUni ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-teal-300 bg-teal-50">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-teal-600" />
+                      <span className="text-sm font-medium text-stone-900">{selectedAffUni.name}</span>
+                    </div>
+                    <button type="button" onClick={() => { setSelectedAffUni(null); setForm(f => ({ ...f, affiliatedUniversityId: '' })); setAffUniSearch('') }} className="text-stone-400 hover:text-red-500">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                      {affUniLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    </div>
+                    <input
+                      type="text"
+                      value={affUniSearch}
+                      onChange={e => { setAffUniSearch(e.target.value); setShowAffUniDropdown(true) }}
+                      onFocus={() => affUniResults.length > 0 && setShowAffUniDropdown(true)}
+                      placeholder="Search university name..."
+                      className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                    />
+                    {showAffUniDropdown && affUniResults.length > 0 && (
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {affUniResults.map(u => (
+                          <button key={u.id} type="button" onClick={() => { setSelectedAffUni({ id: u.id, name: u.name }); setForm(f => ({ ...f, affiliatedUniversityId: u.id })); setShowAffUniDropdown(false); setAffUniSearch('') }} className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0">
+                            <p className="text-sm font-medium text-stone-900">{u.name}</p>
+                            {(u.city || u.state) && <p className="text-xs text-stone-500">{[u.city, u.state].filter(Boolean).join(', ')}</p>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Affiliation: Coordinator/Professor → Clinical Site */}
+            {['coordinator', 'professor'].includes(form.role) && (
+              <div className="space-y-1.5" ref={affSiteRef}>
+                <label className="block text-sm font-medium text-stone-700">Affiliated Clinical Site (Optional)</label>
+                <p className="text-xs text-stone-500 mb-2">Is your program already affiliated with a clinical rotation site?</p>
+                {selectedAffSite ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-teal-300 bg-teal-50">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-teal-600" />
+                      <span className="text-sm font-medium text-stone-900">{selectedAffSite.name}</span>
+                    </div>
+                    <button type="button" onClick={() => { setSelectedAffSite(null); setForm(f => ({ ...f, affiliatedSiteId: '' })); setAffSiteSearch('') }} className="text-stone-400 hover:text-red-500">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                      {affSiteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    </div>
+                    <input
+                      type="text"
+                      value={affSiteSearch}
+                      onChange={e => { setAffSiteSearch(e.target.value); setShowAffSiteDropdown(true) }}
+                      onFocus={() => affSiteResults.length > 0 && setShowAffSiteDropdown(true)}
+                      placeholder="Search clinical site name..."
+                      className="w-full rounded-xl border border-stone-300 bg-white pl-10 pr-4 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none transition-all duration-200"
+                    />
+                    {showAffSiteDropdown && affSiteResults.length > 0 && (
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-stone-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                        {affSiteResults.map(s => (
+                          <button key={s.id} type="button" onClick={() => { setSelectedAffSite({ id: s.id, name: s.name }); setForm(f => ({ ...f, affiliatedSiteId: s.id })); setShowAffSiteDropdown(false); setAffSiteSearch('') }} className="w-full text-left px-4 py-2.5 hover:bg-primary-50 transition-colors border-b border-stone-100 last:border-0">
+                            <p className="text-sm font-medium text-stone-900">{s.name}</p>
+                            {(s.city || s.state) && <p className="text-xs text-stone-500">{[s.city, s.state].filter(Boolean).join(', ')}</p>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

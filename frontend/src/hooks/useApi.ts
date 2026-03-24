@@ -19,7 +19,7 @@ export function useDashboardStats() {
 }
 
 // --- Rotation Slots ---
-export function useSlots(params?: { search?: string; specialty?: string; status?: string; cost_type?: string; page?: number; site_id?: string }) {
+export function useSlots(params?: { search?: string; specialty?: string; status?: string; cost_type?: string; page?: number; site_id?: string; university_id?: string }) {
   return useQuery({
     queryKey: ['slots', params],
     queryFn: () => slotsApi.list(params),

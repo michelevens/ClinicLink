@@ -35,6 +35,8 @@ interface RegisterData {
   siteId?: string
   licenseCode?: string
   npiNumber?: string
+  affiliatedUniversityId?: string
+  affiliatedSiteId?: string
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -203,6 +205,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         site_id: data.siteId,
         license_code: data.licenseCode,
         npi_number: data.npiNumber,
+        affiliated_university_id: data.affiliatedUniversityId,
+        affiliated_site_id: data.affiliatedSiteId,
       })
       // Registration no longer returns a token — account is pending approval
       setState(s => ({ ...s, isLoading: false }))
